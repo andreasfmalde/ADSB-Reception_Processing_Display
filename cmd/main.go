@@ -1,8 +1,8 @@
 package main
 
 import (
-	"ADSB_Reception_Processing_Display_Analysis/internal/global"
-	"ADSB_Reception_Processing_Display_Analysis/internal/logger"
+	"adsb-api/internal/global"
+	"adsb-api/internal/logger"
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
@@ -16,7 +16,20 @@ func main() {
 
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
-		logger.Error.Fatalf("Error opening database: %q", err)
+		logger.Error.Println("Error opening database: %q", err)
+		logger.Info.Println("Attempting to create database.")
+		_, err = db.Exec("CREATE DATABASE " + global.Dbname)
+		if err != nil {
+			logger.Error.Fatalf("Error creating database: %q", err)
+		}
+		logger.Info.Println("Database created successfully.")
+	} else {
+		logger.Info.Println("Database already exists.")
+	}
+
+	err = db.Ping()
+	if err != nil {
+		logger.Error.Fatalf("Error pinging database: %q", err)
 	}
 
 	defer func(db *sql.DB) {
@@ -25,11 +38,6 @@ func main() {
 			logger.Error.Fatalf("Error closing database: %q", err)
 		}
 	}(db)
-
-	err = db.Ping()
-	if err != nil {
-		logger.Error.Fatalf("Error pinging database: %q", err)
-	}
 
 	logger.Info.Println("Successfully connected to database!")
 
