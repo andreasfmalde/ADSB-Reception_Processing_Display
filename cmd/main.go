@@ -16,15 +16,7 @@ func main() {
 
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
-		logger.Error.Println("Error opening database: %q", err)
-		logger.Info.Println("Attempting to create database.")
-		_, err = db.Exec("CREATE DATABASE " + global.Dbname)
-		if err != nil {
-			logger.Error.Fatalf("Error creating database: %q", err)
-		}
-		logger.Info.Println("Database created successfully.")
-	} else {
-		logger.Info.Println("Database already exists.")
+		logger.Error.Fatalf("Error opening database: %q", err)
 	}
 
 	err = db.Ping()
@@ -40,5 +32,4 @@ func main() {
 	}(db)
 
 	logger.Info.Println("Successfully connected to database!")
-
 }
