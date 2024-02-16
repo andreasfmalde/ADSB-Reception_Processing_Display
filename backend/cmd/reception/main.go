@@ -19,17 +19,17 @@ func main() {
 		logger.Error.Fatalf("Error opening database: %q", err)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		logger.Error.Fatalf("Error pinging database: %q", err)
-	}
-
 	defer func(db *sql.DB) {
 		err := db.Close()
 		if err != nil {
 			logger.Error.Fatalf("Error closing database: %q", err)
 		}
 	}(db)
+
+	err = db.Ping()
+	if err != nil {
+		logger.Error.Fatalf("Error pinging database: %q", err)
+	}
 
 	logger.Info.Println("Successfully connected to database!")
 }
