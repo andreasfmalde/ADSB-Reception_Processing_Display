@@ -5,11 +5,15 @@ import (
 	"adsb-api/internal/logger"
 	"database/sql"
 	"fmt"
+
 	_ "github.com/lib/pq"
 )
 
 func main() {
 	logger.InitLogger()
+	global.InitEnvironment()
+
+	fmt.Println(global.Password)
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
 		global.Host, global.Port, global.User, global.Password, global.Dbname)
