@@ -1,39 +1,36 @@
 package main
 
 import (
+	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/logger"
 	"database/sql"
-	"fmt"
 
 	_ "github.com/lib/pq"
 )
 
+/*
+Main method and starting point of the reception and prosessing part of
+the ADS-B API
+*/
 func main() {
+	// Initialize logger
 	logger.InitLogger()
+	// Initialize environmental variables
 	global.InitEnvironment()
-
-	fmt.Println(global.Password)
-
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
-		global.Host, global.Port, global.User, global.Password, global.Dbname)
-
-	db, err := sql.Open("postgres", psqlInfo)
+	// Initialize the database
+	dbConn, err := db.InitDatabase()
 	if err != nil {
 		logger.Error.Fatalf("Error opening database: %q", err)
+	} else {
+		logger.Info.Println("Successfully connected to database!")
 	}
-
-	defer func(db *sql.DB) {
-		err := db.Close()
+	// Close the connection to the datase at the end
+	defer func(conn *sql.DB) {
+		err := db.CloseDatabase(conn)
 		if err != nil {
-			logger.Error.Fatalf("Error closing database: %q", err)
+			logger.Error.Fatalf("Could not close database connection: %q", err)
 		}
-	}(db)
+	}(dbConn)
 
-	err = db.Ping()
-	if err != nil {
-		logger.Error.Fatalf("Error pinging database: %q", err)
-	}
-
-	logger.Info.Println("Successfully connected to database!")
 }
