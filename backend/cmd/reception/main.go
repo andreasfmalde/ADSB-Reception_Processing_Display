@@ -24,6 +24,10 @@ func main() {
 		logger.Error.Fatalf("Error opening database: %q", err)
 	} else {
 		logger.Info.Println("Successfully connected to database!")
+		// Create current time aircraft table if it does not already exists
+		if err := db.CreateCurrentTimeAircraftTable(dbConn); err != nil {
+			logger.Error.Fatalf("Current_time_aircraft table was not created: %q", err)
+		}
 	}
 	// Close the connection to the datase at the end
 	defer func(conn *sql.DB) {
