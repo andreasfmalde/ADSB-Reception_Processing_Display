@@ -3,13 +3,14 @@ package apiUtility
 import (
 	"encoding/json"
 	"net/http"
+	"path"
 	"strings"
 )
 
 // ValidateURL checks if the url is longer then the given minimum length.
 // If the url is not valid, it returns false.
 func ValidateURL(w http.ResponseWriter, r *http.Request, maxLength int) bool {
-	pathList := strings.Split(r.URL.Path, "/")
+	pathList := strings.Split(path.Clean(r.URL.Path), "/")
 	if len(pathList) < maxLength {
 		http.Error(w, "URL is too short", http.StatusBadRequest)
 		return false
