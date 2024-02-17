@@ -20,3 +20,7 @@ const (
 	Port   = 5432
 	Dbname = "adsb_db"
 )
+
+const VERSION = "1.0.0"
+const DefaultPath = "/"
+const CurrentAircraftPath = "/aircraft/current/"
