@@ -44,3 +44,28 @@ func CreateCurrentTimeAircraftTable(db *sql.DB) error {
 
 	return err
 }
+
+/*
+Update the current_time_aircraft table with the new aircraft records provided from
+the parameter 'aircrafts'
+*/
+func UpdateCurrentAircraftsTable(db *sql.DB, aircrafts []global.Aircraft) error {
+	// Delete the current table
+	if _, err := db.Exec("DROP TABLE current_time_aircraft"); err != nil {
+		return err
+	}
+	// Create a new current_time_aircraft table
+	if err := CreateCurrentTimeAircraftTable(db); err != nil {
+		return err
+	}
+	// Fill the new current_time_aircraft table
+	for _, aircraft := range aircrafts {
+		_, err := db.Exec("INSERT INTO current_time_aircraft VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+			aircraft.Icao, aircraft.Callsign, aircraft.Altitude, aircraft.Latitude, aircraft.Longitude,
+			aircraft.Speed, aircraft.Track, aircraft.VerticalRate, aircraft.Timestamp)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
