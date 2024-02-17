@@ -69,3 +69,38 @@ func UpdateCurrentAircraftsTable(db *sql.DB, aircrafts []global.Aircraft) error 
 	}
 	return nil
 }
+
+/*
+Method to retrieve a list of all current aircrafts in the
+current_time_aircraft table
+*/
+func RetrieveCurrentTimeAircrafts(db *sql.DB) ([]global.Aircraft, error) {
+	var aircrafts []global.Aircraft
+	// Make the query to the database
+	rows, err := db.Query("SELECT * FROM current_time_aircraft")
+	if err != nil {
+		return []global.Aircraft{}, err
+	}
+	// Close the rows, preventing further enumeration
+	defer rows.Close()
+
+	// Create an aircraft record
+	ac := global.Aircraft{}
+
+	// Loop through the results and append each aircraft to the list/slice
+	for rows.Next() {
+
+		// Scan each row and save the values in the aircraft record
+		if err := rows.Scan(&ac.Icao, &ac.Callsign, &ac.Altitude,
+			&ac.Latitude, &ac.Longitude, &ac.Speed, &ac.Track,
+			&ac.VerticalRate, &ac.Timestamp); err != nil {
+			return []global.Aircraft{}, err
+		}
+		// Add the aircraft to the list/slice
+		aircrafts = append(aircrafts, ac)
+	}
+
+	// Return the list of all current aircrafts
+	return aircrafts, nil
+
+}
