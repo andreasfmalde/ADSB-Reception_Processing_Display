@@ -3,8 +3,11 @@ package main
 import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global"
+	"adsb-api/internal/handler/currentAircraftHandler"
+	"adsb-api/internal/handler/defaultHandler"
 	"adsb-api/internal/logger"
 	"database/sql"
+	"net/http"
 
 	_ "github.com/lib/pq"
 )
@@ -36,5 +39,11 @@ func main() {
 			logger.Error.Fatalf("Could not close database connection: %q", err)
 		}
 	}(dbConn)
+
+	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
+	http.HandleFunc(global.CurrentAircraftPath, currentAircraftHandler.CurrentAircraftHandler(dbConn))
+
+	logger.Info.Println("Listening on port: 8080 ...")
+	logger.Info.Fatal(http.ListenAndServe(":"+global.DefaultPort, nil))
 
 }
