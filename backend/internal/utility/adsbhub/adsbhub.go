@@ -1,12 +1,10 @@
-package request
+package adsbhub
 
 import (
-	"adsb-api/internal/db"
 	"adsb-api/internal/global"
-	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/converter"
 	"bufio"
-	"database/sql"
+	"errors"
 	"net"
 	"strconv"
 	"strings"
@@ -21,14 +19,21 @@ func CloseTCPConnection(connection net.Conn) error {
 	return connection.Close()
 }
 
-func ProcessSBSstream(conn net.Conn, database *sql.DB) {
+func ProcessSBSstream() ([]global.Aircraft, error) {
+	conn, err := MakeTCPConnection("data.adsbhub.org:5002")
+	if err != nil {
+		return []global.Aircraft{}, err
+
+	}
+
+	defer CloseTCPConnection(conn)
 	scanner := bufio.NewScanner(conn)
 	var aircrafts []global.Aircraft
 
 	for {
 		timer := time.Now()
 		scanner.Scan()
-		if diff := time.Since(timer).Seconds(); diff > 2 {
+		if diff := time.Since(timer).Seconds(); diff > 4 {
 			break
 		}
 		line := strings.Split(scanner.Text(), ",")
@@ -79,11 +84,11 @@ func ProcessSBSstream(conn net.Conn, database *sql.DB) {
 
 			aircrafts = append(aircrafts, aircraft)
 
+		} else {
+			return []global.Aircraft{}, errors.New("could not connect to stream")
 		}
 
 	}
 
-	if err := db.UpdateCurrentAircraftsTable(database, aircrafts); err != nil {
-		logger.Error.Fatalf("Could not update database: %s", err)
-	}
+	return aircrafts, nil
 }
