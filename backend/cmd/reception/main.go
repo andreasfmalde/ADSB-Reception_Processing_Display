@@ -4,7 +4,9 @@ import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/logger"
+	"adsb-api/internal/utility/adsbhub"
 	"database/sql"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -37,4 +39,19 @@ func main() {
 		}
 	}(dbConn)
 
+	for {
+		aircrafts, err := adsbhub.ProcessSBSstream()
+		if err != nil {
+			logger.Info.Println(err.Error() + "... will try again in 4 seconds...")
+			time.Sleep(4 * time.Second)
+			continue
+		}
+
+		err = db.UpdateCurrentAircraftsTable(dbConn, aircrafts)
+		if err != nil {
+			logger.Error.Fatalf("Could not load aircrafts in database: %s", err)
+		}
+		logger.Info.Println("SBS data successfully in local database")
+		time.Sleep(4 * time.Second)
+	}
 }
