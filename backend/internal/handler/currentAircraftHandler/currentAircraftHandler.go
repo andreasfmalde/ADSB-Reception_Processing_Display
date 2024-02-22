@@ -52,5 +52,5 @@ func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, dbC
 		http.Error(w, "No aircraft found.", http.StatusNotFound)
 		return
 	}
-	apiUtility.EncodeData(w, aircraft)
+	apiUtility.EncodeJsonData(w, aircraft)
 }

@@ -29,7 +29,7 @@ func DefaultHandler(w http.ResponseWriter, r *http.Request) {
 			Endpoints: endpoints,
 		}
 
-		apiUtility.EncodeData(w, out)
+		apiUtility.EncodeJsonData(w, out)
 	default:
 		http.Error(w, "Method is not supported", http.StatusMethodNotAllowed)
 	}
