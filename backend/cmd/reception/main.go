@@ -4,6 +4,7 @@ import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/logger"
+	"adsb-api/internal/utility/request"
 	"database/sql"
 
 	_ "github.com/lib/pq"
@@ -37,4 +38,15 @@ func main() {
 		}
 	}(dbConn)
 
+	conn, err := request.MakeTCPConnection("data.adsbhub.org:5002")
+	if err != nil {
+		logger.Error.Fatalf("Could not connect to ADSBhub: %s", err)
+		return
+	}
+
+	defer request.CloseTCPConnection(conn)
+
+	request.ProcessSBSstream(conn, dbConn)
+
+	logger.Info.Println("SBS data successfully in local database")
 }
