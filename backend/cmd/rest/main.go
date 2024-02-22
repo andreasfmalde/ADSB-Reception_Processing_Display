@@ -1,22 +1,51 @@
 package main
 
 import (
-	"adsb-api/cmd"
+	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/handler/currentAircraftHandler"
 	"adsb-api/internal/handler/defaultHandler"
 	"adsb-api/internal/logger"
+	"database/sql"
 	_ "github.com/lib/pq"
+	"log"
 	"net/http"
+	"os"
 )
 
 // main method for the RESTFUL API
 func main() {
-	dbConn := cmd.InitializeApiResources()
+	logger.InitLogger()
+	global.InitEnvironment()
+	dbConn, err := db.InitDatabase()
+	if err != nil {
+		logger.Error.Fatalf("Error opening database: %q", err)
+	} else {
+		logger.Info.Println("Successfully connected to database!")
+		// Create current time aircraft table if it does not already exists
+		if err := db.CreateCurrentTimeAircraftTable(dbConn); err != nil {
+			logger.Error.Fatalf("Current_time_aircraft table was not created: %q", err)
+		}
+	}
+
+	defer func(conn *sql.DB) {
+		err := db.CloseDatabase(conn)
+		if err != nil {
+			logger.Error.Fatalf("Could not close database connection: %q", err)
+		}
+	}(dbConn)
 
 	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
 	http.HandleFunc(global.CurrentAircraftPath, currentAircraftHandler.CurrentAircraftHandler(dbConn))
 
-	logger.Info.Println("Listening on port: 8080 ...")
-	logger.Info.Fatal(http.ListenAndServe(":"+global.DefaultPort, nil))
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		log.Println("$PORT has not been set. Default: " + global.DefaultPort)
+		port = global.DefaultPort
+	}
+
+	logger.Info.Println("Listening on port: " + port)
+	logger.Info.Fatal(http.ListenAndServe(":"+port, nil))
+
 }
