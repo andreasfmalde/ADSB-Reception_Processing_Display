@@ -14,3 +14,32 @@ type Aircraft struct {
 	VerticalRate int     `json:"vspeed"`
 	Timestamp    string  `json:"timestamp"`
 }
+
+type GeoJsonAircraft struct {
+	Type     string           `json:"type"`
+	Features []GeoJsonFeature `json:"features"`
+}
+
+type GeoJsonFeature struct {
+	Type       string             `json:"type"`
+	Properties AircraftProperties `json:"properties"`
+	Geometry   struct {
+		Coordinates []Coordinates `json:"coordinates"`
+		Type        string        `json:"type"`
+	} `json:"geometry"`
+}
+
+type AircraftProperties struct {
+	Icao         string `json:"icao"`
+	Callsign     string `json:"callsign"`
+	Altitude     int    `json:"altitude"`
+	Speed        int    `json:"speed"`
+	Track        int    `json:"track"`
+	VerticalRate int    `json:"vspeed"`
+	Timestamp    string `json:"timestamp"`
+}
+
+type Coordinates struct {
+	Latitude  float32 `json:"latitude"`
+	Longitude float32 `json:"longitude"`
+}
