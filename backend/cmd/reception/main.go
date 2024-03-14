@@ -38,7 +38,7 @@ func main() {
 			logger.Error.Fatalf("Could not close database connection: %q", err)
 		}
 	}(dbConn)
-
+	timer := time.Now()
 	for {
 		aircrafts, err := adsbhub.ProcessSBSstream()
 		if err != nil {
@@ -52,6 +52,12 @@ func main() {
 			logger.Error.Fatalf("Could not load aircrafts in database: %s", err)
 		}
 		logger.Info.Println("SBS data successfully in local database")
+		if diff := time.Since(timer).Seconds(); diff > 120 {
+			if e := db.DeleteCurrentTimeAircrafts(dbConn); e == nil {
+				timer = time.Now()
+				logger.Info.Println("Rows deleted successfully!")
+			}
+		}
 		time.Sleep(4 * time.Second)
 	}
 }
