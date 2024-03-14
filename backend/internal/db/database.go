@@ -8,9 +8,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-/*
-Initialize the PostgreSQL database and return the connection pointer
-*/
+// Initialize the PostgreSQL database and return the connection pointer
 func InitDatabase() (*sql.DB, error) {
 
 	dbLogin := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
@@ -20,19 +18,21 @@ func InitDatabase() (*sql.DB, error) {
 
 }
 
-/*
-Close the connection to the database
-*/
+// Close the connection to the database
 func CloseDatabase(db *sql.DB) error {
 	return db.Close()
 }
 
-/*
-Create current_time_aircraft table in database if it does not already exists
-*/
+// Create current_time_aircraft table in database if it does not already exists
 func CreateCurrentTimeAircraftTable(db *sql.DB) error {
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS current_time_aircraft(" +
-		"icao VARCHAR(6) NOT NULL PRIMARY KEY ," +
+	// Begin a transaction
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	// Create current_time table
+	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS current_time_aircraft(" +
+		"icao VARCHAR(6) NOT NULL," +
 		"callsign VARCHAR(10) NOT NULL," +
 		"altitude INT NOT NULL," +
 		"lat DECIMAL NOT NULL," +
@@ -40,15 +40,24 @@ func CreateCurrentTimeAircraftTable(db *sql.DB) error {
 		"speed INT NOT NULL," +
 		"track INT NOT NULL," +
 		"vspeed INT NOT NULL," +
-		"timestamp TIMESTAMP NOT NULL);")
+		"timestamp TIMESTAMP NOT NULL," +
+		"PRIMARY KEY(icao,timestamp	));")
 
-	return err
+	if err != nil {
+		return err
+	}
+	// Create another index on the timestamp column
+	_, err = tx.Exec("CREATE INDEX timestamp_index ON current_time_aircraft(timestamp);")
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	// Commit the transaction
+	return tx.Commit()
 }
 
-/*
-Update the current_time_aircraft table with the new aircraft records provided from
-the parameter 'aircrafts'
-*/
+// Update the current_time_aircraft table with the new aircraft records provided from
+// the parameter 'aircrafts'
 func UpdateCurrentAircraftsTable(db *sql.DB, aircrafts []global.Aircraft) error {
 	// Delete the current table
 	if _, err := db.Exec("DROP TABLE current_time_aircraft"); err != nil {
@@ -70,10 +79,8 @@ func UpdateCurrentAircraftsTable(db *sql.DB, aircrafts []global.Aircraft) error 
 	return nil
 }
 
-/*
-Method to retrieve a list of all current aircrafts in the
-current_time_aircraft table
-*/
+// Method to retrieve a list of all current aircrafts in the
+// current_time_aircraft table
 func RetrieveCurrentTimeAircrafts(db *sql.DB) ([]global.Aircraft, error) {
 	var aircrafts []global.Aircraft
 	// Make the query to the database
