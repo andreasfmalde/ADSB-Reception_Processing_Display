@@ -11,10 +11,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
-/*
-Main method and starting point of the reception and prosessing part of
-the ADS-B API
-*/
+// Main method and starting point of the reception and prosessing part of
+// the ADS-B API
 func main() {
 	// Initialize logger
 	logger.InitLogger()
@@ -38,20 +36,23 @@ func main() {
 			logger.Error.Fatalf("Could not close database connection: %q", err)
 		}
 	}(dbConn)
+	// Timer to control when to delete rows from table
 	timer := time.Now()
 	for {
+		// Retireve SBS data from ADSBhub
 		aircrafts, err := adsbhub.ProcessSBSstream()
 		if err != nil {
 			logger.Info.Println(err.Error() + "... will try again in 4 seconds...")
 			time.Sleep(4 * time.Second)
 			continue
 		}
-
+		// Insert new ADS-B data into db
 		err = db.UpdateCurrentAircraftsTable(dbConn, aircrafts)
 		if err != nil {
 			logger.Error.Fatalf("Could not load aircrafts in database: %s", err)
 		}
 		logger.Info.Println("SBS data successfully in local database")
+		// Delete old rows every 2 minutes (120 seconds)
 		if diff := time.Since(timer).Seconds(); diff > 120 {
 			if e := db.DeleteCurrentTimeAircrafts(dbConn); e == nil {
 				timer = time.Now()
