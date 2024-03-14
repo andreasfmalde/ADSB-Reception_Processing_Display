@@ -84,6 +84,28 @@ func UpdateCurrentAircraftsTable(db *sql.DB, aircrafts []global.Aircraft) error 
 
 }
 
+// Method that will delete rows older that 6 seconds
+// from the lastest entry.
+func DeleteCurrentTimeAircrafts(db *sql.DB) error {
+	// Begin transaction
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	// Delete all rows older than 6 second from the latest entry
+	_, err = tx.Exec("DELETE FROM current_time_aircraft where timestamp" +
+		" < (select max(timestamp)-(6 * interval '1 second')" +
+		" from current_time_aircraft);")
+	// Roll back transaction if failed
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	// Commit transaction
+	return tx.Commit()
+
+}
+
 // Method to retrieve a list of all current aircrafts in the
 // current_time_aircraft table
 func RetrieveCurrentTimeAircrafts(db *sql.DB) ([]global.Aircraft, error) {
