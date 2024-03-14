@@ -44,10 +44,11 @@ func CreateCurrentTimeAircraftTable(db *sql.DB) error {
 		"PRIMARY KEY(icao,timestamp	));")
 
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 	// Create another index on the timestamp column
-	_, err = tx.Exec("CREATE INDEX timestamp_index ON current_time_aircraft(timestamp);")
+	_, err = tx.Exec("CREATE INDEX IF NOT EXISTS timestamp_index ON current_time_aircraft(timestamp);")
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -59,24 +60,28 @@ func CreateCurrentTimeAircraftTable(db *sql.DB) error {
 // Update the current_time_aircraft table with the new aircraft records provided from
 // the parameter 'aircrafts'
 func UpdateCurrentAircraftsTable(db *sql.DB, aircrafts []global.Aircraft) error {
-	// Delete the current table
-	if _, err := db.Exec("DROP TABLE current_time_aircraft"); err != nil {
-		return err
-	}
-	// Create a new current_time_aircraft table
-	if err := CreateCurrentTimeAircraftTable(db); err != nil {
-		return err
-	}
-	// Fill the new current_time_aircraft table
+
+	query := "INSERT INTO current_time_aircraft VALUES "
+
 	for _, aircraft := range aircrafts {
-		_, err := db.Exec("INSERT INTO current_time_aircraft VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+		entry := fmt.Sprintf("('%s','%s','%d','%f','%f','%d','%d','%d','%s'),",
 			aircraft.Icao, aircraft.Callsign, aircraft.Altitude, aircraft.Latitude, aircraft.Longitude,
 			aircraft.Speed, aircraft.Track, aircraft.VerticalRate, aircraft.Timestamp)
-		if err != nil {
-			return err
-		}
+		query = query + entry
 	}
+	if query[len(query)-1] == ',' {
+		query = query[:len(query)-1]
+	}
+	query = query + ";"
+
+	_, err := db.Exec(query)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
+
 }
 
 // Method to retrieve a list of all current aircrafts in the
