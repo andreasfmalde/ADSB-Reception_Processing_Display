@@ -42,15 +42,15 @@ func CurrentAircraftHandler(dbConn *sql.DB) http.HandlerFunc {
 // handleCurrentAircraftGetRequest handles GET requests for the /aircraft/current/ endpoint.
 // Sends all current aircraft in the database to the client.
 func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, dbConn *sql.DB) {
-	aircraft, err := db.RetrieveCurrentTimeAircrafts(dbConn)
+	res, err := db.RetrieveCurrentTimeAircrafts(dbConn)
 	if err != nil {
 		http.Error(w, "Error during request execution", http.StatusInternalServerError)
 		logger.Error.Printf("Error: %q Path: %q", err, r.URL)
 		return
 	}
-	if len(aircraft) == 0 {
+	if len(res.Features) == 0 {
 		http.Error(w, "No aircraft found.", http.StatusNotFound)
 		return
 	}
-	apiUtility.EncodeJsonData(w, aircraft)
+	apiUtility.EncodeJsonData(w, res)
 }
