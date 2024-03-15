@@ -43,7 +43,7 @@ func main() {
 		aircrafts, err := adsbhub.ProcessSBSstream()
 		if err != nil {
 			logger.Info.Println(err.Error() + "... will try again in 4 seconds...")
-			time.Sleep(4 * time.Second)
+			time.Sleep(global.WaitingTime * time.Second)
 			continue
 		}
 		// Insert new ADS-B data into db
@@ -59,6 +59,6 @@ func main() {
 				logger.Info.Println("Rows deleted successfully!")
 			}
 		}
-		time.Sleep(4 * time.Second)
+		time.Sleep(global.WaitingTime * time.Second)
 	}
 }

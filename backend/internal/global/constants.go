@@ -20,3 +20,5 @@ const (
 	Port   = 5432
 	Dbname = "adsb_db"
 )
+
+const WaitingTime = 4
