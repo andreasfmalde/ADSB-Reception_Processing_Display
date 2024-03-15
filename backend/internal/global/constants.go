@@ -25,3 +25,4 @@ const DefaultPort = "8080"
 const VERSION = "1.0.0"
 const DefaultPath = "/"
 const CurrentAircraftPath = "/aircraft/current/"
+const WaitingTime = 4
