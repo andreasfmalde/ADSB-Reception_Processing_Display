@@ -15,7 +15,7 @@ type Aircraft struct {
 	Timestamp    string  `json:"timestamp"`
 }
 
-type GeoJsonAircraft struct {
+type GeoJsonFeatureCollection struct {
 	Type     string           `json:"type"`
 	Features []GeoJsonFeature `json:"features"`
 }
@@ -24,8 +24,8 @@ type GeoJsonFeature struct {
 	Type       string             `json:"type"`
 	Properties AircraftProperties `json:"properties"`
 	Geometry   struct {
-		Coordinates []Coordinates `json:"coordinates"`
-		Type        string        `json:"type"`
+		Coordinates []float32 `json:"coordinates"`
+		Type        string    `json:"type"`
 	} `json:"geometry"`
 }
 
@@ -37,9 +37,4 @@ type AircraftProperties struct {
 	Track        int    `json:"track"`
 	VerticalRate int    `json:"vspeed"`
 	Timestamp    string `json:"timestamp"`
-}
-
-type Coordinates struct {
-	Latitude  float32 `json:"latitude"`
-	Longitude float32 `json:"longitude"`
 }

@@ -74,39 +74,38 @@ func UpdateCurrentAircraftsTable(db *sql.DB, aircrafts []global.Aircraft) error 
 Method to retrieve a list of all current aircrafts in the
 current_time_aircraft table
 */
-func RetrieveCurrentTimeAircrafts(db *sql.DB) ([]global.GeoJsonAircraft, error) {
-	var aircrafts []global.GeoJsonAircraft
+func RetrieveCurrentTimeAircrafts(db *sql.DB) (global.GeoJsonFeatureCollection, error) {
 
 	rows, err := db.Query("SELECT * FROM current_time_aircraft")
 	if err != nil {
-		return nil, err
+		return global.GeoJsonFeatureCollection{}, err
 	}
 	defer rows.Close()
 
+	featureCollection := global.GeoJsonFeatureCollection{}
+	featureCollection.Type = "FeatureCollection"
+
 	for rows.Next() {
 		properties := global.AircraftProperties{}
-		coordinates := global.Coordinates{}
+		var lat float32
+		var long float32
 
-		err := rows.Scan(&properties.Icao, &properties.Callsign, &properties.Altitude, &coordinates.Latitude,
-			&coordinates.Longitude, &properties.Speed, &properties.Track,
+		err := rows.Scan(&properties.Icao, &properties.Callsign, &properties.Altitude, &lat,
+			&long, &properties.Speed, &properties.Track,
 			&properties.VerticalRate, &properties.Timestamp)
 		if err != nil {
-			return nil, err
+			return global.GeoJsonFeatureCollection{}, err
 		}
 
 		feature := global.GeoJsonFeature{}
 		feature.Type = "Feature"
 		feature.Properties = properties
-		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, coordinates)
+		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, lat, long)
 		feature.Geometry.Type = "Point"
 
-		ac := global.GeoJsonAircraft{}
-		ac.Type = "FeatureCollection"
-		ac.Features = append(ac.Features, feature)
-
-		aircrafts = append(aircrafts, ac)
+		featureCollection.Features = append(featureCollection.Features, feature)
 	}
 
-	return aircrafts, nil
+	return featureCollection, nil
 
 }
