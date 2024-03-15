@@ -111,7 +111,8 @@ func DeleteCurrentTimeAircrafts(db *sql.DB) error {
 func RetrieveCurrentTimeAircrafts(db *sql.DB) ([]global.Aircraft, error) {
 	var aircrafts []global.Aircraft
 	// Make the query to the database
-	rows, err := db.Query("SELECT * FROM current_time_aircraft")
+	rows, err := db.Query("select * from current_time_aircraft where timestamp > " +
+		"(select max(timestamp)-(6 * interval '1 second') from current_time_aircraft);")
 	if err != nil {
 		return []global.Aircraft{}, err
 	}
