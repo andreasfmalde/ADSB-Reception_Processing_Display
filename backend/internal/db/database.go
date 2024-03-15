@@ -108,34 +108,38 @@ func DeleteCurrentTimeAircrafts(db *sql.DB) error {
 
 // Method to retrieve a list of all current aircrafts in the
 // current_time_aircraft table
-func RetrieveCurrentTimeAircrafts(db *sql.DB) ([]global.Aircraft, error) {
-	var aircrafts []global.Aircraft
+func RetrieveCurrentTimeAircrafts(db *sql.DB) (global.GeoJsonFeatureCollection, error) {
 	// Make the query to the database
 	rows, err := db.Query("select * from current_time_aircraft where timestamp > " +
 		"(select max(timestamp)-(6 * interval '1 second') from current_time_aircraft);")
 	if err != nil {
-		return []global.Aircraft{}, err
+		return global.GeoJsonFeatureCollection{}, err
 	}
-	// Close the rows, preventing further enumeration
 	defer rows.Close()
 
-	// Create an aircraft record
-	ac := global.Aircraft{}
+	featureCollection := global.GeoJsonFeatureCollection{}
+	featureCollection.Type = "FeatureCollection"
 
-	// Loop through the results and append each aircraft to the list/slice
 	for rows.Next() {
+		properties := global.AircraftProperties{}
+		var lat float32
+		var long float32
 
-		// Scan each row and save the values in the aircraft record
-		if err := rows.Scan(&ac.Icao, &ac.Callsign, &ac.Altitude,
-			&ac.Latitude, &ac.Longitude, &ac.Speed, &ac.Track,
-			&ac.VerticalRate, &ac.Timestamp); err != nil {
-			return []global.Aircraft{}, err
+		err := rows.Scan(&properties.Icao, &properties.Callsign, &properties.Altitude, &lat,
+			&long, &properties.Speed, &properties.Track,
+			&properties.VerticalRate, &properties.Timestamp)
+		if err != nil {
+			return global.GeoJsonFeatureCollection{}, err
 		}
-		// Add the aircraft to the list/slice
-		aircrafts = append(aircrafts, ac)
+
+		feature := global.GeoJsonFeature{}
+		feature.Type = "Feature"
+		feature.Properties = properties
+		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, lat, long)
+		feature.Geometry.Type = "Point"
+
+		featureCollection.Features = append(featureCollection.Features, feature)
 	}
 
-	// Return the list of all current aircrafts
-	return aircrafts, nil
-
+	return featureCollection, nil
 }
