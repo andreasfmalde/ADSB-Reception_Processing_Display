@@ -5,58 +5,51 @@ import (
 	"adsb-api/internal/global"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/adsbhub"
-	"database/sql"
 	"time"
-
-	_ "github.com/lib/pq"
 )
 
-// Main method and starting point of the reception and prosessing part of
-// the ADS-B API
+// main method and starting point of the reception and processing part of the ADS-B API
 func main() {
 	// Initialize logger
 	logger.InitLogger()
-	// Initialize environmental variables
-	global.InitEnvironment()
+	// Initialize environment
+	logger.Info.Println(global.InitEnv())
 	// Initialize the database
-	dbConn, err := db.InitDatabase()
+	adsbDB, err := db.Init()
 	if err != nil {
-		logger.Error.Fatalf("Error opening database: %q", err)
-	} else {
-		logger.Info.Println("Successfully connected to database!")
-		// Create current time aircraft table if it does not already exists
-		if err := db.CreateCurrentTimeAircraftTable(dbConn); err != nil {
-			logger.Error.Fatalf("Current_time_aircraft table was not created: %q", err)
-		}
+		logger.Error.Fatalf("error opening database: %q", err)
 	}
-	// Close the connection to the datase at the end
-	defer func(conn *sql.DB) {
-		err := db.CloseDatabase(conn)
+	logger.Info.Println("successfully connected to database")
+
+	defer func() {
+		err := adsbDB.Close()
 		if err != nil {
-			logger.Error.Fatalf("Could not close database connection: %q", err)
+			logger.Error.Fatalf("error closing database: %q", err)
 		}
-	}(dbConn)
-	// Timer to control when to delete rows from table
+	}()
+
+	if err := adsbDB.CreateCurrentTimeAircraftTable(); err != nil {
+		logger.Error.Fatalf("current_time_aircraft table was not created: %q", err)
+	}
+
 	timer := time.Now()
 	for {
-		// Retireve SBS data from ADSBhub
-		aircrafts, err := adsbhub.ProcessSBSstream()
+		aircraft, err := adsbhub.ProcessSBSstream()
 		if err != nil {
-			logger.Info.Println(err.Error() + "... will try again in 4 seconds...")
+			logger.Info.Println(err.Error() + " ... will try again in 4 seconds")
 			time.Sleep(global.WaitingTime * time.Second)
 			continue
 		}
-		// Insert new ADS-B data into db
-		err = db.UpdateCurrentAircraftsTable(dbConn, aircrafts)
+		err = adsbDB.BulkInsertCurrentTimeAircraftTable(aircraft)
 		if err != nil {
-			logger.Error.Fatalf("Could not load aircrafts in database: %s", err)
+			logger.Error.Fatalf("could not insert new SBS data: %q", err)
 		}
-		logger.Info.Println("SBS data successfully in local database")
+		logger.Info.Println("new SBS data inserted")
 		// Delete old rows every 2 minutes (120 seconds)
 		if diff := time.Since(timer).Seconds(); diff > 120 {
-			if e := db.DeleteCurrentTimeAircrafts(dbConn); e == nil {
+			if e := adsbDB.DeleteOldCurrentAircraft(); e == nil {
 				timer = time.Now()
-				logger.Info.Println("Rows deleted successfully!")
+				logger.Info.Println("old SBS data deleted")
 			}
 		}
 		time.Sleep(global.WaitingTime * time.Second)

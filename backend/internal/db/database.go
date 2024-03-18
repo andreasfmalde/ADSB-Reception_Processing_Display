@@ -4,44 +4,57 @@ import (
 	"adsb-api/internal/global"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
 
-// Initialize the PostgreSQL database and return the connection pointer
-func InitDatabase() (*sql.DB, error) {
+type Database interface {
+	Init() (*AdsbDB, error)
+	Close() error
+	CreateCurrentTimeAircraftTable() error
+	BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error
+	DeleteOldCurrentAircraft() error
+	GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error)
+}
 
+type AdsbDB struct {
+	Conn *sql.DB
+}
+
+// Init the PostgresSQL database and return the connection pointer
+func Init() (*AdsbDB, error) {
 	dbLogin := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
 		global.Host, global.Port, global.User, global.Password, global.Dbname)
-	// Open a SQL connection to the database
-	return sql.Open("postgres", dbLogin)
 
+	dbConn, err := sql.Open("postgres", dbLogin)
+	return &AdsbDB{Conn: dbConn}, err
 }
 
-// Close the connection to the database
-func CloseDatabase(db *sql.DB) error {
-	return db.Close()
+func (db *AdsbDB) Close() error {
+	return db.Conn.Close()
 }
 
-// Create current_time_aircraft table in database if it does not already exists
-func CreateCurrentTimeAircraftTable(db *sql.DB) error {
+// CreateCurrentTimeAircraftTable creates current_time_aircraft table in database if it does not already exist
+func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
 	// Begin a transaction
-	tx, err := db.Begin()
+	tx, err := db.Conn.Begin()
 	if err != nil {
 		return err
 	}
+
 	// Create current_time table
-	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS current_time_aircraft(" +
-		"icao VARCHAR(6) NOT NULL," +
-		"callsign VARCHAR(10) NOT NULL," +
-		"altitude INT NOT NULL," +
-		"lat DECIMAL NOT NULL," +
-		"long DECIMAL NOT NULL," +
-		"speed INT NOT NULL," +
-		"track INT NOT NULL," +
-		"vspeed INT NOT NULL," +
-		"timestamp TIMESTAMP NOT NULL," +
-		"PRIMARY KEY(icao,timestamp	));")
+	_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS current_time_aircraft(
+		icao VARCHAR(6) NOT NULL,
+		callsign VARCHAR(10) NOT NULL,
+		altitude INT NOT NULL,
+		lat DECIMAL NOT NULL,
+		long DECIMAL NOT NULL,
+		speed INT NOT NULL,
+		track INT NOT NULL,
+		vspeed INT NOT NULL,
+		timestamp TIMESTAMP NOT NULL,
+		PRIMARY KEY (icao,timestamp))`)
 
 	if err != nil {
 		tx.Rollback()
@@ -57,46 +70,40 @@ func CreateCurrentTimeAircraftTable(db *sql.DB) error {
 	return tx.Commit()
 }
 
-// Update the current_time_aircraft table with the new aircraft records provided from
-// the parameter 'aircrafts'
-func UpdateCurrentAircraftsTable(db *sql.DB, aircrafts []global.Aircraft) error {
+// BulkInsertCurrentTimeAircraftTable updates the current_time_aircraft table with the new aircraft records provided from
+// the parameter 'aircraft'
+func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error {
+	var (
+		placeholders []string
+		vals         []any
+	)
 
-	query := "INSERT INTO current_time_aircraft VALUES "
+	for i, aircraft := range aircraft {
+		placeholders = append(placeholders, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+			i*9+1, i*9+2, i*9+3, i*9+4, i*9+5, i*9+6, i*9+7, i*9+8, i*9+9))
 
-	for _, aircraft := range aircrafts {
-		entry := fmt.Sprintf("('%s','%s','%d','%f','%f','%d','%d','%d','%s'),",
-			aircraft.Icao, aircraft.Callsign, aircraft.Altitude, aircraft.Latitude, aircraft.Longitude,
+		vals = append(vals, aircraft.Icao, aircraft.Callsign, aircraft.Altitude, aircraft.Latitude, aircraft.Longitude,
 			aircraft.Speed, aircraft.Track, aircraft.VerticalRate, aircraft.Timestamp)
-		query = query + entry
-	}
-	if query[len(query)-1] == ',' {
-		query = query[:len(query)-1]
-	}
-	query = query + ";"
-
-	_, err := db.Exec(query)
-
-	if err != nil {
-		return err
 	}
 
-	return nil
-
+	stmt := fmt.Sprintf("INSERT INTO current_time_aircraft (icao, callsign, altitude, lat, long, speed, track, vspeed, timestamp) VALUES %s",
+		strings.Join(placeholders, ","))
+	_, err := db.Conn.Exec(stmt, vals...)
+	return err
 }
 
-// Method that will delete rows older that 6 seconds
-// from the lastest entry.
-func DeleteCurrentTimeAircrafts(db *sql.DB) error {
+// DeleteOldCurrentAircraft will delete rows older than 6 seconds from the latest entry.
+func (db *AdsbDB) DeleteOldCurrentAircraft() error {
 	// Begin transaction
-	tx, err := db.Begin()
+	tx, err := db.Conn.Begin()
 	if err != nil {
 		return err
 	}
 	// Delete all rows older than 6 second from the latest entry
-	_, err = tx.Exec("DELETE FROM current_time_aircraft where timestamp" +
-		" < (select max(timestamp)-(6 * interval '1 second')" +
-		" from current_time_aircraft);")
-	// Roll back transaction if failed
+	_, err = tx.Exec(`DELETE FROM current_time_aircraft 
+       					WHERE timestamp < (select max(timestamp)-(6 * interval '1 second') 
+                        FROM current_time_aircraft)`)
+	// Rolls back transaction if failed
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -106,12 +113,14 @@ func DeleteCurrentTimeAircrafts(db *sql.DB) error {
 
 }
 
-// Method to retrieve a list of all current aircrafts in the
-// current_time_aircraft table
-func RetrieveCurrentTimeAircrafts(db *sql.DB) (global.GeoJsonFeatureCollection, error) {
+// GetAllCurrentAircraft retrieves a list of all current aircraft in the current_time_aircraft table
+func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error) {
 	// Make the query to the database
-	rows, err := db.Query("select * from current_time_aircraft where timestamp > " +
-		"(select max(timestamp)-(6 * interval '1 second') from current_time_aircraft);")
+
+	rows, err := db.Conn.Query(`
+							SELECT * FROM current_time_aircraft 
+         					WHERE timestamp > (select max(timestamp)-(6 * interval '1 second') 
+                            FROM current_time_aircraft)`)
 	if err != nil {
 		return global.GeoJsonFeatureCollection{}, err
 	}
