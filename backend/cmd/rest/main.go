@@ -7,6 +7,8 @@ import (
 	"adsb-api/internal/handler/defaultHandler"
 	"adsb-api/internal/logger"
 	"database/sql"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
@@ -31,8 +33,9 @@ func main() {
 		}
 	}(dbConn)
 
-	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
-	http.HandleFunc(global.CurrentAircraftPath, currentAircraftHandler.CurrentAircraftHandler(dbConn))
+	router := mux.NewRouter()
+	router.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler).Methods("GET")
+	router.HandleFunc(global.CurrentAircraftPath, currentAircraftHandler.CurrentAircraftHandler(dbConn)).Methods("GET")
 
 	port := os.Getenv("PORT")
 
@@ -42,6 +45,9 @@ func main() {
 	}
 
 	logger.Info.Println("Listening on port: " + port)
-	logger.Info.Fatal(http.ListenAndServe(":"+port, nil))
+	logger.Info.Fatal(http.ListenAndServe(":"+port,
+		handlers.CORS(
+			handlers.AllowedOrigins([]string{"*"}),
+		)(router)))
 
 }
