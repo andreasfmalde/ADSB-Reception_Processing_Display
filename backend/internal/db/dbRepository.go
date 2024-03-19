@@ -10,7 +10,7 @@ import (
 )
 
 type Database interface {
-	InitDB() (*AdsbDB, error)
+	InitDB() (*AdsbRepository, error)
 	Close() error
 	CreateCurrentTimeAircraftTable() error
 	BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error
@@ -18,25 +18,25 @@ type Database interface {
 	GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error)
 }
 
-type AdsbDB struct {
+type AdsbRepository struct {
 	Conn *sql.DB
 }
 
 // InitDB the PostgresSQL database and return the connection pointer
-func InitDB() (*AdsbDB, error) {
+func InitDB() (*AdsbRepository, error) {
 	dbLogin := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
 		global.Host, global.Port, global.User, global.Password, global.Dbname)
 
 	dbConn, err := sql.Open("postgres", dbLogin)
-	return &AdsbDB{Conn: dbConn}, err
+	return &AdsbRepository{Conn: dbConn}, err
 }
 
-func (db *AdsbDB) Close() error {
+func (db *AdsbRepository) Close() error {
 	return db.Conn.Close()
 }
 
 // CreateCurrentTimeAircraftTable creates current_time_aircraft table in database if it does not already exist
-func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
+func (db *AdsbRepository) CreateCurrentTimeAircraftTable() error {
 	// Begin a transaction
 	tx, err := db.Conn.Begin()
 	if err != nil {
@@ -72,7 +72,7 @@ func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
 
 // BulkInsertCurrentTimeAircraftTable updates the current_time_aircraft table with the new aircraft records provided from
 // the parameter 'aircraft'
-func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error {
+func (db *AdsbRepository) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error {
 	var (
 		placeholders []string
 		vals         []any
@@ -93,7 +93,7 @@ func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft)
 }
 
 // DeleteOldCurrentAircraft will delete rows older than 6 seconds from the latest entry.
-func (db *AdsbDB) DeleteOldCurrentAircraft() error {
+func (db *AdsbRepository) DeleteOldCurrentAircraft() error {
 	// Begin transaction
 	tx, err := db.Conn.Begin()
 	if err != nil {
@@ -114,7 +114,7 @@ func (db *AdsbDB) DeleteOldCurrentAircraft() error {
 }
 
 // GetAllCurrentAircraft retrieves a list of all current aircraft in the current_time_aircraft table
-func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error) {
+func (db *AdsbRepository) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error) {
 	// Make the query to the database
 
 	rows, err := db.Conn.Query(`

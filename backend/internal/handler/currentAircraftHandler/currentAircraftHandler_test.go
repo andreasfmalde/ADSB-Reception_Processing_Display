@@ -12,7 +12,7 @@ import (
 )
 
 var currentEndpoint *httptest.Server
-var dbConn db.AdsbDB
+var dbConn db.AdsbRepository
 
 func TestMain(m *testing.M) {
 	logger.InitLogger()

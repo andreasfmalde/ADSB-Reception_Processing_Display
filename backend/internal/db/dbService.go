@@ -14,7 +14,7 @@ type AdsbServiceInterface interface {
 }
 
 type AdsbService struct {
-	DB *AdsbDB
+	DB *AdsbRepository
 }
 
 func (service *AdsbService) InitSvc() (*AdsbService, error) {
