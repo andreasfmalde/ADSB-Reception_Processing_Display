@@ -78,24 +78,38 @@ func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
 // BulkInsertCurrentTimeAircraftTable updates the current_time_aircraft table with the new aircraft records provided from
 // the parameter 'aircraft'
 func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error {
-	var (
-		placeholders []string
-		vals         []any
-	)
+	// Maximum number of aircraft per query
+	// (65535 is the max amount of parameters postgres supports and there are 9 aircraft parameters)
+	const maxAircraft = 65535 / 9
 
-	for i, aircraft := range aircraft {
-		placeholders = append(placeholders, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
-			i*9+1, i*9+2, i*9+3, i*9+4, i*9+5, i*9+6, i*9+7, i*9+8, i*9+9))
+	for i := 0; i < len(aircraft); i += maxAircraft {
+		end := i + maxAircraft
+		if end > len(aircraft) {
+			end = len(aircraft)
+		}
 
-		vals = append(vals, aircraft.Icao, aircraft.Callsign, aircraft.Altitude, aircraft.Latitude, aircraft.Longitude,
-			aircraft.Speed, aircraft.Track, aircraft.VerticalRate, aircraft.Timestamp)
+		var (
+			placeholders []string
+			vals         []interface{}
+		)
+
+		for j, ac := range aircraft[i:end] {
+			placeholders = append(placeholders, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+				j*9+1, j*9+2, j*9+3, j*9+4, j*9+5, j*9+6, j*9+7, j*9+8, j*9+9))
+
+			vals = append(vals, ac.Icao, ac.Callsign, ac.Altitude, ac.Latitude, ac.Longitude,
+				ac.Speed, ac.Track, ac.VerticalRate, ac.Timestamp)
+		}
+
+		query := `INSERT INTO current_time_aircraft (icao, callsign, altitude, lat, long, speed, track, vspeed, timestamp) VALUES %s`
+		stmt := fmt.Sprintf(query, strings.Join(placeholders, ","))
+		_, err := db.Conn.Exec(stmt, vals...)
+		if err != nil {
+			return err
+		}
 	}
 
-	var query = `INSERT INTO current_time_aircraft (icao, callsign, altitude, lat, long, speed, track, vspeed, timestamp) VALUES %s`
-
-	stmt := fmt.Sprintf(query, strings.Join(placeholders, ","))
-	_, err := db.Conn.Exec(stmt, vals...)
-	return err
+	return nil
 }
 
 // DeleteOldCurrentAircraft will delete rows older than 6 seconds from the latest entry.
@@ -107,11 +121,11 @@ func (db *AdsbDB) DeleteOldCurrentAircraft() error {
 	}
 
 	var query = `DELETE FROM current_time_aircraft 
-       			 WHERE timestamp < (select max(timestamp)-(6 * interval '1 second') 
+       			 WHERE timestamp < (select max(timestamp)-($1 * interval '1 second') 
                  FROM current_time_aircraft)`
 
 	// Delete all rows older than 6 second from the latest entry
-	_, err = tx.Exec(query)
+	_, err = tx.Exec(query, global.AdsbHubTime)
 	// Rolls back transaction if failed
 	if err != nil {
 		tx.Rollback()
@@ -127,10 +141,10 @@ func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, erro
 	// Make the query to the database
 
 	var query = `SELECT * FROM current_time_aircraft 
-				 WHERE timestamp > (select max(timestamp)-(6 * interval '1 second') 
+				 WHERE timestamp > (select max(timestamp)-($1 * interval '1 second') 
 				 FROM current_time_aircraft)`
 
-	rows, err := db.Conn.Query(query)
+	rows, err := db.Conn.Query(query, global.AdsbHubTime)
 	if err != nil {
 		return global.GeoJsonFeatureCollection{}, err
 	}

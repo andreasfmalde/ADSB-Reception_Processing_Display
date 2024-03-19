@@ -8,3 +8,6 @@ const (
 	CurrentAircraftPath = "/aircraft/current/"
 	WaitingTime         = 4
 )
+
+// AdsbHubTime time in seconds between receiving SBS data
+const AdsbHubTime = 5

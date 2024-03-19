@@ -3,6 +3,7 @@ package utility
 import (
 	"adsb-api/internal/global"
 	"strconv"
+	"time"
 )
 
 func CreateAircraft(n int) []global.Aircraft {
@@ -10,15 +11,15 @@ func CreateAircraft(n int) []global.Aircraft {
 
 	for i := 0; i < n; i++ {
 		ac := global.Aircraft{
-			Icao:         "AB" + strconv.Itoa(i),
-			Callsign:     "ABC" + strconv.Itoa(i),
+			Icao:         strconv.Itoa(i),
+			Callsign:     strconv.Itoa(i),
 			Altitude:     i,
 			Latitude:     float32(i),
 			Longitude:    float32(i),
 			Speed:        i,
 			Track:        i,
 			VerticalRate: i,
-			Timestamp:    "2024-01-01 12:00:00",
+			Timestamp:    time.Now().Format(time.DateTime),
 		}
 		aircraft = append(aircraft, ac)
 	}
