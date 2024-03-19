@@ -1,4 +1,4 @@
-package utility
+package testUtility
 
 import (
 	"adsb-api/internal/global"

@@ -2,7 +2,7 @@ package db
 
 import (
 	"adsb-api/internal/global"
-	"adsb-api/internal/utility"
+	"adsb-api/internal/utility/testUtility"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
@@ -96,7 +96,7 @@ func TestAdsbDB_ValidBulkInsertCurrentTimeAircraftTable(t *testing.T) {
 
 	var nAircraft = 100
 
-	aircraft := utility.CreateAircraft(nAircraft)
+	aircraft := testUtility.CreateAircraft(nAircraft)
 
 	err = db.BulkInsertCurrentTimeAircraftTable(aircraft)
 	if err != nil {
@@ -122,7 +122,7 @@ func TestAdsbDB_BulkInsertCurrentTimeAircraftTable_MaxPostgresParameters(t *test
 
 	var maxAircraft = 65535/9 + 1
 
-	aircraft := utility.CreateAircraft(maxAircraft)
+	aircraft := testUtility.CreateAircraft(maxAircraft)
 
 	err = db.BulkInsertCurrentTimeAircraftTable(aircraft)
 	if err != nil {
