@@ -15,7 +15,7 @@ func main() {
 	// Initialize environment
 	logger.Info.Println(global.InitEnv())
 	// Initialize the database
-	adsbDB, err := db.Init()
+	adsbDB, err := db.InitDB()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
@@ -28,7 +28,9 @@ func main() {
 		}
 	}()
 
-	if err := adsbDB.CreateCurrentTimeAircraftTable(); err != nil {
+	adsbSvc := db.AdsbService{DB: adsbDB}
+
+	if err := adsbSvc.CreateCurrentTimeAircraftTable(); err != nil {
 		logger.Error.Fatalf("current_time_aircraft table was not created: %q", err)
 	}
 

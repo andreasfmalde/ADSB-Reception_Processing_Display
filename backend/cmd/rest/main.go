@@ -18,7 +18,7 @@ func main() {
 	// Initialize environment
 	logger.Info.Println(global.InitEnv())
 	// Initialize the database
-	adsbDB, err := db.Init()
+	adsbDB, err := db.InitDB()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
@@ -31,8 +31,10 @@ func main() {
 		}
 	}()
 
+	adsbSvc := db.AdsbService{DB: adsbDB}
+
 	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
-	http.HandleFunc(global.CurrentAircraftPath, currentAircraftHandler.CurrentAircraftHandler(adsbDB))
+	http.HandleFunc(global.CurrentAircraftPath, currentAircraftHandler.CurrentAircraftHandler(&adsbSvc))
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -4,7 +4,6 @@ import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/logger"
-	"adsb-api/internal/utility/test"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -18,13 +17,15 @@ var dbConn db.AdsbDB
 func TestMain(m *testing.M) {
 	logger.InitLogger()
 	global.InitEnv()
-	adsbDB, err := db.Init()
+	adsbDB, err := db.InitDB()
 	if err != nil {
 		logger.Error.Fatalf("Error opening database: %q", err)
 	}
 	dbConn = *adsbDB
 
-	currentEndpoint = httptest.NewServer(CurrentAircraftHandler(adsbDB))
+	adsbSvc := db.AdsbService{DB: adsbDB}
+
+	currentEndpoint = httptest.NewServer(CurrentAircraftHandler(&adsbSvc))
 	defer currentEndpoint.Close()
 	m.Run()
 }
@@ -75,7 +76,6 @@ func TestInvalidRequests(t *testing.T) {
 }
 
 func TestValidRequests(t *testing.T) {
-	test.CleanTestDB(&dbConn)
 
 	tests := []struct {
 		name, url, httpMethod string
@@ -90,10 +90,10 @@ func TestValidRequests(t *testing.T) {
 			statusCode: http.StatusOK,
 			length:     10,
 			setup: func() {
-				test.PopulateSeqTestDB(dbConn, 10)
+
 			},
 			teardown: func() {
-				test.CleanTestDB(&dbConn)
+
 			},
 		},
 		{
@@ -103,7 +103,7 @@ func TestValidRequests(t *testing.T) {
 			statusCode: http.StatusNotFound,
 			length:     0,
 			setup: func() {
-				test.CleanTestDB(&dbConn)
+
 			},
 		},
 	}

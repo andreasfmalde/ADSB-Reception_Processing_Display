@@ -10,7 +10,7 @@ import (
 )
 
 type Database interface {
-	Init() (*AdsbDB, error)
+	InitDB() (*AdsbDB, error)
 	Close() error
 	CreateCurrentTimeAircraftTable() error
 	BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error
@@ -22,8 +22,8 @@ type AdsbDB struct {
 	Conn *sql.DB
 }
 
-// Init the PostgresSQL database and return the connection pointer
-func Init() (*AdsbDB, error) {
+// InitDB the PostgresSQL database and return the connection pointer
+func InitDB() (*AdsbDB, error) {
 	dbLogin := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
 		global.Host, global.Port, global.User, global.Password, global.Dbname)
 
