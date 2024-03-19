@@ -86,7 +86,7 @@ func TestAdsbDB_CreateCurrentTimeAircraftTable(t *testing.T) {
 	}
 }
 
-func TestAdsbDB_ValidBulkInsertCurrentTimeAircraftTable(t *testing.T) {
+func TestAdsbDB_BulkInsertCurrentTimeAircraftTable(t *testing.T) {
 	db, err := setupTestDB()
 	if err != nil {
 		t.Fatalf("Failed to initialize test database: %v", err)
@@ -96,7 +96,7 @@ func TestAdsbDB_ValidBulkInsertCurrentTimeAircraftTable(t *testing.T) {
 
 	var nAircraft = 100
 
-	aircraft := testUtility.CreateAircraft(nAircraft)
+	aircraft := testUtility.CreateMockAircraft(nAircraft)
 
 	err = db.BulkInsertCurrentTimeAircraftTable(aircraft)
 	if err != nil {
@@ -122,7 +122,7 @@ func TestAdsbDB_BulkInsertCurrentTimeAircraftTable_MaxPostgresParameters(t *test
 
 	var maxAircraft = 65535/9 + 1
 
-	aircraft := testUtility.CreateAircraft(maxAircraft)
+	aircraft := testUtility.CreateMockAircraft(maxAircraft)
 
 	err = db.BulkInsertCurrentTimeAircraftTable(aircraft)
 	if err != nil {
@@ -138,7 +138,7 @@ func TestAdsbDB_BulkInsertCurrentTimeAircraftTable_MaxPostgresParameters(t *test
 	assert.Equal(t, maxAircraft, n)
 }
 
-func TestAdsbDB_InvalidBulkInsertCurrentTimeAircraftTable(t *testing.T) {
+func TestAdsbDB_BulkInsertCurrentTimeAircraftTable_InvalidType(t *testing.T) {
 	db, err := setupTestDB()
 	if err != nil {
 		t.Fatalf("Failed to initialize test database: %v", err)
@@ -176,28 +176,12 @@ func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
 
 	defer teardownTestDB(db)
 
-	acAfter := global.Aircraft{
-		Icao:         "TEST1",
-		Callsign:     "TEST",
-		Altitude:     10000,
-		Latitude:     51.5074,
-		Longitude:    0.1278,
-		Speed:        450,
-		Track:        180,
-		VerticalRate: 0,
-		Timestamp:    time.Now().Add(-(global.AdsbHubTime + 1) * time.Second).Format(time.DateTime),
-	}
-	acNow := global.Aircraft{
-		Icao:         "TEST2",
-		Callsign:     "TEST",
-		Altitude:     10000,
-		Latitude:     51.5074,
-		Longitude:    0.1278,
-		Speed:        450,
-		Track:        180,
-		VerticalRate: 0,
-		Timestamp:    time.Now().Format(time.DateTime), // current time
-	}
+	acAfter := testUtility.CreateMockAircraftWithTimestamp("TEST1",
+		time.Now().Add(-(global.AdsbHubTime+1)*time.Second).Format(time.DateTime))
+
+	acNow := testUtility.CreateMockAircraftWithTimestamp("TEST2",
+		time.Now().Format(time.DateTime))
+
 	err = db.BulkInsertCurrentTimeAircraftTable([]global.Aircraft{acAfter, acNow})
 	if err != nil {
 		t.Fatalf("Error inserting aircraft: %q", err)
@@ -237,30 +221,22 @@ func TestAdsbDB_GetAllCurrentAircraft(t *testing.T) {
 
 	defer teardownTestDB(db)
 
-	// geoJsonFeatureCollection with timestamp after global.AdsbHubTime seconds
-	acAfter := global.Aircraft{
-		Icao:         "TEST1",
-		Callsign:     "TEST",
-		Altitude:     10000,
-		Latitude:     51.5074,
-		Longitude:    0.1278,
-		Speed:        450,
-		Track:        180,
-		VerticalRate: 0,
-		Timestamp:    time.Now().Add(-(global.AdsbHubTime + 1) * time.Second).Format(time.DateTime),
-	}
-	// geoJsonFeatureCollection with timestamp before global.AdsbHubTime seconds
+	acAfter := testUtility.CreateMockAircraftWithTimestamp("TEST1",
+		time.Now().Add(-(global.AdsbHubTime+1)*time.Second).Format(time.DateTime))
+
 	var icaoTest2 = "TEST2"
-	acNow := global.Aircraft{
-		Icao:         icaoTest2,
-		Callsign:     "TEST",
-		Altitude:     10000,
-		Latitude:     51.5074,
-		Longitude:    0.1278,
-		Speed:        450,
-		Track:        180,
-		VerticalRate: 0,
-		Timestamp:    time.Now().Format(time.DateTime), // current time
+	acNow := testUtility.CreateMockAircraftWithTimestamp(icaoTest2,
+		time.Now().Format(time.DateTime))
+
+	var count = 0
+	geoJsonFeatureCollection, err := db.GetAllCurrentAircraft()
+	if err != nil {
+		t.Fatalf("Error getting all current geoJsonFeatureCollection: %q", err)
+	}
+
+	count = len(geoJsonFeatureCollection.Features)
+	if count != 0 {
+		t.Fatalf("Expected error, db should not contain any elements")
 	}
 
 	err = db.BulkInsertCurrentTimeAircraftTable([]global.Aircraft{acAfter, acNow})
@@ -268,17 +244,17 @@ func TestAdsbDB_GetAllCurrentAircraft(t *testing.T) {
 		t.Fatalf("Error inserting geoJsonFeatureCollection: %q", err)
 	}
 
-	geoJsonFeatureCollection, err := db.GetAllCurrentAircraft()
+	geoJsonFeatureCollection, err = db.GetAllCurrentAircraft()
 	if err != nil {
 		t.Fatalf("Error getting all current geoJsonFeatureCollection: %q", err)
 	}
 
-	if len(geoJsonFeatureCollection.Features) != 1 {
+	count = len(geoJsonFeatureCollection.Features)
+
+	if count != 1 {
 		t.Fatalf("Expected error, list should only contain 1 element")
 
 	}
 
-	ac := geoJsonFeatureCollection.Features[0]
-
-	assert.Equal(t, icaoTest2, ac.Properties.Icao)
+	assert.Equal(t, icaoTest2, geoJsonFeatureCollection.Features[0].Properties.Icao)
 }

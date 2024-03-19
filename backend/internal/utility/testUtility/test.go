@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func CreateAircraft(n int) []global.Aircraft {
+func CreateMockAircraft(n int) []global.Aircraft {
 	var aircraft []global.Aircraft
 
 	for i := 0; i < n; i++ {
@@ -25,4 +25,18 @@ func CreateAircraft(n int) []global.Aircraft {
 	}
 
 	return aircraft
+}
+
+func CreateMockAircraftWithTimestamp(icao string, timestamp string) global.Aircraft {
+	return global.Aircraft{
+		Icao:         icao,
+		Callsign:     "TEST",
+		Altitude:     10000,
+		Latitude:     51.5074,
+		Longitude:    0.1278,
+		Speed:        450,
+		Track:        180,
+		VerticalRate: 0,
+		Timestamp:    timestamp,
+	}
 }
