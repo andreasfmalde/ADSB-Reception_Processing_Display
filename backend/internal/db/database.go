@@ -43,25 +43,30 @@ func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
 		return err
 	}
 
+	var query = `CREATE TABLE IF NOT EXISTS current_time_aircraft(
+				 icao VARCHAR(6) NOT NULL,
+				 callsign VARCHAR(10) NOT NULL,
+				 altitude INT NOT NULL,
+				 lat DECIMAL NOT NULL,
+				 long DECIMAL NOT NULL,
+				 speed INT NOT NULL,
+				 track INT NOT NULL,
+				 vspeed INT NOT NULL,
+				 timestamp TIMESTAMP NOT NULL,
+				 PRIMARY KEY (icao,timestamp))`
+
 	// Create current_time table
-	_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS current_time_aircraft(
-		icao VARCHAR(6) NOT NULL,
-		callsign VARCHAR(10) NOT NULL,
-		altitude INT NOT NULL,
-		lat DECIMAL NOT NULL,
-		long DECIMAL NOT NULL,
-		speed INT NOT NULL,
-		track INT NOT NULL,
-		vspeed INT NOT NULL,
-		timestamp TIMESTAMP NOT NULL,
-		PRIMARY KEY (icao,timestamp))`)
+	_, err = tx.Exec(query)
 
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
+
+	query = `CREATE INDEX IF NOT EXISTS timestamp_index ON current_time_aircraft(timestamp)`
+
 	// Create another index on the timestamp column
-	_, err = tx.Exec("CREATE INDEX IF NOT EXISTS timestamp_index ON current_time_aircraft(timestamp);")
+	_, err = tx.Exec(query)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -86,8 +91,9 @@ func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft)
 			aircraft.Speed, aircraft.Track, aircraft.VerticalRate, aircraft.Timestamp)
 	}
 
-	stmt := fmt.Sprintf("INSERT INTO current_time_aircraft (icao, callsign, altitude, lat, long, speed, track, vspeed, timestamp) VALUES %s",
-		strings.Join(placeholders, ","))
+	var query = `INSERT INTO current_time_aircraft (icao, callsign, altitude, lat, long, speed, track, vspeed, timestamp) VALUES %s`
+
+	stmt := fmt.Sprintf(query, strings.Join(placeholders, ","))
 	_, err := db.Conn.Exec(stmt, vals...)
 	return err
 }
@@ -99,10 +105,13 @@ func (db *AdsbDB) DeleteOldCurrentAircraft() error {
 	if err != nil {
 		return err
 	}
+
+	var query = `DELETE FROM current_time_aircraft 
+       			 WHERE timestamp < (select max(timestamp)-(6 * interval '1 second') 
+                 FROM current_time_aircraft)`
+
 	// Delete all rows older than 6 second from the latest entry
-	_, err = tx.Exec(`DELETE FROM current_time_aircraft 
-       					WHERE timestamp < (select max(timestamp)-(6 * interval '1 second') 
-                        FROM current_time_aircraft)`)
+	_, err = tx.Exec(query)
 	// Rolls back transaction if failed
 	if err != nil {
 		tx.Rollback()
@@ -117,10 +126,11 @@ func (db *AdsbDB) DeleteOldCurrentAircraft() error {
 func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error) {
 	// Make the query to the database
 
-	rows, err := db.Conn.Query(`
-							SELECT * FROM current_time_aircraft 
-         					WHERE timestamp > (select max(timestamp)-(6 * interval '1 second') 
-                            FROM current_time_aircraft)`)
+	var query = `SELECT * FROM current_time_aircraft 
+				 WHERE timestamp > (select max(timestamp)-(6 * interval '1 second') 
+				 FROM current_time_aircraft)`
+
+	rows, err := db.Conn.Query(query)
 	if err != nil {
 		return global.GeoJsonFeatureCollection{}, err
 	}
