@@ -12,8 +12,8 @@ import (
 func main() {
 	// Initialize logger
 	logger.InitLogger()
-	// Initialize environment
-	logger.Info.Println(global.InitEnv())
+	// Initialize environment variables
+	global.InitEnvironment()
 	// Initialize the database
 	adsbDB, err := db.InitDB()
 	if err != nil {

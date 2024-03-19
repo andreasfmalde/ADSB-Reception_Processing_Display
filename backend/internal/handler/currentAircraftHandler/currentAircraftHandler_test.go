@@ -16,7 +16,7 @@ var dbConn db.AdsbDB
 
 func TestMain(m *testing.M) {
 	logger.InitLogger()
-	global.InitEnv()
+	global.InitEnvironment()
 	adsbDB, err := db.InitDB()
 	if err != nil {
 		logger.Error.Fatalf("Error opening database: %q", err)
