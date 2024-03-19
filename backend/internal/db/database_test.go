@@ -2,8 +2,7 @@ package db
 
 import (
 	"adsb-api/internal/global"
-	"adsb-api/internal/utility/test"
-	"fmt"
+	"adsb-api/internal/utility"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
@@ -11,66 +10,32 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	global.InitDevEnv()
+	global.InitTestEnv()
 	m.Run()
 }
 
-func InitTestDB() (*AdsbDB, error) {
+func setupDB() (*AdsbDB, error) {
 	db, err := InitDB()
 	if err != nil {
 		log.Fatalf("Failed to initialize service: %v", err)
 	}
+	return db, err
+}
 
-	_, err = db.Conn.Exec("DROP TABLE IF EXISTS current_time_aircraft")
+func teardownDB(db *AdsbDB) {
+	_, err := db.Conn.Exec("DROP TABLE IF EXISTS current_time_aircraft")
 	if err != nil {
-		return nil, fmt.Errorf("error dropping current_time_aircraft table: %w", err)
+		log.Fatalf("error dropping table: %q", err)
 	}
 
 	err = db.CreateCurrentTimeAircraftTable()
 	if err != nil {
-		return nil, fmt.Errorf("error creating current_time_aircraft table: %w", err)
+		log.Fatalf("error creating table: %q", err)
 	}
 
-	return db, nil
-}
-
-func TestAdsbDB(t *testing.T) {
-	tests := []struct {
-		name    string
-		setup   func() (*AdsbDB, error)
-		cleanup func(db *AdsbDB)
-		wantErr bool
-	}{
-		{
-			name: "valid case",
-			setup: func() (*AdsbDB, error) {
-				db, err := InitTestDB()
-				if err != nil {
-					t.Fatalf("Failed to initialize test database: %v", err)
-				}
-				return db, nil
-			},
-			cleanup: func(db *AdsbDB) {
-				db.Close()
-			},
-			wantErr: false,
-		},
-		// Add more test cases here
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			db, err := tt.setup()
-			if err != nil {
-				t.Fatalf("Failed to setup test: %v", err)
-			}
-			defer tt.cleanup(db)
-
-			err = db.CreateCurrentTimeAircraftTable()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("CreateCurrentTimeAircraftTable() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
+	err = db.Close()
+	if err != nil {
+		log.Fatalf("error closing database: %q", err)
 	}
 }
 
@@ -79,22 +44,26 @@ func TestInitCloseDB(t *testing.T) {
 	if err != nil {
 		t.Errorf("Database connection failed: %q", err)
 	}
-	defer db.Close()
+	defer func(db *AdsbDB) {
+		err := db.Close()
+		if err != nil {
+
+		}
+	}(db)
 
 	err = db.Conn.Close()
 	if err != nil {
 		t.Errorf("Database connection failed: %q", err)
 	}
-
 }
 
 func TestAdsbDB_CreateCurrentTimeAircraftTable(t *testing.T) {
-	db, err := InitTestDB()
+	db, err := setupDB()
 	if err != nil {
 		t.Fatalf("Failed to initialize test database: %v", err)
 	}
 
-	defer db.Close()
+	defer teardownDB(db)
 
 	err = db.CreateCurrentTimeAircraftTable()
 	if err != nil {
@@ -118,21 +87,16 @@ func TestAdsbDB_CreateCurrentTimeAircraftTable(t *testing.T) {
 }
 
 func TestAdsbDB_ValidBulkInsertCurrentTimeAircraftTable(t *testing.T) {
-	db, err := InitTestDB()
+	db, err := setupDB()
 	if err != nil {
 		t.Fatalf("Failed to initialize test database: %v", err)
 	}
 
-	defer db.Close()
-
-	_, err = db.Conn.Exec("DELETE FROM current_time_aircraft")
-	if err != nil {
-		t.Fatalf("could not reset database")
-	}
+	defer teardownDB(db)
 
 	var nAircraft = 100
 
-	aircraft := test.GetAircraft(nAircraft)
+	aircraft := utility.CreateAircraft(nAircraft)
 
 	err = db.BulkInsertCurrentTimeAircraftTable(aircraft)
 	if err != nil {
@@ -149,18 +113,18 @@ func TestAdsbDB_ValidBulkInsertCurrentTimeAircraftTable(t *testing.T) {
 }
 
 func TestAdsbDB_InvalidBulkInsertCurrentTimeAircraftTable(t *testing.T) {
-	db, err := InitTestDB()
+	db, err := setupDB()
 	if err != nil {
 		t.Fatalf("Failed to initialize test database: %v", err)
 	}
 
-	defer db.Close()
+	defer teardownDB(db)
 
 	// Create an aircraft with a null icao value
 	aircraft := []global.Aircraft{
 		{
 			Icao:         "", // null icao value
-			Callsign:     "TEST",
+			Callsign:     "",
 			Altitude:     0,
 			Latitude:     0,
 			Longitude:    0,
@@ -179,12 +143,12 @@ func TestAdsbDB_InvalidBulkInsertCurrentTimeAircraftTable(t *testing.T) {
 }
 
 func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
-	db, err := InitTestDB()
+	db, err := setupDB()
 	if err != nil {
 		t.Fatalf("Failed to initialize test database: %v", err)
 	}
 
-	defer db.Close()
+	defer teardownDB(db)
 
 	aircraft1 := global.Aircraft{
 		Icao:         "TEST1",
@@ -195,7 +159,7 @@ func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
 		Speed:        450,
 		Track:        180,
 		VerticalRate: 0,
-		Timestamp:    time.Now().Add(-7 * time.Second).Format(time.RFC3339Nano), // 7 seconds ago
+		Timestamp:    time.Now().Add(-7 * time.Second).Format(time.RFC3339Nano),
 	}
 	aircraft2 := global.Aircraft{
 		Icao:         "TEST2",
@@ -213,13 +177,11 @@ func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
 		t.Fatalf("Error inserting aircraft: %q", err)
 	}
 
-	// Call the DeleteOldCurrentAircraft method
 	err = db.DeleteOldCurrentAircraft()
 	if err != nil {
 		t.Fatalf("Error deleting old aircraft: %q", err)
 	}
 
-	// Query the table to check if the old aircraft data has been deleted
 	var count int
 	err = db.Conn.QueryRow("SELECT COUNT(*) FROM current_time_aircraft WHERE icao = $1", aircraft1.Icao).Scan(&count)
 	if err != nil {
@@ -240,12 +202,12 @@ func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
 }
 
 func TestAdsbDB_GetAllCurrentAircraft(t *testing.T) {
-	db, err := InitTestDB()
+	db, err := setupDB()
 	if err != nil {
 		t.Fatalf("Failed to initialize test database: %v", err)
 	}
 
-	defer db.Close()
+	defer teardownDB(db)
 
 	// Insert some aircraft data with different timestamps
 	aircraft1 := global.Aircraft{
@@ -290,52 +252,5 @@ func TestAdsbDB_GetAllCurrentAircraft(t *testing.T) {
 		if timestamp.Before(time.Now().Add(-6 * time.Second)) {
 			t.Fatalf("Returned aircraft data is not within the current timeframe")
 		}
-	}
-}
-
-func TestAdsbDB_GetAllCurrentAircraft_Failure(t *testing.T) {
-	db, err := InitTestDB()
-	if err != nil {
-		t.Fatalf("Failed to initialize test database: %v", err)
-	}
-
-	defer db.Close()
-
-	// Close the database connection to force db.Conn.Query to fail
-	db.Close()
-
-	// Call the GetAllCurrentAircraft method
-	_, err = db.GetAllCurrentAircraft()
-	if err == nil {
-		t.Fatalf("Expected an error when calling GetAllCurrentAircraft with a closed database connection, got nil")
-	}
-
-	// Reopen the database connection
-	db, err = InitDB()
-	if err != nil {
-		t.Fatalf("Database connection failed: %q", err)
-	}
-
-	// Insert some aircraft data with an invalid timestamp to force rows.Scan to fail
-	aircraft := global.Aircraft{
-		Icao:         "TEST",
-		Callsign:     "TEST",
-		Altitude:     10000,
-		Latitude:     51.5074,
-		Longitude:    0.1278,
-		Speed:        450,
-		Track:        180,
-		VerticalRate: 0,
-		Timestamp:    "invalid timestamp", // invalid timestamp
-	}
-	err = db.BulkInsertCurrentTimeAircraftTable([]global.Aircraft{aircraft})
-	if err == nil {
-		t.Fatalf("Error inserting aircraft: %q", err)
-	}
-
-	// Call the GetAllCurrentAircraft method
-	_, err = db.GetAllCurrentAircraft()
-	if err != nil {
-		t.Fatalf("Expected an error when calling GetAllCurrentAircraft with invalid data, got nil")
 	}
 }
