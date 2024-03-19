@@ -15,21 +15,20 @@ func main() {
 	// Initialize environment
 	logger.Info.Println(global.InitEnv())
 	// Initialize the database
-	svc := db.AdsbService{}
-	adsbSvc, err := svc.InitSvc()
+	adsbDB, err := db.InitDB()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
 	logger.Info.Println("successfully connected to database")
 
 	defer func() {
-		err := adsbSvc.Close()
+		err := adsbDB.Close()
 		if err != nil {
 			logger.Error.Fatalf("error closing database: %q", err)
 		}
 	}()
 
-	if err := adsbSvc.CreateCurrentTimeAircraftTable(); err != nil {
+	if err := adsbDB.CreateCurrentTimeAircraftTable(); err != nil {
 		logger.Error.Fatalf("current_time_aircraft table was not created: %q", err)
 	}
 
@@ -41,14 +40,14 @@ func main() {
 			time.Sleep(global.WaitingTime * time.Second)
 			continue
 		}
-		err = adsbSvc.BulkInsertCurrentTimeAircraftTable(aircraft)
+		err = adsbDB.BulkInsertCurrentTimeAircraftTable(aircraft)
 		if err != nil {
 			logger.Error.Fatalf("could not insert new SBS data: %q", err)
 		}
 		logger.Info.Println("new SBS data inserted")
 		// Delete old rows every 2 minutes (120 seconds)
 		if diff := time.Since(timer).Seconds(); diff > 120 {
-			if e := adsbSvc.DeleteOldCurrentAircraft(); e == nil {
+			if e := adsbDB.DeleteOldCurrentAircraft(); e == nil {
 				timer = time.Now()
 				logger.Info.Println("old SBS data deleted")
 			}

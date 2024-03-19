@@ -12,7 +12,7 @@ import (
 )
 
 var currentEndpoint *httptest.Server
-var dbConn db.AdsbRepository
+var dbConn db.AdsbDB
 
 func TestMain(m *testing.M) {
 	logger.InitLogger()
@@ -23,9 +23,7 @@ func TestMain(m *testing.M) {
 	}
 	dbConn = *adsbDB
 
-	adsbSvc := db.AdsbService{DB: adsbDB}
-
-	currentEndpoint = httptest.NewServer(CurrentAircraftHandler(&adsbSvc))
+	currentEndpoint = httptest.NewServer(CurrentAircraftHandler(adsbDB))
 	defer currentEndpoint.Close()
 	m.Run()
 }
