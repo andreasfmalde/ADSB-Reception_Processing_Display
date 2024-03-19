@@ -18,23 +18,22 @@ func main() {
 	// Initialize environment
 	logger.Info.Println(global.InitEnv())
 	// Initialize the database
-	adsbDB, err := db.InitDB()
+	svc := db.AdsbService{}
+	adsbSvc, err := svc.InitSvc()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
 	logger.Info.Println("successfully connected to database")
 
 	defer func() {
-		err := adsbDB.Close()
+		err := adsbSvc.Close()
 		if err != nil {
 			logger.Error.Fatalf("error closing database: %q", err)
 		}
 	}()
 
-	adsbSvc := db.AdsbService{DB: adsbDB}
-
 	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
-	http.HandleFunc(global.CurrentAircraftPath, currentAircraftHandler.CurrentAircraftHandler(&adsbSvc))
+	http.HandleFunc(global.CurrentAircraftPath, currentAircraftHandler.CurrentAircraftHandler(adsbSvc))
 
 	port := os.Getenv("PORT")
 	if port == "" {
