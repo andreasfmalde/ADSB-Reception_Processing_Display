@@ -22,7 +22,12 @@ func setupTestDB() *AdsbDB {
 
 	err = db.CreateCurrentTimeAircraftTable()
 	if err != nil {
-		logger.Error.Fatalf("error creating table: %q", err)
+		logger.Error.Fatalf("error creating current_time_aircraft table: %q", err)
+	}
+
+	err = db.CreateHistoryAircraft()
+	if err != nil {
+		logger.Error.Fatalf("error creating history_aircraft table: %q", err)
 	}
 
 	return db
@@ -42,6 +47,13 @@ func teardownTestDB(db *AdsbDB) {
 
 func dropCurrentTimeAircraft(db *AdsbDB) {
 	_, err := db.Conn.Exec("DROP TABLE current_time_aircraft")
+	if err != nil {
+		logger.Error.Fatalf("error droppint current_time_aircraft: %q", err.Error())
+	}
+}
+
+func dropHistoryAircraft(db *AdsbDB) {
+	_, err := db.Conn.Exec("DROP TABLE history_aircraft")
 	if err != nil {
 		logger.Error.Fatalf("error droppint current_time_aircraft: %q", err.Error())
 	}
@@ -89,6 +101,26 @@ func TestAdsbDB_CreateCurrentTimeAircraftTable(t *testing.T) {
 	err = db.Conn.QueryRow(query, "timestamp_index", "current_time_aircraft").Scan(&exists)
 	if err != nil {
 		t.Fatalf("index does not exists: %q", err)
+	}
+}
+
+func TestAdsbDB_CreateHistoryAircraft(t *testing.T) {
+	db := setupTestDB()
+	defer teardownTestDB(db)
+
+	dropHistoryAircraft(db)
+
+	err := db.CreateHistoryAircraft()
+	if err != nil {
+		t.Fatalf("error creating history table: %q", err.Error())
+	}
+
+	query := `SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'history_aircraft')`
+
+	var exists bool
+	err = db.Conn.QueryRow(query).Scan(&exists)
+	if err != nil {
+		t.Fatalf("table does not exists: %q", err)
 	}
 }
 

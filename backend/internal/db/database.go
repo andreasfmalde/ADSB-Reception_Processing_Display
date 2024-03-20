@@ -12,6 +12,7 @@ import (
 type Database interface {
 	Close() error
 	CreateCurrentTimeAircraftTable() error
+	CreateHistoryAircraft() error
 	BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error
 	DeleteOldCurrentAircraft() error
 	GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error)
@@ -71,6 +72,29 @@ func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
 		return err
 	}
 	// Commit the transaction
+	return tx.Commit()
+}
+
+func (db *AdsbDB) CreateHistoryAircraft() error {
+	tx, err := db.Conn.Begin()
+	if err != nil {
+		return err
+	}
+
+	var query = `CREATE TABLE IF NOT EXISTS history_aircraft(
+				 icao VARCHAR(6) NOT NULL,
+				 lat DECIMAL NOT NULL,
+				 long DECIMAL NOT NULL,
+				 timestamp TIMESTAMP NOT NULL,
+				 PRIMARY KEY (icao,timestamp))`
+
+	_, err = tx.Exec(query)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	return tx.Commit()
 }
 
