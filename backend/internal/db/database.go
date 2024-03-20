@@ -74,6 +74,28 @@ func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
 	return tx.Commit()
 }
 
+func (db *AdsbDB) CreateAircraftHistoryTable() error {
+	tx, err := db.Conn.Begin()
+	if err != nil {
+		return err
+	}
+
+	var query = `CREATE TABLE IF NOT EXISTS history_aircraft(
+				 icao VARCHAR(6) NOT NULL,
+				 lat DECIMAL NOT NULL,
+				 long DECIMAL NOT NULL,
+				 timestamp TIMESTAMP NOT NULL,
+				 PRIMARY KEY (icao,timestamp))`
+
+	_, err = tx.Exec(query)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
 // BulkInsertCurrentTimeAircraftTable updates the current_time_aircraft table with the new aircraft records provided from
 // the parameter 'aircraft'
 func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error {
