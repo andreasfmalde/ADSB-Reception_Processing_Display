@@ -19,28 +19,30 @@ func setupTestDB() (*AdsbDB, error) {
 	if err != nil {
 		log.Fatalf("Failed to initialize service: %v", err)
 	}
+
 	err = db.CreateCurrentTimeAircraftTable()
 	if err != nil {
 		log.Fatalf("error creating table: %q", err)
 	}
+
 	return db, err
 }
 
 func teardownTestDB(db *AdsbDB) {
-	_, err := db.Conn.Exec("DROP TABLE IF EXISTS current_time_aircraft")
+	_, err := db.Conn.Exec("DELETE FROM current_time_aircraft")
 	if err != nil {
 		log.Fatalf("error dropping table: %q", err)
-	}
-
-	err = db.CreateCurrentTimeAircraftTable()
-	if err != nil {
-		log.Fatalf("error creating table: %q", err)
 	}
 
 	err = db.Close()
 	if err != nil {
 		log.Fatalf("error closing database: %q", err)
 	}
+}
+
+func dropCurrentTimeAircraft(db *AdsbDB) error {
+	_, err := db.Conn.Exec("DROP TABLE current_time_aircraft")
+	return err
 }
 
 func TestInitCloseDB(t *testing.T) {
@@ -68,6 +70,11 @@ func TestAdsbDB_CreateCurrentTimeAircraftTable(t *testing.T) {
 	}
 
 	defer teardownTestDB(db)
+
+	err = dropCurrentTimeAircraft(db)
+	if err != nil {
+		t.Fatalf("Failed dropping current_time_aircraft")
+	}
 
 	err = db.CreateCurrentTimeAircraftTable()
 	if err != nil {
