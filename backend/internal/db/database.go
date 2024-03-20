@@ -35,6 +35,19 @@ func (db *AdsbDB) Close() error {
 	return db.Conn.Close()
 }
 
+func (db *AdsbDB) CreateAdsbTables() error {
+	err := db.CreateCurrentTimeAircraftTable()
+	if err != nil {
+		return err
+	}
+
+	err = db.CreateHistoryAircraft()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // CreateCurrentTimeAircraftTable creates current_time_aircraft table in database if it does not already exist
 func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
 	// Begin a transaction

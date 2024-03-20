@@ -28,8 +28,8 @@ func main() {
 		}
 	}()
 
-	if err := adsbDB.CreateCurrentTimeAircraftTable(); err != nil {
-		logger.Error.Fatalf("current_time_aircraft table was not created: %q", err)
+	if err := adsbDB.CreateAdsbTables(); err != nil {
+		logger.Error.Fatalf("error creating tables for database: %q", err)
 	}
 
 	timer := time.Now()
