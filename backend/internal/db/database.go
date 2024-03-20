@@ -11,8 +11,7 @@ import (
 
 type Database interface {
 	Close() error
-	CreateCurrentTimeAircraftTable() error
-	CreateHistoryAircraft() error
+	CreateAdsbTables() error
 	BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error
 	DeleteOldCurrentAircraft() error
 	GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error)
@@ -36,20 +35,20 @@ func (db *AdsbDB) Close() error {
 }
 
 func (db *AdsbDB) CreateAdsbTables() error {
-	err := db.CreateCurrentTimeAircraftTable()
+	err := db.createCurrentTimeAircraftTable()
 	if err != nil {
 		return err
 	}
 
-	err = db.CreateHistoryAircraft()
+	err = db.createHistoryAircraft()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// CreateCurrentTimeAircraftTable creates current_time_aircraft table in database if it does not already exist
-func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
+// createCurrentTimeAircraftTable creates current_time_aircraft table in database if it does not already exist
+func (db *AdsbDB) createCurrentTimeAircraftTable() error {
 	// Begin a transaction
 	tx, err := db.Conn.Begin()
 	if err != nil {
@@ -88,7 +87,8 @@ func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
 	return tx.Commit()
 }
 
-func (db *AdsbDB) CreateHistoryAircraft() error {
+// createHistoryAircraft creates table for storing aircraft history
+func (db *AdsbDB) createHistoryAircraft() error {
 	tx, err := db.Conn.Begin()
 	if err != nil {
 		return err

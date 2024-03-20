@@ -65,7 +65,7 @@ func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
 // CreateCurrentTimeAircraftTable mocks base method.
 func (m *MockDatabase) CreateCurrentTimeAircraftTable() error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateCurrentTimeAircraftTable")
+	ret := m.ctrl.Call(m, "createCurrentTimeAircraftTable")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -73,7 +73,7 @@ func (m *MockDatabase) CreateCurrentTimeAircraftTable() error {
 // CreateCurrentTimeAircraftTable indicates an expected call of CreateCurrentTimeAircraftTable.
 func (mr *MockDatabaseMockRecorder) CreateCurrentTimeAircraftTable() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCurrentTimeAircraftTable", reflect.TypeOf((*MockDatabase)(nil).CreateCurrentTimeAircraftTable))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "createCurrentTimeAircraftTable", reflect.TypeOf((*MockDatabase)(nil).CreateCurrentTimeAircraftTable))
 }
 
 // DeleteOldCurrentAircraft mocks base method.

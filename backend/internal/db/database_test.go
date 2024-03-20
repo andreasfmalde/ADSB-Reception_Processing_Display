@@ -20,12 +20,12 @@ func setupTestDB() *AdsbDB {
 		logger.Error.Fatalf("Failed to initialize service: %v", err)
 	}
 
-	err = db.CreateCurrentTimeAircraftTable()
+	err = db.createCurrentTimeAircraftTable()
 	if err != nil {
 		logger.Error.Fatalf("error creating current_time_aircraft table: %q", err)
 	}
 
-	err = db.CreateHistoryAircraft()
+	err = db.createHistoryAircraft()
 	if err != nil {
 		logger.Error.Fatalf("error creating history_aircraft table: %q", err)
 	}
