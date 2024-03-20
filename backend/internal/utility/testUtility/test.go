@@ -40,3 +40,39 @@ func CreateMockAircraftWithTimestamp(icao string, timestamp string) global.Aircr
 		Timestamp:    timestamp,
 	}
 }
+
+func CreateMockFeatureCollection(n int) global.GeoJsonFeatureCollection {
+	featureCollection := global.GeoJsonFeatureCollection{}
+	featureCollection.Type = "FeatureCollection"
+
+	for i := 0; i < n; i++ {
+		var lat float32 = 51.5074
+		var long float32 = 51.5074
+
+		ac := global.GeoJsonFeature{
+			Type: "Feature",
+			Properties: global.AircraftProperties{
+				Icao:         "TEST",
+				Callsign:     "TEST",
+				Altitude:     0,
+				Speed:        0,
+				Track:        0,
+				VerticalRate: 0,
+				Timestamp:    "",
+			},
+			Geometry: struct {
+				Coordinates []float32 `json:"coordinates"`
+				Type        string    `json:"type"`
+			}{},
+		}
+
+		feature := global.GeoJsonFeature{}
+		feature.Properties = ac.Properties
+		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, lat, long)
+		feature.Geometry.Type = "Point"
+
+		featureCollection.Features = append(featureCollection.Features, feature)
+	}
+
+	return featureCollection
+}

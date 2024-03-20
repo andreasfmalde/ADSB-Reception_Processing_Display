@@ -10,7 +10,6 @@ import (
 )
 
 type Database interface {
-	InitDB() (*AdsbDB, error)
 	Close() error
 	CreateCurrentTimeAircraftTable() error
 	BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error
