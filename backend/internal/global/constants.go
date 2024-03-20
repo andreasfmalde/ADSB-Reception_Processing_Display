@@ -1,28 +1,10 @@
 package global
 
-import (
-	"os"
-
-	"github.com/joho/godotenv"
-)
-
-var User string
-var Password string
-
-func InitEnvironment() {
-	godotenv.Load("../.env")
-	User = os.Getenv("DB_USER")
-	Password = os.Getenv("DB_PASSWORD")
-}
-
+// API constants
 const (
-	Host   = "localhost"
-	Port   = 5432
-	Dbname = "adsb_db"
+	DefaultPort         = "8080"
+	VERSION             = "1.0.0"
+	DefaultPath         = "/"
+	CurrentAircraftPath = "/aircraft/current/"
+	WaitingTime         = 4
 )
-
-const DefaultPort = "8080"
-const VERSION = "1.0.0"
-const DefaultPath = "/"
-const CurrentAircraftPath = "/aircraft/current/"
-const WaitingTime = 4
