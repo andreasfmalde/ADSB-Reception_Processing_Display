@@ -1,4 +1,4 @@
-package aircraftCurrentHandler
+package currentAircraftHandler
 
 import (
 	"adsb-api/internal/db"
