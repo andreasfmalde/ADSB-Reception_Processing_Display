@@ -62,18 +62,18 @@ func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close))
 }
 
-// CreateCurrentTimeAircraftTable mocks base method.
-func (m *MockDatabase) CreateCurrentTimeAircraftTable() error {
+// CreateAdsbTables mocks base method.
+func (m *MockDatabase) CreateAdsbTables() error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "createCurrentTimeAircraftTable")
+	ret := m.ctrl.Call(m, "CreateAdsbTables")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateCurrentTimeAircraftTable indicates an expected call of CreateCurrentTimeAircraftTable.
-func (mr *MockDatabaseMockRecorder) CreateCurrentTimeAircraftTable() *gomock.Call {
+// CreateAdsbTables indicates an expected call of CreateAdsbTables.
+func (mr *MockDatabaseMockRecorder) CreateAdsbTables() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "createCurrentTimeAircraftTable", reflect.TypeOf((*MockDatabase)(nil).CreateCurrentTimeAircraftTable))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAdsbTables", reflect.TypeOf((*MockDatabase)(nil).CreateAdsbTables))
 }
 
 // DeleteOldCurrentAircraft mocks base method.
@@ -103,19 +103,4 @@ func (m *MockDatabase) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection,
 func (mr *MockDatabaseMockRecorder) GetAllCurrentAircraft() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCurrentAircraft", reflect.TypeOf((*MockDatabase)(nil).GetAllCurrentAircraft))
-}
-
-// InitDB mocks base method.
-func (m *MockDatabase) InitDB() (*AdsbDB, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitDB")
-	ret0, _ := ret[0].(*AdsbDB)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// InitDB indicates an expected call of InitDB.
-func (mr *MockDatabaseMockRecorder) InitDB() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitDB", reflect.TypeOf((*MockDatabase)(nil).InitDB))
 }
