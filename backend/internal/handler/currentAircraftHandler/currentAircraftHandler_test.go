@@ -3,7 +3,6 @@ package currentAircraftHandler
 import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global"
-	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/testUtility"
 	"encoding/json"
 	"errors"
@@ -18,7 +17,6 @@ import (
 
 func TestMain(m *testing.M) {
 	global.InitTestEnv()
-	logger.InitLogger()
 	m.Run()
 }
 

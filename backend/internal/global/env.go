@@ -1,6 +1,7 @@
 package global
 
 import (
+	"adsb-api/internal/logger"
 	"github.com/joho/godotenv"
 	"os"
 )
@@ -12,6 +13,7 @@ func InitEnvironment() {
 }
 
 func InitTestEnv() {
+	logger.InitLogger()
 	User = "test"
 	Password = "test"
 	Dbname = "adsb_test_db"
