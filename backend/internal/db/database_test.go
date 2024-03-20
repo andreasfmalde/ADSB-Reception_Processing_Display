@@ -14,6 +14,35 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
+func setupTestDB() (*AdsbDB, error) {
+	db, err := InitDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize service: %v", err)
+	}
+	err = db.CreateCurrentTimeAircraftTable()
+	if err != nil {
+		log.Fatalf("error creating table: %q", err)
+	}
+	return db, err
+}
+
+func teardownTestDB(db *AdsbDB) {
+	_, err := db.Conn.Exec("DROP TABLE IF EXISTS current_time_aircraft")
+	if err != nil {
+		log.Fatalf("error dropping table: %q", err)
+	}
+
+	err = db.CreateCurrentTimeAircraftTable()
+	if err != nil {
+		log.Fatalf("error creating table: %q", err)
+	}
+
+	err = db.Close()
+	if err != nil {
+		log.Fatalf("error closing database: %q", err)
+	}
+}
+
 func TestInitCloseDB(t *testing.T) {
 	db, err := InitDB()
 	if err != nil {
@@ -152,7 +181,7 @@ func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
 	defer teardownTestDB(db)
 
 	acAfter := testUtility.CreateMockAircraftWithTimestamp("TEST1",
-		time.Now().Add(-(global.AdsbHubTime+1)*time.Second).Format(time.DateTime))
+		time.Now().Add(-(global.WaitingTime+3)*time.Second).Format(time.DateTime))
 
 	acNow := testUtility.CreateMockAircraftWithTimestamp("TEST2",
 		time.Now().Format(time.DateTime))
@@ -197,7 +226,7 @@ func TestAdsbDB_GetAllCurrentAircraft(t *testing.T) {
 	defer teardownTestDB(db)
 
 	acAfter := testUtility.CreateMockAircraftWithTimestamp("TEST1",
-		time.Now().Add(-(global.AdsbHubTime+1)*time.Second).Format(time.DateTime))
+		time.Now().Add(-(global.WaitingTime+3)*time.Second).Format(time.DateTime))
 
 	var icaoTest2 = "TEST2"
 	acNow := testUtility.CreateMockAircraftWithTimestamp(icaoTest2,
@@ -232,33 +261,4 @@ func TestAdsbDB_GetAllCurrentAircraft(t *testing.T) {
 	}
 
 	assert.Equal(t, icaoTest2, geoJsonFeatureCollection.Features[0].Properties.Icao)
-}
-
-func setupTestDB() (*AdsbDB, error) {
-	db, err := InitDB()
-	if err != nil {
-		log.Fatalf("Failed to initialize service: %v", err)
-	}
-	err = db.CreateCurrentTimeAircraftTable()
-	if err != nil {
-		log.Fatalf("error creating table: %q", err)
-	}
-	return db, err
-}
-
-func teardownTestDB(db *AdsbDB) {
-	_, err := db.Conn.Exec("DROP TABLE IF EXISTS current_time_aircraft")
-	if err != nil {
-		log.Fatalf("error dropping table: %q", err)
-	}
-
-	err = db.CreateCurrentTimeAircraftTable()
-	if err != nil {
-		log.Fatalf("error creating table: %q", err)
-	}
-
-	err = db.Close()
-	if err != nil {
-		log.Fatalf("error closing database: %q", err)
-	}
 }

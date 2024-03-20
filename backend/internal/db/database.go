@@ -124,7 +124,7 @@ func (db *AdsbDB) DeleteOldCurrentAircraft() error {
                  FROM current_time_aircraft)`
 
 	// Delete all rows older than 6 second from the latest entry
-	_, err = tx.Exec(query, global.AdsbHubTime)
+	_, err = tx.Exec(query, global.WaitingTime+2)
 	// Rolls back transaction if failed
 	if err != nil {
 		tx.Rollback()
@@ -143,7 +143,7 @@ func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, erro
 				 WHERE timestamp > (select max(timestamp)-($1 * interval '1 second') 
 				 FROM current_time_aircraft)`
 
-	rows, err := db.Conn.Query(query, global.AdsbHubTime)
+	rows, err := db.Conn.Query(query, global.WaitingTime+2)
 	if err != nil {
 		return global.GeoJsonFeatureCollection{}, err
 	}
