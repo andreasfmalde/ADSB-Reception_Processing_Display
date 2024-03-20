@@ -29,11 +29,11 @@ Planned options:
 */
 
 // CurrentAircraftHandler handles HTTP requests for /aircraft/current/ endpoint.
-func CurrentAircraftHandler(svc db.Database) http.HandlerFunc {
+func CurrentAircraftHandler(db db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			handleCurrentAircraftGetRequest(w, r, svc)
+			handleCurrentAircraftGetRequest(w, r, db)
 		default:
 			http.Error(w, fmt.Sprintf(global.MethodNotSupported, r.Method), http.StatusMethodNotAllowed)
 		}
@@ -42,8 +42,8 @@ func CurrentAircraftHandler(svc db.Database) http.HandlerFunc {
 
 // handleCurrentAircraftGetRequest handles GET requests for the /aircraft/current/ endpoint.
 // Sends all current aircraft in the database to the client.
-func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc db.Database) {
-	res, err := svc.GetAllCurrentAircraft()
+func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, db db.Database) {
+	res, err := db.GetAllCurrentAircraft()
 	if err != nil {
 		http.Error(w, global.ErrorRetrievingCurrentAircraft, http.StatusInternalServerError)
 		logger.Error.Printf(global.ErrorRetrievingCurrentAircraft+": %q Path: %q", err, r.URL)
