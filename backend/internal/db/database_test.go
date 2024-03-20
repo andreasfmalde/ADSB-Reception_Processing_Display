@@ -34,31 +34,24 @@ func setupTestDB() *AdsbDB {
 }
 
 func teardownTestDB(db *AdsbDB) {
-	_, err := db.Conn.Exec("DELETE FROM current_time_aircraft")
-	if err != nil {
-		logger.Error.Fatalf("error dropping table: %q", err)
-	}
+	dropCurrentTimeAircraft(db)
+	dropHistoryAircraft(db)
 
-	_, err = db.Conn.Exec("DELETE FROM history_aircraft")
-	if err != nil {
-		logger.Error.Fatalf("error dropping table: %q", err)
-	}
-
-	err = db.Close()
+	err := db.Close()
 	if err != nil {
 		logger.Error.Fatalf("error closing database: %q", err)
 	}
 }
 
 func dropCurrentTimeAircraft(db *AdsbDB) {
-	_, err := db.Conn.Exec("DROP TABLE current_time_aircraft")
+	_, err := db.Conn.Exec("DROP TABLE IF EXISTS current_time_aircraft CASCADE")
 	if err != nil {
 		logger.Error.Fatalf("error droppint current_time_aircraft: %q", err.Error())
 	}
 }
 
 func dropHistoryAircraft(db *AdsbDB) {
-	_, err := db.Conn.Exec("DROP TABLE history_aircraft")
+	_, err := db.Conn.Exec("DROP TABLE IF EXISTS history_aircraft CASCADE")
 	if err != nil {
 		logger.Error.Fatalf("error droppint current_time_aircraft: %q", err.Error())
 	}
@@ -197,6 +190,33 @@ func TestAdsbDB_BulkInsertCurrentTimeAircraftTable_InvalidType(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Expected an error when inserting invalid data, got nil")
 	}
+}
+
+func TestAdsbDB_AddHistoryFromCurrent(t *testing.T) {
+	db := setupTestDB()
+	defer teardownTestDB(db)
+
+	var nAircraft = 100
+
+	mockAircraft := testUtility.CreateMockAircraft(nAircraft)
+
+	err := db.BulkInsertCurrentTimeAircraftTable(mockAircraft)
+	if err != nil {
+		t.Fatalf("error inserting mockAircraft: %q", err)
+	}
+
+	err = db.AddHistoryFromCurrent()
+	if err != nil {
+		t.Fatalf("error adding history data: %q", err)
+	}
+
+	n := 0
+	err = db.Conn.QueryRow("SELECT COUNT(*) FROM history_aircraft").Scan(&n)
+	if err != nil {
+		t.Fatalf("error counting mockAircraft: %q", err)
+	}
+
+	assert.Equal(t, nAircraft, n)
 }
 
 func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {

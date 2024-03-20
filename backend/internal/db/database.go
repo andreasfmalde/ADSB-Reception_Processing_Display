@@ -13,6 +13,7 @@ type Database interface {
 	Close() error
 	CreateAdsbTables() error
 	BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error
+	AddHistoryFromCurrent() error
 	DeleteOldCurrentAircraft() error
 	GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error)
 }
@@ -99,10 +100,13 @@ func (db *AdsbDB) createHistoryAircraft() error {
 				 lat DECIMAL NOT NULL,
 				 long DECIMAL NOT NULL,
 				 timestamp TIMESTAMP NOT NULL,
-				 PRIMARY KEY (icao,timestamp))`
+				 PRIMARY KEY (icao,timestamp),
+				 CONSTRAINT fk_history_current
+                    FOREIGN KEY (icao, timestamp)
+                    	REFERENCES current_time_aircraft(icao, timestamp)
+                        ON DELETE NO ACTION)`
 
 	_, err = tx.Exec(query)
-
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -146,6 +150,16 @@ func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft)
 	}
 
 	return nil
+}
+
+func (db *AdsbDB) AddHistoryFromCurrent() error {
+	query := `INSERT INTO history_aircraft 
+			  SELECT icao, lat, long, timestamp
+			  FROM current_time_aircraft
+			  ON CONFLICT (icao, timestamp) 
+			      DO UPDATE SET timestamp = excluded.timestamp`
+	_, err := db.Conn.Exec(query)
+	return err
 }
 
 // DeleteOldCurrentAircraft will delete rows older than 6 seconds from the latest entry.
