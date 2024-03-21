@@ -14,8 +14,20 @@ function App() {
     latitude: 60.6,
     zoom: 5
   });
+  const [currentRender, setCurrentRender] = useState(null);
   const [selected, setSelected] = useState(null);
   const [selectedImg, setSelectedImg] = useState(null);
+
+  const isInBounds = (p,mapBounds) =>{
+      
+    if (p.geometry.coordinates[0] > mapBounds._ne.lat || p.geometry.coordinates[0] < mapBounds._sw.lat ){
+      return false;
+    }
+    if (p.geometry.coordinates[1] > mapBounds._ne.long || p.geometry.coordinates[1] < mapBounds._sw.long ){
+      return false;
+    }
+    return true
+  }
 
   const retrieveImage = async (icao) =>{
     try{
@@ -45,8 +57,12 @@ function App() {
           onMove={(e)=>{
             setViewport(e.viewState);
           }}
+          onMoveEnd={(e)=>{
+            let aircraftInBounds = geojson.features?.filter(p => isInBounds(p,e.target.getBounds()))
+            setCurrentRender(aircraftInBounds);
+          }}
         >
-          { geojson.features.map((p) =>(
+          {currentRender?.map((p) =>(
           <div key={p.properties.icao}>
             <Marker 
               latitude={p.geometry.coordinates[0]}
