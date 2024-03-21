@@ -1,11 +1,12 @@
 
 import './App.css';
 import { Navbar } from './components/Navbar';
-import Map from 'react-map-gl/maplibre';
+import Map, {Marker} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
-import {style} from './data/MapData';
+import {style, geojson} from './data/MapData';
+import { IoMdAirplane } from "react-icons/io";
 
 function App() {
   const [viewport,setViewport] =  useState({
@@ -28,6 +29,22 @@ function App() {
             setViewport(e.viewState);
           }}
         >
+          { geojson.features.map((p) =>(
+          <div key={p.properties.icao}>
+            <Marker 
+              latitude={p.geometry.coordinates[0]}
+              longitude={p.geometry.coordinates[1]}
+              rotation={p.properties.track}
+            >
+            <IoMdAirplane 
+              style={{
+                color: '#c9a206',
+                fontSize: '1.8em'
+              }}
+            />
+          </Marker>
+        </div>
+        ))}
         </Map>
         <Sidebar />
       </div>
