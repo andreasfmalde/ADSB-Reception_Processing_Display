@@ -4,6 +4,8 @@ import { Navbar } from './components/Navbar';
 import Map from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useState } from 'react';
+import { Sidebar } from './components/Sidebar';
+import {style} from './data/MapData';
 
 function App() {
   const [viewport,setViewport] =  useState({
@@ -11,25 +13,7 @@ function App() {
     latitude: 60.6,
     zoom: 5
   });
-  const style = {
-    "version": 8,
-    "sources": {
-      "osm": {
-        "type": "raster",
-        "tiles": ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-        "tileSize": 256,
-        "attribution": "&copy; OpenStreetMap Contributors",
-        "maxzoom": 19
-      }
-    },
-    "layers": [
-      {
-        "id": "osm",
-        "type": "raster",
-        "source": "osm" // This must match the source key above
-      }
-    ]
-  };
+  
   return (
     <div className="App">
       <Navbar />
@@ -38,14 +22,14 @@ function App() {
           initialViewState={viewport}
           minZoom={3}
           maxZoom={10}
-          style={{width: '1000px', height: '600px'}}
+          style={{width: 'calc(100vw - 300px)', height: 'calc(100vh - 78px)',gridColumn:'1/2'}}
           mapStyle={style}
           onMove={(e)=>{
             setViewport(e.viewState);
           }}
         >
         </Map>
-
+        <Sidebar />
       </div>
     </div>
   );

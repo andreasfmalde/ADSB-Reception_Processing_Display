@@ -3,3 +3,10 @@
     height: 100vh;
     background-color: white;
 }
+
+.main-content{
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    width: 100%;
+}
+
