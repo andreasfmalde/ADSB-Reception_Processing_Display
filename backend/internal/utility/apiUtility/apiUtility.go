@@ -9,6 +9,7 @@ import (
 // EncodeJsonData encodes a struct to json and writes it to the response writer. Returns an error if the encoding fails.
 func EncodeJsonData(w http.ResponseWriter, data interface{}) {
 	w.Header().Add("content-type", "application/json")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "\t")
 	err := encoder.Encode(data)
