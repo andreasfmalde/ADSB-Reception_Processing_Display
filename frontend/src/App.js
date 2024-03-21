@@ -1,12 +1,12 @@
-
-import './App.css';
-import { Navbar } from './components/Navbar';
-import Map, {Marker} from 'react-map-gl/maplibre';
-import 'maplibre-gl/dist/maplibre-gl.css';
 import { useState, useEffect } from 'react';
+import Map, {Marker} from 'react-map-gl/maplibre';
 import { Sidebar } from './components/Sidebar';
+import { Navbar } from './components/Navbar';
 import {style, geojson} from './data/MapData';
 import { IoMdAirplane } from "react-icons/io";
+
+import './App.css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 function App() {
   const [viewport,setViewport] =  useState({
@@ -32,7 +32,7 @@ function App() {
 
   const retrievePlanes = async () =>{
     try{
-      const response = await fetch("http://localhost:8080/aircraft/current/");// http://129.241.150.147:8080/aircraft/current/
+      const response = await fetch("http://localhost:8080/aircraft/current/"); // http://129.241.150.147:8080/aircraft/current/
       const data = await response.json()
       setAircraftJSON(data.features);
     }catch(error){
@@ -45,12 +45,7 @@ function App() {
     try{
       const response = await fetch(`https://api.planespotters.net/pub/photos/hex/${icao}`);
       const data = await response.json();
-      if (data.error){
-        console.log("AYA")
-        setSelectedImg(null)
-      }else{
-        setSelectedImg(data.photos[0])
-      }
+      data.error ? setSelectedImg(null) : setSelectedImg(data.photos[0]);
     }catch(error){
       console.log("API retrieval failed")
     } 
