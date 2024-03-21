@@ -301,3 +301,48 @@ func TestAdsbDB_GetAllCurrentAircraft(t *testing.T) {
 
 	assert.Equal(t, icaoTest2, geoJsonFeatureCollection.Features[0].Properties.Icao)
 }
+
+func TestAdsbDB_GetHistoryByIcao(t *testing.T) {
+	db := setupTestDB()
+	defer teardownTestDB(db)
+
+	var nAircraft = 100
+	var icao = "TEST"
+	mockAircraft := testUtility.CreateMockAircraftWithIcao(nAircraft, icao)
+
+	err := db.BulkInsertCurrentTimeAircraftTable(mockAircraft)
+	if err != nil {
+		t.Fatalf("error inserting ac: %q", err.Error())
+	}
+
+	err = db.AddHistoryFromCurrent()
+	if err != nil {
+		t.Fatalf("error inserting history data: %q", err.Error())
+	}
+
+	featureCollection, err := db.GetHistoryByIcao(icao)
+	if err != nil {
+		t.Fatalf("error retriving history data: %q", err.Error())
+	}
+
+	assert.Equal(t, 1, len(featureCollection.Features))
+	assert.Equal(t, icao, featureCollection.Features[0].Properties.Icao)
+	assert.Equal(t, nAircraft*2, len(featureCollection.Features[0].Geometry.Coordinates))
+}
+
+func TestAdsbDB_AddHistoryFromCurrent_InvalidIcao(t *testing.T) {
+	db := setupTestDB()
+	defer teardownTestDB(db)
+
+	err := db.AddHistoryFromCurrent()
+	if err != nil {
+		t.Fatalf("error inserting history data: %q", err.Error())
+	}
+
+	featureCollection, err := db.GetHistoryByIcao("")
+	if err != nil {
+		t.Fatalf("error retriving history data: %q", err.Error())
+	}
+
+	assert.Equal(t, 0, len(featureCollection.Features[0].Geometry.Coordinates))
+}

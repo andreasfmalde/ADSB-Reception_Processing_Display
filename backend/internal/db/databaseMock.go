@@ -34,6 +34,20 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 	return m.recorder
 }
 
+// AddHistoryFromCurrent mocks base method.
+func (m *MockDatabase) AddHistoryFromCurrent() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddHistoryFromCurrent")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddHistoryFromCurrent indicates an expected call of AddHistoryFromCurrent.
+func (mr *MockDatabaseMockRecorder) AddHistoryFromCurrent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddHistoryFromCurrent", reflect.TypeOf((*MockDatabase)(nil).AddHistoryFromCurrent))
+}
+
 // BulkInsertCurrentTimeAircraftTable mocks base method.
 func (m *MockDatabase) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error {
 	m.ctrl.T.Helper()
@@ -103,4 +117,19 @@ func (m *MockDatabase) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection,
 func (mr *MockDatabaseMockRecorder) GetAllCurrentAircraft() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCurrentAircraft", reflect.TypeOf((*MockDatabase)(nil).GetAllCurrentAircraft))
+}
+
+// GetHistoryByIcao mocks base method.
+func (m *MockDatabase) GetHistoryByIcao(search string) (global.GeoJsonFeatureCollection, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHistoryByIcao", search)
+	ret0, _ := ret[0].(global.GeoJsonFeatureCollection)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHistoryByIcao indicates an expected call of GetHistoryByIcao.
+func (mr *MockDatabaseMockRecorder) GetHistoryByIcao(search interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistoryByIcao", reflect.TypeOf((*MockDatabase)(nil).GetHistoryByIcao), search)
 }

@@ -16,6 +16,7 @@ type Database interface {
 	AddHistoryFromCurrent() error
 	DeleteOldCurrentAircraft() error
 	GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error)
+	GetHistoryByIcao(search string) (global.GeoJsonFeatureCollection, error)
 }
 
 type AdsbDB struct {
@@ -222,6 +223,42 @@ func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, erro
 		feature.Geometry.Type = "Point"
 
 		featureCollection.Features = append(featureCollection.Features, feature)
+	}
+
+	return featureCollection, nil
+}
+
+func (db *AdsbDB) GetHistoryByIcao(search string) (global.GeoJsonFeatureCollection, error) {
+	var query = `SELECT * FROM history_aircraft WHERE icao = $1`
+	rows, err := db.Conn.Query(query, search)
+	if err != nil {
+		return global.GeoJsonFeatureCollection{}, nil
+	}
+	defer rows.Close()
+
+	feature := global.GeoJsonFeature{}
+	feature.Type = "Feature"
+	feature.Geometry.Type = "Point"
+
+	properties := global.AircraftProperties{}
+
+	for rows.Next() {
+		var lat float32
+		var long float32
+
+		err := rows.Scan(&properties.Icao, &lat, &long, &properties.Timestamp)
+		if err != nil {
+			return global.GeoJsonFeatureCollection{}, err
+		}
+
+		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, lat, long)
+	}
+
+	feature.Properties = properties
+
+	featureCollection := global.GeoJsonFeatureCollection{
+		Type:     "FeatureCollection",
+		Features: []global.GeoJsonFeature{feature},
 	}
 
 	return featureCollection, nil
