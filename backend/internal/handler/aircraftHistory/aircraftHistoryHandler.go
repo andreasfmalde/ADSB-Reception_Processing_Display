@@ -33,15 +33,15 @@ func HistoryAircraftHandler(db db.Database) http.HandlerFunc {
 // A valid icao: "ABC123"
 func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, db db.Database) {
 	var search = r.URL.Query().Get("icao")
-	res, err := db.GetHistoryByIcao(search)
+	featureCollection, err := db.GetHistoryByIcao(search)
 	if err != nil {
 		http.Error(w, global.ErrorRetrievingAircraftWithIcao+search, http.StatusInternalServerError)
 		logger.Error.Printf(global.ErrorRetrievingAircraftWithIcao+search+": %q URL: %q", err, r.URL)
 		return
 	}
-	if len(res.Features) == 0 {
+	if featureCollection.Features == nil || featureCollection.Features[0].Properties.Icao == "" {
 		http.Error(w, global.NoAircraftFound, http.StatusNoContent)
 		return
 	}
-	apiUtility.EncodeJsonData(w, res)
+	apiUtility.EncodeJsonData(w, featureCollection)
 }

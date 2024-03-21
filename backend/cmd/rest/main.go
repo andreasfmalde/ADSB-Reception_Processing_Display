@@ -4,6 +4,7 @@ import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/handler/aircraftCurrentHandler"
+	"adsb-api/internal/handler/aircraftHistory"
 	"adsb-api/internal/handler/defaultHandler"
 	"adsb-api/internal/logger"
 	"log"
@@ -33,6 +34,7 @@ func main() {
 
 	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
 	http.HandleFunc(global.CurrentAircraftPath, aircraftCurrentHandler.CurrentAircraftHandler(adsbDB))
+	http.HandleFunc(global.AircraftHistoryPath, aircraftHistory.HistoryAircraftHandler(adsbDB))
 
 	port := os.Getenv("PORT")
 	if port == "" {
