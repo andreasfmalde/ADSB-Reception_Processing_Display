@@ -12,11 +12,11 @@ import (
 type Database interface {
 	Close() error
 	CreateAdsbTables() error
-	BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error
+	BulkInsertCurrentTimeAircraftTable(aircraft []global.AircraftCurrentModel) error
 	AddHistoryFromCurrent() error
 	DeleteOldCurrentAircraft() error
-	GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error)
-	GetHistoryByIcao(search string) (global.GeoJsonFeatureCollection, error)
+	GetAllCurrentAircraft() (global.GeoJsonFeatureCollectionPoint, error)
+	GetHistoryByIcao(search string) (global.GeoJsonFeatureCollectionLineString, error)
 }
 
 type AdsbDB struct {
@@ -118,7 +118,7 @@ func (db *AdsbDB) createHistoryAircraft() error {
 
 // BulkInsertCurrentTimeAircraftTable updates the current_time_aircraft table with the new aircraft records provided from
 // the parameter 'aircraft'
-func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error {
+func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.AircraftCurrentModel) error {
 	// Maximum number of aircraft per query
 	// (65535 is the max amount of parameters postgres supports and there are 9 aircraft parameters)
 	const maxAircraft = 65535 / 9
@@ -188,7 +188,7 @@ func (db *AdsbDB) DeleteOldCurrentAircraft() error {
 }
 
 // GetAllCurrentAircraft retrieves a list of all current aircraft in the current_time_aircraft table
-func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error) {
+func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollectionPoint, error) {
 	// Make the query to the database
 
 	var query = `SELECT * FROM current_time_aircraft 
@@ -197,15 +197,15 @@ func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, erro
 
 	rows, err := db.Conn.Query(query, global.WaitingTime+2)
 	if err != nil {
-		return global.GeoJsonFeatureCollection{}, err
+		return global.GeoJsonFeatureCollectionPoint{}, err
 	}
 	defer rows.Close()
 
-	featureCollection := global.GeoJsonFeatureCollection{}
+	featureCollection := global.GeoJsonFeatureCollectionPoint{}
 	featureCollection.Type = "FeatureCollection"
 
 	for rows.Next() {
-		properties := global.AircraftProperties{}
+		properties := global.AircraftCurrentProperties{}
 		var lat float32
 		var long float32
 
@@ -213,10 +213,10 @@ func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, erro
 			&long, &properties.Speed, &properties.Track,
 			&properties.VerticalRate, &properties.Timestamp)
 		if err != nil {
-			return global.GeoJsonFeatureCollection{}, err
+			return global.GeoJsonFeatureCollectionPoint{}, err
 		}
 
-		feature := global.GeoJsonFeature{}
+		feature := global.GeoJsonFeaturePoint{}
 		feature.Type = "Feature"
 		feature.Properties = properties
 		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, lat, long)
@@ -228,37 +228,40 @@ func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, erro
 	return featureCollection, nil
 }
 
-func (db *AdsbDB) GetHistoryByIcao(search string) (global.GeoJsonFeatureCollection, error) {
-	var query = `SELECT * FROM history_aircraft WHERE icao = $1`
+func (db *AdsbDB) GetHistoryByIcao(search string) (global.GeoJsonFeatureCollectionLineString, error) {
+	var query = `SELECT icao, lat, long FROM history_aircraft WHERE icao = $1`
 	rows, err := db.Conn.Query(query, search)
 	if err != nil {
-		return global.GeoJsonFeatureCollection{}, nil
+		return global.GeoJsonFeatureCollectionLineString{}, nil
 	}
 	defer rows.Close()
 
-	feature := global.GeoJsonFeature{}
-	feature.Type = "Feature"
-	feature.Geometry.Type = "Point"
-
-	properties := global.AircraftProperties{}
+	var icao string
+	var coordinates [][]float32
 
 	for rows.Next() {
 		var lat float32
 		var long float32
 
-		err := rows.Scan(&properties.Icao, &lat, &long, &properties.Timestamp)
+		err := rows.Scan(&icao, &lat, &long)
 		if err != nil {
-			return global.GeoJsonFeatureCollection{}, err
+			return global.GeoJsonFeatureCollectionLineString{}, err
 		}
 
-		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, lat, long)
+		var point = []float32{lat, long}
+
+		coordinates = append(coordinates, point)
 	}
 
-	feature.Properties = properties
+	var feature global.GeoJsonFeatureLineString
+	feature.Type = "Feature"
+	feature.Properties.Icao = icao
+	feature.Geometry.Type = "LineString"
+	feature.Geometry.Coordinates = coordinates
 
-	featureCollection := global.GeoJsonFeatureCollection{
+	var featureCollection = global.GeoJsonFeatureCollectionLineString{
 		Type:     "FeatureCollection",
-		Features: []global.GeoJsonFeature{feature},
+		Features: []global.GeoJsonFeatureLineString{feature},
 	}
 
 	return featureCollection, nil

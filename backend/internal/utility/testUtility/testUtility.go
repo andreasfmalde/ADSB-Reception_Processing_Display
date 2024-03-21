@@ -6,11 +6,11 @@ import (
 	"time"
 )
 
-func CreateMockAircraft(n int) []global.Aircraft {
-	var aircraft []global.Aircraft
+func CreateMockAircraft(n int) []global.AircraftCurrentModel {
+	var aircraft []global.AircraftCurrentModel
 
 	for i := 0; i < n; i++ {
-		ac := global.Aircraft{
+		ac := global.AircraftCurrentModel{
 			Icao:         strconv.Itoa(i),
 			Callsign:     strconv.Itoa(i),
 			Altitude:     i,
@@ -27,8 +27,8 @@ func CreateMockAircraft(n int) []global.Aircraft {
 	return aircraft
 }
 
-func CreateMockAircraftWithTimestamp(icao string, timestamp string) global.Aircraft {
-	return global.Aircraft{
+func CreateMockAircraftWithTimestamp(icao string, timestamp string) global.AircraftCurrentModel {
+	return global.AircraftCurrentModel{
 		Icao:         icao,
 		Callsign:     "TEST",
 		Altitude:     10000,
@@ -41,11 +41,11 @@ func CreateMockAircraftWithTimestamp(icao string, timestamp string) global.Aircr
 	}
 }
 
-func CreateMockAircraftWithIcao(n int, icao string) []global.Aircraft {
-	var aircraft []global.Aircraft
+func CreateMockAircraftWithIcao(n int, icao string) []global.AircraftCurrentModel {
+	var aircraft []global.AircraftCurrentModel
 
 	for i := 0; i < n; i++ {
-		ac := global.Aircraft{
+		ac := global.AircraftCurrentModel{
 			Icao:         icao,
 			Callsign:     strconv.Itoa(i),
 			Altitude:     i,
@@ -62,17 +62,17 @@ func CreateMockAircraftWithIcao(n int, icao string) []global.Aircraft {
 	return aircraft
 }
 
-func CreateMockFeatureCollection(n int) global.GeoJsonFeatureCollection {
-	featureCollection := global.GeoJsonFeatureCollection{}
+func CreateMockFeatureCollectionPoint(n int) global.GeoJsonFeatureCollectionPoint {
+	featureCollection := global.GeoJsonFeatureCollectionPoint{}
 	featureCollection.Type = "FeatureCollection"
 
 	for i := 0; i < n; i++ {
 		var lat float32 = 51.5074
 		var long float32 = 51.5074
 
-		ac := global.GeoJsonFeature{
+		ac := global.GeoJsonFeaturePoint{
 			Type: "Feature",
-			Properties: global.AircraftProperties{
+			Properties: global.AircraftCurrentProperties{
 				Icao:         "TEST",
 				Callsign:     "TEST",
 				Altitude:     0,
@@ -87,13 +87,33 @@ func CreateMockFeatureCollection(n int) global.GeoJsonFeatureCollection {
 			}{},
 		}
 
-		feature := global.GeoJsonFeature{}
+		feature := global.GeoJsonFeaturePoint{}
 		feature.Properties = ac.Properties
 		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, lat, long)
 		feature.Geometry.Type = "Point"
 
 		featureCollection.Features = append(featureCollection.Features, feature)
 	}
+
+	return featureCollection
+}
+
+func CreateMockFeatureCollectionLineString(n int) global.GeoJsonFeatureCollectionLineString {
+	var coordinates [][]float32
+
+	for i := 0; i < n; i++ {
+		coordinates = append(coordinates, []float32{float32(i), float32(-i)})
+	}
+
+	feature := global.GeoJsonFeatureLineString{}
+	feature.Type = "Feature"
+	feature.Properties.Icao = "TEST"
+	feature.Geometry.Type = "LineString"
+	feature.Geometry.Coordinates = coordinates
+
+	featureCollection := global.GeoJsonFeatureCollectionLineString{}
+	featureCollection.Type = "FeatureCollection"
+	featureCollection.Features = append(featureCollection.Features, feature)
 
 	return featureCollection
 }

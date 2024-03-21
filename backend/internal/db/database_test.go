@@ -171,7 +171,7 @@ func TestAdsbDB_BulkInsertCurrentTimeAircraftTable_InvalidType(t *testing.T) {
 	defer teardownTestDB(db)
 
 	// Create an aircraft with a null icao value
-	aircraft := []global.Aircraft{
+	aircraft := []global.AircraftCurrentModel{
 		{
 			Icao:         "", // null icao value
 			Callsign:     "",
@@ -229,7 +229,7 @@ func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
 	acNow := testUtility.CreateMockAircraftWithTimestamp("TEST2",
 		time.Now().Format(time.DateTime))
 
-	err := db.BulkInsertCurrentTimeAircraftTable([]global.Aircraft{acAfter, acNow})
+	err := db.BulkInsertCurrentTimeAircraftTable([]global.AircraftCurrentModel{acAfter, acNow})
 	if err != nil {
 		t.Fatalf("Error inserting aircraft: %q", err)
 	}
@@ -272,34 +272,34 @@ func TestAdsbDB_GetAllCurrentAircraft(t *testing.T) {
 		time.Now().Format(time.DateTime))
 
 	var count = 0
-	geoJsonFeatureCollection, err := db.GetAllCurrentAircraft()
+	featureCollection, err := db.GetAllCurrentAircraft()
 	if err != nil {
-		t.Fatalf("Error getting all current geoJsonFeatureCollection: %q", err)
+		t.Fatalf("Error getting all current featureCollection: %q", err)
 	}
 
-	count = len(geoJsonFeatureCollection.Features)
+	count = len(featureCollection.Features)
 	if count != 0 {
 		t.Fatalf("Expected error, db should not contain any elements")
 	}
 
-	err = db.BulkInsertCurrentTimeAircraftTable([]global.Aircraft{acAfter, acNow})
+	err = db.BulkInsertCurrentTimeAircraftTable([]global.AircraftCurrentModel{acAfter, acNow})
 	if err != nil {
-		t.Fatalf("Error inserting geoJsonFeatureCollection: %q", err)
+		t.Fatalf("Error inserting featureCollection: %q", err)
 	}
 
-	geoJsonFeatureCollection, err = db.GetAllCurrentAircraft()
+	featureCollection, err = db.GetAllCurrentAircraft()
 	if err != nil {
-		t.Fatalf("Error getting all current geoJsonFeatureCollection: %q", err)
+		t.Fatalf("Error getting all current featureCollection: %q", err)
 	}
 
-	count = len(geoJsonFeatureCollection.Features)
+	count = len(featureCollection.Features)
 
 	if count != 1 {
 		t.Fatalf("Expected error, list should only contain 1 element")
 
 	}
 
-	assert.Equal(t, icaoTest2, geoJsonFeatureCollection.Features[0].Properties.Icao)
+	assert.Equal(t, icaoTest2, featureCollection.Features[0].Properties.Icao)
 }
 
 func TestAdsbDB_GetHistoryByIcao(t *testing.T) {
@@ -327,7 +327,7 @@ func TestAdsbDB_GetHistoryByIcao(t *testing.T) {
 
 	assert.Equal(t, 1, len(featureCollection.Features))
 	assert.Equal(t, icao, featureCollection.Features[0].Properties.Icao)
-	assert.Equal(t, nAircraft*2, len(featureCollection.Features[0].Geometry.Coordinates))
+	assert.Equal(t, nAircraft, len(featureCollection.Features[0].Geometry.Coordinates))
 }
 
 func TestAdsbDB_GetHistoryByIcao_InvalidIcao(t *testing.T) {

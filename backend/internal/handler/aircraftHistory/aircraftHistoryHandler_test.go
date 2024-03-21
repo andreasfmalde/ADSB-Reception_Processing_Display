@@ -57,7 +57,7 @@ func TestInvalidRequests(t *testing.T) {
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusInternalServerError,
 			setup: func(mockDB *db.MockDatabase) {
-				mockDB.EXPECT().GetHistoryByIcao("ABC123").Return(global.GeoJsonFeatureCollection{}, errors.New("expected error"))
+				mockDB.EXPECT().GetHistoryByIcao("ABC123").Return(global.GeoJsonFeatureCollectionLineString{}, errors.New("expected error"))
 			},
 			errorMsg: global.ErrorRetrievingAircraftWithIcao + "ABC123",
 		},
@@ -139,16 +139,16 @@ func TestValidRequests(t *testing.T) {
 	tests := []struct {
 		name, url, httpMethod string
 		statusCode            int
-		mockData              global.GeoJsonFeatureCollection
-		setup                 func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollection)
+		mockData              global.GeoJsonFeatureCollectionLineString
+		setup                 func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollectionLineString)
 	}{
 		{
 			name:       "Get request with valid URl",
 			url:        endpoint + "?icao=ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
-			mockData:   testUtility.CreateMockFeatureCollection(10),
-			setup: func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollection) {
+			mockData:   testUtility.CreateMockFeatureCollectionLineString(10),
+			setup: func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollectionLineString) {
 				mockDB.EXPECT().GetHistoryByIcao("ABC123").Return(mockData, nil)
 			},
 		},
@@ -157,8 +157,8 @@ func TestValidRequests(t *testing.T) {
 			url:        currentEndpoint.URL + "/../" + global.AircraftHistoryPath + "//../././/?icao=ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
-			mockData:   testUtility.CreateMockFeatureCollection(10),
-			setup: func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollection) {
+			mockData:   testUtility.CreateMockFeatureCollectionLineString(10),
+			setup: func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollectionLineString) {
 				mockDB.EXPECT().GetHistoryByIcao("ABC123").Return(mockData, nil)
 			},
 		},
@@ -167,8 +167,8 @@ func TestValidRequests(t *testing.T) {
 			url:        endpoint + "?icao=ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
-			setup: func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollection) {
-				mockDB.EXPECT().GetHistoryByIcao("ABC123").Return(global.GeoJsonFeatureCollection{}, nil)
+			setup: func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollectionLineString) {
+				mockDB.EXPECT().GetHistoryByIcao("ABC123").Return(global.GeoJsonFeatureCollectionLineString{}, nil)
 			},
 		},
 	}
@@ -190,12 +190,12 @@ func TestValidRequests(t *testing.T) {
 
 			assert.Equal(t, tt.statusCode, res.StatusCode)
 
-			var actual global.GeoJsonFeatureCollection
+			var actual global.GeoJsonFeatureCollectionLineString
 			_ = json.NewDecoder(res.Body).Decode(&actual)
 
 			assert.Equal(t, tt.mockData, actual)
 
-			if reflect.TypeOf(actual) != reflect.TypeOf(global.GeoJsonFeatureCollection{}) {
+			if reflect.TypeOf(actual) != reflect.TypeOf(global.GeoJsonFeatureCollectionLineString{}) {
 				t.Error("The response does not follow the GeoJson standard")
 			}
 		})
