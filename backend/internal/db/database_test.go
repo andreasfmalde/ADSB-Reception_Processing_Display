@@ -330,7 +330,7 @@ func TestAdsbDB_GetHistoryByIcao(t *testing.T) {
 	assert.Equal(t, nAircraft*2, len(featureCollection.Features[0].Geometry.Coordinates))
 }
 
-func TestAdsbDB_AddHistoryFromCurrent_InvalidIcao(t *testing.T) {
+func TestAdsbDB_GetHistoryByIcao_InvalidIcao(t *testing.T) {
 	db := setupTestDB()
 	defer teardownTestDB(db)
 
