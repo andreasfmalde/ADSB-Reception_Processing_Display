@@ -154,7 +154,7 @@ func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft)
 }
 
 func (db *AdsbDB) AddHistoryFromCurrent() error {
-	query := `INSERT INTO history_aircraft 
+	query := `INSERT INTO history_aircraft (icao, lat, long, timestamp) 
 			  SELECT icao, lat, long, timestamp
 			  FROM current_time_aircraft
 			  ON CONFLICT (icao, timestamp) 
