@@ -14,6 +14,23 @@ function App() {
     latitude: 60.6,
     zoom: 5
   });
+  const [selected, setSelected] = useState(null);
+  const [selectedImg, setSelectedImg] = useState(null);
+
+  const retrieveImage = async (icao) =>{
+    try{
+      const response = await fetch(`https://api.planespotters.net/pub/photos/hex/${icao}`);
+      const data = await response.json();
+      if (data.error){
+        console.log("AYA")
+        setSelectedImg(null)
+      }else{
+        setSelectedImg(data.photos[0])
+      }
+    }catch(error){
+      console.log("API retrieval failed")
+    } 
+  };
   
   return (
     <div className="App">
@@ -35,10 +52,17 @@ function App() {
               latitude={p.geometry.coordinates[0]}
               longitude={p.geometry.coordinates[1]}
               rotation={p.properties.track}
+              onClick={()=>{
+                if(selected?.properties.icao !== p.properties.icao){
+                  setSelected(p);
+                  retrieveImage(p.properties.icao);
+                }
+                
+              }}
             >
             <IoMdAirplane 
               style={{
-                color: '#c9a206',
+                color: selected?.properties.icao===p.properties.icao ? '#b50404' : '#c9a206',
                 fontSize: '1.8em'
               }}
             />
@@ -46,7 +70,7 @@ function App() {
         </div>
         ))}
         </Map>
-        <Sidebar />
+        <Sidebar aircraft={selected} image={selectedImg} />
       </div>
     </div>
   );
