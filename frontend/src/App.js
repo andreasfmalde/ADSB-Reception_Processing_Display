@@ -3,7 +3,7 @@ import './App.css';
 import { Navbar } from './components/Navbar';
 import Map, {Marker} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import {style, geojson} from './data/MapData';
 import { IoMdAirplane } from "react-icons/io";
@@ -14,6 +14,7 @@ function App() {
     latitude: 60.6,
     zoom: 5
   });
+  const [aircraftJSON,setAircraftJSON] = useState(null);
   const [currentRender, setCurrentRender] = useState(null);
   const [selected, setSelected] = useState(null);
   const [selectedImg, setSelectedImg] = useState(null);
@@ -27,6 +28,17 @@ function App() {
       return false;
     }
     return true
+  }
+
+  const retrievePlanes = async () =>{
+    try{
+      const response = await fetch("http://localhost:8080/aircraft/current/");// http://129.241.150.147:8080/aircraft/current/
+      const data = await response.json()
+      setAircraftJSON(data.features);
+    }catch(error){
+      console.log("Something went wrong")
+    }
+    
   }
 
   const retrieveImage = async (icao) =>{
@@ -43,6 +55,12 @@ function App() {
       console.log("API retrieval failed")
     } 
   };
+
+  useEffect(()=>{
+    //  const seconds = 10;
+    retrievePlanes();
+    //setInterval(()=>retrievePlanes(),1000 * seconds );
+  },[])
   
   return (
     <div className="App">
@@ -58,7 +76,7 @@ function App() {
             setViewport(e.viewState);
           }}
           onMoveEnd={(e)=>{
-            let aircraftInBounds = geojson.features?.filter(p => isInBounds(p,e.target.getBounds()))
+            let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,e.target.getBounds()))
             setCurrentRender(aircraftInBounds);
           }}
         >
