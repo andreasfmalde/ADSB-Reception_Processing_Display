@@ -7,4 +7,5 @@ const (
 	DefaultPath         = "/"
 	CurrentAircraftPath = "/aircraft/current/"
 	WaitingTime         = 4
+	AircraftHistoryPath = "/aircraft/history/"
 )
