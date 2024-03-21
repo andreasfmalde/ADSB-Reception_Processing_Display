@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -194,6 +195,9 @@ func TestValidRequests(t *testing.T) {
 
 			assert.Equal(t, tt.mockData, actual)
 
+			if reflect.TypeOf(actual) != reflect.TypeOf(global.GeoJsonFeatureCollection{}) {
+				t.Error("The response does not follow the GeoJson standard")
+			}
 		})
 	}
 }
