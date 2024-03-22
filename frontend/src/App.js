@@ -72,6 +72,19 @@ function App() {
           }}
           onMoveEnd={(e)=>{
             let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,e.target.getBounds()))
+            if (aircraftInBounds.length > 3500){
+              aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.9)
+            }else if (aircraftInBounds.length > 2500){
+              aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.8)
+            }else if (aircraftInBounds.length > 2000){
+              aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.7)
+            }else if (aircraftInBounds.length > 1250){
+              aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.5)
+            }else if (aircraftInBounds.length > 900){
+              aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.3)
+            }else if (aircraftInBounds.length > 500){
+              aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.15)
+            }
             setCurrentRender(aircraftInBounds);
           }}
         >
