@@ -54,7 +54,7 @@ func TestInvalidRequests(t *testing.T) {
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusInternalServerError,
 			setup: func(mockDB *db.MockDatabase) {
-				mockDB.EXPECT().GetAllCurrentAircraft().Return(global.GeoJsonFeatureCollectionPoint{}, errors.New("no new aircraft"))
+				mockDB.EXPECT().GetAllCurrentAircraft().Return(global.FeatureCollectionPoint{}, errors.New("no new aircraft"))
 			},
 			errorMsg: global.ErrorRetrievingCurrentAircraft,
 		},
@@ -99,8 +99,8 @@ func TestValidRequests(t *testing.T) {
 	tests := []struct {
 		name, url, httpMethod string
 		statusCode            int
-		mockData              global.GeoJsonFeatureCollectionPoint
-		setup                 func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollectionPoint)
+		mockData              global.FeatureCollectionPoint
+		setup                 func(mockDB *db.MockDatabase, mockData global.FeatureCollectionPoint)
 	}{
 		{
 			name:       "Get request without parameters",
@@ -108,7 +108,7 @@ func TestValidRequests(t *testing.T) {
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
 			mockData:   testUtility.CreateMockFeatureCollectionPoint(10),
-			setup: func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollectionPoint) {
+			setup: func(mockDB *db.MockDatabase, mockData global.FeatureCollectionPoint) {
 				mockDB.EXPECT().GetAllCurrentAircraft().Return(mockData, nil)
 			},
 		},
@@ -117,7 +117,7 @@ func TestValidRequests(t *testing.T) {
 			url:        currentEndpoint.URL + global.CurrentAircraftPath,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
-			setup: func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollectionPoint) {
+			setup: func(mockDB *db.MockDatabase, mockData global.FeatureCollectionPoint) {
 				mockDB.EXPECT().GetAllCurrentAircraft().Return(mockData, nil)
 			},
 		},
@@ -139,12 +139,12 @@ func TestValidRequests(t *testing.T) {
 
 			assert.Equal(t, tt.statusCode, res.StatusCode)
 
-			var actual global.GeoJsonFeatureCollectionPoint
+			var actual global.FeatureCollectionPoint
 			_ = json.NewDecoder(res.Body).Decode(&actual)
 
 			assert.Equal(t, tt.mockData, actual)
 
-			if reflect.TypeOf(actual) != reflect.TypeOf(global.GeoJsonFeatureCollectionPoint{}) {
+			if reflect.TypeOf(actual) != reflect.TypeOf(global.FeatureCollectionPoint{}) {
 				t.Error("The response does not follow the GeoJson standard")
 			}
 		})

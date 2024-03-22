@@ -23,15 +23,15 @@ type AircraftHistoryModel struct {
 
 // GeoJson FeatureCollection for a Point type
 
-type GeoJsonFeatureCollectionPoint struct {
-	Type     string                `json:"type"`
-	Features []GeoJsonFeaturePoint `json:"features"`
+type FeatureCollectionPoint struct {
+	Type     string         `json:"type"`
+	Features []FeaturePoint `json:"features"`
 }
 
-type GeoJsonFeaturePoint struct {
+type FeaturePoint struct {
 	Type       string                    `json:"type"`
 	Properties AircraftCurrentProperties `json:"properties"`
-	Geometry   GeoJsonGeometryPoint      `json:"geometry"`
+	Geometry   GeometryPoint             `json:"geometry"`
 }
 
 type AircraftCurrentProperties struct {
@@ -44,29 +44,29 @@ type AircraftCurrentProperties struct {
 	Timestamp    string `json:"timestamp"`
 }
 
-type GeoJsonGeometryPoint struct {
+type GeometryPoint struct {
 	Coordinates []float32 `json:"coordinates"`
 	Type        string    `json:"type"`
 }
 
 // GeoJson FeatureCollection for a LineString type
 
-type GeoJsonFeatureCollectionLineString struct {
-	Type     string                     `json:"type"`
-	Features []GeoJsonFeatureLineString `json:"features"`
+type FeatureCollectionLineString struct {
+	Type     string              `json:"type"`
+	Features []FeatureLineString `json:"features"`
 }
 
-type GeoJsonFeatureLineString struct {
-	Type       string                    `json:"type"`
-	Properties AircraftHistProperties    `json:"properties"`
-	Geometry   GeoJsonGeometryLineString `json:"geometry"`
+type FeatureLineString struct {
+	Type       string                 `json:"type"`
+	Properties AircraftHistProperties `json:"properties"`
+	Geometry   GeometryLineString     `json:"geometry"`
 }
 
 type AircraftHistProperties struct {
 	Icao string `json:"icao"`
 }
 
-type GeoJsonGeometryLineString struct {
+type GeometryLineString struct {
 	Coordinates [][]float32 `json:"coordinates"`
 	Type        string      `json:"type"`
 }
