@@ -15,6 +15,6 @@ func EncodeJsonData(w http.ResponseWriter, data interface{}) {
 	err := encoder.Encode(data)
 	if err != nil {
 		http.Error(w, "Failed to encode data", http.StatusInternalServerError)
-		logger.Error.Println("Failed to encode data: %q", err)
+		logger.Error.Printf("Failed to encode data: %q", err)
 	}
 }
