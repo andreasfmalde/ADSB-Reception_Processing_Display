@@ -147,7 +147,7 @@ func TestValidRequests(t *testing.T) {
 			var actual geoJSON.FeatureCollectionPoint
 			err = json.NewDecoder(res.Body).Decode(&actual)
 			if err != nil {
-				t.Errorf("Test: %s. Error decoding response body %s request: %s", tt.name, tt.httpMethod, err.Error())
+				t.Errorf("Test: %s. Error decoing response body: %s", tt.name, err.Error())
 			}
 
 			mockFeatureCollection, err := geoJSON.ConvertCurrentModelToGeoJson(tt.mockData)
