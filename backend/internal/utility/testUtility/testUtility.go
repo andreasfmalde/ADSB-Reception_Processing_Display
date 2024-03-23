@@ -1,16 +1,16 @@
 package testUtility
 
 import (
-	"adsb-api/internal/global"
+	"adsb-api/internal/db/models"
 	"strconv"
 	"time"
 )
 
-func CreateMockAircraft(n int) []global.AircraftCurrentModel {
-	var aircraft []global.AircraftCurrentModel
+func CreateMockAircraft(n int) []models.AircraftCurrentModel {
+	var aircraft []models.AircraftCurrentModel
 
 	for i := 0; i < n; i++ {
-		ac := global.AircraftCurrentModel{
+		ac := models.AircraftCurrentModel{
 			Icao:         strconv.Itoa(i),
 			Callsign:     strconv.Itoa(i),
 			Altitude:     i,
@@ -27,11 +27,11 @@ func CreateMockAircraft(n int) []global.AircraftCurrentModel {
 	return aircraft
 }
 
-func CreateMockHistAircraft(n int) []global.AircraftHistoryModel {
-	var aircraft []global.AircraftHistoryModel
+func CreateMockHistAircraft(n int) []models.AircraftHistoryModel {
+	var aircraft []models.AircraftHistoryModel
 
 	for i := 0; i < n; i++ {
-		ac := global.AircraftHistoryModel{
+		ac := models.AircraftHistoryModel{
 			Icao:      strconv.Itoa(i),
 			Latitude:  float32(i),
 			Longitude: float32(i),
@@ -43,8 +43,8 @@ func CreateMockHistAircraft(n int) []global.AircraftHistoryModel {
 	return aircraft
 }
 
-func CreateMockAircraftWithTimestamp(icao string, timestamp string) global.AircraftCurrentModel {
-	return global.AircraftCurrentModel{
+func CreateMockAircraftWithTimestamp(icao string, timestamp string) models.AircraftCurrentModel {
+	return models.AircraftCurrentModel{
 		Icao:         icao,
 		Callsign:     "TEST",
 		Altitude:     10000,
@@ -57,11 +57,11 @@ func CreateMockAircraftWithTimestamp(icao string, timestamp string) global.Aircr
 	}
 }
 
-func CreateMockAircraftWithIcao(n int, icao string) []global.AircraftCurrentModel {
-	var aircraft []global.AircraftCurrentModel
+func CreateMockAircraftWithIcao(n int, icao string) []models.AircraftCurrentModel {
+	var aircraft []models.AircraftCurrentModel
 
 	for i := 0; i < n; i++ {
-		ac := global.AircraftCurrentModel{
+		ac := models.AircraftCurrentModel{
 			Icao:         icao,
 			Callsign:     strconv.Itoa(i),
 			Altitude:     i,

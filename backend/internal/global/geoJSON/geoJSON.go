@@ -1,6 +1,8 @@
 package geoJSON
 
-import "adsb-api/internal/global"
+import (
+	"adsb-api/internal/db/models"
+)
 
 // GeoJson FeatureCollection for a Point type
 
@@ -52,7 +54,7 @@ type geometryLineString struct {
 	Type        string      `json:"type"`
 }
 
-func ConvertCurrentModelToGeoJson(aircraft []global.AircraftCurrentModel) (FeatureCollectionPoint, error) {
+func ConvertCurrentModelToGeoJson(aircraft []models.AircraftCurrentModel) (FeatureCollectionPoint, error) {
 	if len(aircraft) == 0 {
 		return FeatureCollectionPoint{}, nil
 	}
@@ -81,7 +83,7 @@ func ConvertCurrentModelToGeoJson(aircraft []global.AircraftCurrentModel) (Featu
 	return featureCollection, nil
 }
 
-func ConvertHistoryModelToGeoJson(aircraft []global.AircraftHistoryModel) (FeatureCollectionLineString, error) {
+func ConvertHistoryModelToGeoJson(aircraft []models.AircraftHistoryModel) (FeatureCollectionLineString, error) {
 	if len(aircraft) == 0 {
 		return FeatureCollectionLineString{}, nil
 	}

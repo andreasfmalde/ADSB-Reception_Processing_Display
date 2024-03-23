@@ -1,6 +1,7 @@
 package db
 
 import (
+	"adsb-api/internal/db/models"
 	"adsb-api/internal/global"
 	"database/sql"
 	"fmt"
@@ -12,11 +13,11 @@ import (
 type Database interface {
 	Close() error
 	CreateAdsbTables() error
-	BulkInsertCurrentTimeAircraftTable(aircraft []global.AircraftCurrentModel) error
+	BulkInsertCurrentTimeAircraftTable(aircraft []models.AircraftCurrentModel) error
 	AddHistoryFromCurrent() error
 	DeleteOldCurrentAircraft() error
-	GetAllCurrentAircraft() ([]global.AircraftCurrentModel, error)
-	GetHistoryByIcao(search string) ([]global.AircraftHistoryModel, error)
+	GetAllCurrentAircraft() ([]models.AircraftCurrentModel, error)
+	GetHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
 }
 
 type AdsbDB struct {
@@ -118,7 +119,7 @@ func (db *AdsbDB) createHistoryAircraft() error {
 
 // BulkInsertCurrentTimeAircraftTable updates the current_time_aircraft table with the new aircraft records provided from
 // the parameter 'aircraft'
-func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.AircraftCurrentModel) error {
+func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []models.AircraftCurrentModel) error {
 	// Maximum number of aircraft per query
 	// (65535 is the max amount of parameters postgres supports and there are 9 aircraft parameters)
 	const maxAircraft = 65535 / 9
@@ -188,7 +189,7 @@ func (db *AdsbDB) DeleteOldCurrentAircraft() error {
 }
 
 // GetAllCurrentAircraft retrieves a list of all current aircraft in the current_time_aircraft table
-func (db *AdsbDB) GetAllCurrentAircraft() ([]global.AircraftCurrentModel, error) {
+func (db *AdsbDB) GetAllCurrentAircraft() ([]models.AircraftCurrentModel, error) {
 	// Make the query to the database
 
 	var query = `SELECT * FROM current_time_aircraft 
@@ -201,10 +202,10 @@ func (db *AdsbDB) GetAllCurrentAircraft() ([]global.AircraftCurrentModel, error)
 	}
 	defer rows.Close()
 
-	var aircraft []global.AircraftCurrentModel
+	var aircraft []models.AircraftCurrentModel
 
 	for rows.Next() {
-		var ac global.AircraftCurrentModel
+		var ac models.AircraftCurrentModel
 		err := rows.Scan(&ac.Icao, &ac.Callsign, &ac.Altitude, &ac.Latitude, &ac.Longitude, &ac.Speed, &ac.Track,
 			&ac.VerticalRate, &ac.Timestamp)
 		if err != nil {
@@ -217,18 +218,18 @@ func (db *AdsbDB) GetAllCurrentAircraft() ([]global.AircraftCurrentModel, error)
 	return aircraft, nil
 }
 
-func (db *AdsbDB) GetHistoryByIcao(search string) ([]global.AircraftHistoryModel, error) {
+func (db *AdsbDB) GetHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
 	var query = `SELECT icao, long, lat FROM history_aircraft WHERE icao = $1`
 	rows, err := db.Conn.Query(query, search)
 	if err != nil {
-		return []global.AircraftHistoryModel{}, err
+		return []models.AircraftHistoryModel{}, err
 	}
 	defer rows.Close()
 
-	var aircraft []global.AircraftHistoryModel
+	var aircraft []models.AircraftHistoryModel
 
 	for rows.Next() {
-		var ac global.AircraftHistoryModel
+		var ac models.AircraftHistoryModel
 		err := rows.Scan(&ac.Icao, &ac.Longitude, &ac.Latitude)
 		if err != nil {
 			return nil, err

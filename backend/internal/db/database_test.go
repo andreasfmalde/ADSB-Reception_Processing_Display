@@ -1,6 +1,7 @@
 package db
 
 import (
+	"adsb-api/internal/db/models"
 	"adsb-api/internal/global"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/testUtility"
@@ -188,7 +189,7 @@ func TestAdsbDB_BulkInsertCurrentTimeAircraftTable_InvalidType(t *testing.T) {
 	defer teardownTestDB(db)
 
 	// Create an aircraft with a null icao value
-	aircraft := []global.AircraftCurrentModel{
+	aircraft := []models.AircraftCurrentModel{
 		{
 			Icao:         "", // null icao value
 			Callsign:     "",
@@ -246,7 +247,7 @@ func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
 	acNow := testUtility.CreateMockAircraftWithTimestamp("TEST2",
 		time.Now().Format(time.DateTime))
 
-	err := db.BulkInsertCurrentTimeAircraftTable([]global.AircraftCurrentModel{acAfter, acNow})
+	err := db.BulkInsertCurrentTimeAircraftTable([]models.AircraftCurrentModel{acAfter, acNow})
 	if err != nil {
 		t.Fatalf("Error inserting aircraft: %q", err)
 	}
@@ -299,7 +300,7 @@ func TestAdsbDB_GetAllCurrentAircraft(t *testing.T) {
 		t.Fatalf("Expected error, db should not contain any elements")
 	}
 
-	err = db.BulkInsertCurrentTimeAircraftTable([]global.AircraftCurrentModel{acAfter, acNow})
+	err = db.BulkInsertCurrentTimeAircraftTable([]models.AircraftCurrentModel{acAfter, acNow})
 	if err != nil {
 		t.Fatalf("Error inserting aircraft: %q", err)
 	}

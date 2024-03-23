@@ -2,6 +2,7 @@ package aircraftCurrentHandler
 
 import (
 	"adsb-api/internal/db"
+	"adsb-api/internal/db/models"
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/utility/testUtility"
@@ -54,7 +55,7 @@ func TestInvalidRequests(t *testing.T) {
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusInternalServerError,
 			setup: func(mockDB *db.MockDatabase) {
-				mockDB.EXPECT().GetAllCurrentAircraft().Return([]global.AircraftCurrentModel{}, errors.New("no new aircraft"))
+				mockDB.EXPECT().GetAllCurrentAircraft().Return([]models.AircraftCurrentModel{}, errors.New("no new aircraft"))
 			},
 			errorMsg: global.ErrorRetrievingCurrentAircraft,
 		},
@@ -99,8 +100,8 @@ func TestValidRequests(t *testing.T) {
 	tests := []struct {
 		name, url, httpMethod string
 		statusCode            int
-		mockData              []global.AircraftCurrentModel
-		setup                 func(mockDB *db.MockDatabase, mockData []global.AircraftCurrentModel)
+		mockData              []models.AircraftCurrentModel
+		setup                 func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel)
 	}{
 		{
 			name:       "Get request without parameters",
@@ -108,7 +109,7 @@ func TestValidRequests(t *testing.T) {
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
 			mockData:   testUtility.CreateMockAircraft(10),
-			setup: func(mockDB *db.MockDatabase, mockData []global.AircraftCurrentModel) {
+			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel) {
 				mockDB.EXPECT().GetAllCurrentAircraft().Return(mockData, nil)
 			},
 		},
@@ -117,8 +118,8 @@ func TestValidRequests(t *testing.T) {
 			url:        currentEndpoint.URL + global.CurrentAircraftPath,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
-			setup: func(mockDB *db.MockDatabase, mockData []global.AircraftCurrentModel) {
-				mockDB.EXPECT().GetAllCurrentAircraft().Return([]global.AircraftCurrentModel{}, nil)
+			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel) {
+				mockDB.EXPECT().GetAllCurrentAircraft().Return([]models.AircraftCurrentModel{}, nil)
 			},
 		},
 	}
