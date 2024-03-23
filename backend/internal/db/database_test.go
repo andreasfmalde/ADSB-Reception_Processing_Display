@@ -4,7 +4,9 @@ import (
 	"adsb-api/internal/global"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/testUtility"
+	"fmt"
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -75,7 +77,6 @@ func TestInitCloseDB(t *testing.T) {
 	}
 }
 
-// TODO: Test columns name and type
 func TestAdsbDB_CreateAdsbTables(t *testing.T) {
 	db := setupTestDB()
 	defer teardownTestDB(db)
@@ -88,39 +89,54 @@ func TestAdsbDB_CreateAdsbTables(t *testing.T) {
 		t.Errorf("creating ADS-B tables failed: %q", err)
 	}
 
-	query := `SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = $1)`
+	// Define the expected column names and types for each table
+	expectedCurrentTimeAircraftColumns := map[string]string{
+		"icao":      "character varying(6)",
+		"callsign":  "character varying(10)",
+		"altitude":  "integer",
+		"lat":       "numeric",
+		"long":      "numeric",
+		"speed":     "integer",
+		"track":     "integer",
+		"vspeed":    "integer",
+		"timestamp": "timestamp without time zone",
+	}
 
-	var exists bool
-	err = db.Conn.QueryRow(query, "current_time_aircraft").Scan(&exists)
+	expectedHistoryAircraftColumns := map[string]string{
+		"icao":      "character varying(6)",
+		"lat":       "numeric",
+		"long":      "numeric",
+		"timestamp": "timestamp without time zone",
+	}
+
+	// Check the columns for each table
+	checkTableColumns(t, db, "current_time_aircraft", expectedCurrentTimeAircraftColumns)
+	checkTableColumns(t, db, "history_aircraft", expectedHistoryAircraftColumns)
+}
+
+func checkTableColumns(t *testing.T, db *AdsbDB, tableName string, expectedColumns map[string]string) {
+	rows, err := db.Conn.Query(`SELECT column_name, data_type, character_maximum_length FROM information_schema.columns WHERE table_name = $1`, tableName)
 	if err != nil {
-		t.Fatalf("error executing test query: %q", err.Error())
+		t.Fatalf("error executing column info query: %q", err.Error())
+	}
+	defer rows.Close()
+
+	actualColumns := make(map[string]string)
+	for rows.Next() {
+		var columnName, dataType string
+		var maxLength *int
+		if err := rows.Scan(&columnName, &dataType, &maxLength); err != nil {
+			t.Fatalf("error scanning column info: %q", err.Error())
+		}
+		if maxLength != nil {
+			dataType = fmt.Sprintf("%s(%d)", dataType, *maxLength)
+		}
+		actualColumns[columnName] = dataType
 	}
 
-	if !exists {
-		t.Fatalf("table does not exists")
+	if !reflect.DeepEqual(expectedColumns, actualColumns) {
+		t.Fatalf("columns for table %s do not match expected. \n Expected: %v \n Got     : %v", tableName, expectedColumns, actualColumns)
 	}
-
-	query = `SELECT EXISTS (SELECT 1 FROM  pg_indexes WHERE indexname = $1 AND tablename = $2)`
-
-	err = db.Conn.QueryRow(query, "timestamp_index", "current_time_aircraft").Scan(&exists)
-	if err != nil {
-		t.Fatalf("error executing test query: %q", err.Error())
-	}
-
-	if !exists {
-		t.Fatal("index does not exists")
-	}
-
-	query = `SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = $1)`
-	err = db.Conn.QueryRow(query, "history_aircraft").Scan(&exists)
-	if err != nil {
-		t.Fatalf("error executing test query: %q", err.Error())
-	}
-
-	if !exists {
-		t.Fatalf("table does not exists")
-	}
-
 }
 
 func TestAdsbDB_BulkInsertCurrentTimeAircraftTable(t *testing.T) {

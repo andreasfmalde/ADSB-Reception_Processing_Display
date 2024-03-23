@@ -126,7 +126,6 @@ func TestInvalidRequests(t *testing.T) {
 	}
 }
 
-// TODO: Check if result follows GeoJson standard
 func TestValidRequests(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
