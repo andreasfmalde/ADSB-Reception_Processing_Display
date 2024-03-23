@@ -3,6 +3,7 @@ package aircraftCurrentHandler
 import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/apiUtility"
 	"fmt"
@@ -49,9 +50,17 @@ func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, db 
 		logger.Error.Printf(global.ErrorRetrievingCurrentAircraft+": %q Path: %q", err, r.URL)
 		return
 	}
-	if len(res.Features) == 0 {
+	if len(res) == 0 {
 		http.Error(w, global.NoAircraftFound, http.StatusNoContent)
 		return
 	}
-	apiUtility.EncodeJsonData(w, res)
+
+	aircraft, err := geoJSON.ConvertCurrentModelToGeoJson(res)
+	if err != nil {
+		http.Error(w, global.ErrorConvertingDataToGeoJson, http.StatusInternalServerError)
+		logger.Error.Printf(global.ErrorConvertingDataToGeoJson+": %q", err)
+		return
+	}
+
+	apiUtility.EncodeJsonData(w, aircraft)
 }

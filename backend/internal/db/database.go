@@ -15,8 +15,8 @@ type Database interface {
 	BulkInsertCurrentTimeAircraftTable(aircraft []global.AircraftCurrentModel) error
 	AddHistoryFromCurrent() error
 	DeleteOldCurrentAircraft() error
-	GetAllCurrentAircraft() (global.FeatureCollectionPoint, error)
-	GetHistoryByIcao(search string) (global.FeatureCollectionLineString, error)
+	GetAllCurrentAircraft() ([]global.AircraftCurrentModel, error)
+	GetHistoryByIcao(search string) ([]global.AircraftHistoryModel, error)
 }
 
 type AdsbDB struct {
@@ -188,7 +188,7 @@ func (db *AdsbDB) DeleteOldCurrentAircraft() error {
 }
 
 // GetAllCurrentAircraft retrieves a list of all current aircraft in the current_time_aircraft table
-func (db *AdsbDB) GetAllCurrentAircraft() (global.FeatureCollectionPoint, error) {
+func (db *AdsbDB) GetAllCurrentAircraft() ([]global.AircraftCurrentModel, error) {
 	// Make the query to the database
 
 	var query = `SELECT * FROM current_time_aircraft 
@@ -197,72 +197,45 @@ func (db *AdsbDB) GetAllCurrentAircraft() (global.FeatureCollectionPoint, error)
 
 	rows, err := db.Conn.Query(query, global.WaitingTime+2)
 	if err != nil {
-		return global.FeatureCollectionPoint{}, err
+		return nil, err
 	}
 	defer rows.Close()
 
-	featureCollection := global.FeatureCollectionPoint{}
-	featureCollection.Type = "FeatureCollection"
+	var aircraft []global.AircraftCurrentModel
 
 	for rows.Next() {
-		properties := global.AircraftCurrentProperties{}
-		var lat float32
-		var long float32
-
-		err := rows.Scan(&properties.Icao, &properties.Callsign, &properties.Altitude, &lat,
-			&long, &properties.Speed, &properties.Track,
-			&properties.VerticalRate, &properties.Timestamp)
+		var ac global.AircraftCurrentModel
+		err := rows.Scan(&ac.Icao, &ac.Callsign, &ac.Altitude, &ac.Latitude, &ac.Longitude, &ac.Speed, &ac.Track,
+			&ac.VerticalRate, &ac.Timestamp)
 		if err != nil {
-			return global.FeatureCollectionPoint{}, err
+			return nil, err
 		}
 
-		feature := global.FeaturePoint{}
-		feature.Type = "Feature"
-		feature.Properties = properties
-		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, lat, long)
-		feature.Geometry.Type = "Point"
-
-		featureCollection.Features = append(featureCollection.Features, feature)
+		aircraft = append(aircraft, ac)
 	}
 
-	return featureCollection, nil
+	return aircraft, nil
 }
 
-func (db *AdsbDB) GetHistoryByIcao(search string) (global.FeatureCollectionLineString, error) {
-	var query = `SELECT icao, lat, long FROM history_aircraft WHERE icao = $1`
+func (db *AdsbDB) GetHistoryByIcao(search string) ([]global.AircraftHistoryModel, error) {
+	var query = `SELECT icao, long, lat FROM history_aircraft WHERE icao = $1`
 	rows, err := db.Conn.Query(query, search)
 	if err != nil {
-		return global.FeatureCollectionLineString{}, nil
+		return []global.AircraftHistoryModel{}, err
 	}
 	defer rows.Close()
 
-	var icao string
-	var coordinates [][]float32
+	var aircraft []global.AircraftHistoryModel
 
 	for rows.Next() {
-		var lat float32
-		var long float32
-
-		err := rows.Scan(&icao, &lat, &long)
+		var ac global.AircraftHistoryModel
+		err := rows.Scan(&ac.Icao, &ac.Longitude, &ac.Latitude)
 		if err != nil {
-			return global.FeatureCollectionLineString{}, err
+			return nil, err
 		}
 
-		var point = []float32{lat, long}
-
-		coordinates = append(coordinates, point)
+		aircraft = append(aircraft, ac)
 	}
 
-	var feature global.FeatureLineString
-	feature.Type = "Feature"
-	feature.Properties.Icao = icao
-	feature.Geometry.Type = "LineString"
-	feature.Geometry.Coordinates = coordinates
-
-	var featureCollection = global.FeatureCollectionLineString{
-		Type:     "FeatureCollection",
-		Features: []global.FeatureLineString{feature},
-	}
-
-	return featureCollection, nil
+	return aircraft, nil
 }

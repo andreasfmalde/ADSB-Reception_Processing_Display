@@ -105,10 +105,10 @@ func (mr *MockDatabaseMockRecorder) DeleteOldCurrentAircraft() *gomock.Call {
 }
 
 // GetAllCurrentAircraft mocks base method.
-func (m *MockDatabase) GetAllCurrentAircraft() (global.FeatureCollectionPoint, error) {
+func (m *MockDatabase) GetAllCurrentAircraft() ([]global.AircraftCurrentModel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllCurrentAircraft")
-	ret0, _ := ret[0].(global.FeatureCollectionPoint)
+	ret0, _ := ret[0].([]global.AircraftCurrentModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -120,10 +120,10 @@ func (mr *MockDatabaseMockRecorder) GetAllCurrentAircraft() *gomock.Call {
 }
 
 // GetHistoryByIcao mocks base method.
-func (m *MockDatabase) GetHistoryByIcao(search string) (global.FeatureCollectionLineString, error) {
+func (m *MockDatabase) GetHistoryByIcao(search string) ([]global.AircraftHistoryModel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHistoryByIcao", search)
-	ret0, _ := ret[0].(global.FeatureCollectionLineString)
+	ret0, _ := ret[0].([]global.AircraftHistoryModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

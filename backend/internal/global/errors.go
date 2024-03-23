@@ -7,4 +7,5 @@ const (
 	ErrorTongURL                    = "requested URL is too long"
 	ErrorInvalidQueryParams         = "invalid query parameters: Endpoint only supports the given parameters: "
 	ErrorRetrievingAircraftWithIcao = "error retrieving aircraft history with icao: "
+	ErrorConvertingDataToGeoJson    = "error converting aircraft data to Geo Json"
 )
