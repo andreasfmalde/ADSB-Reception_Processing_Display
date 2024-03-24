@@ -56,7 +56,7 @@ func TestInvalidRequests(t *testing.T) {
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusInternalServerError,
 			setup: func(mockDB *db.MockDatabase) {
-				mockDB.EXPECT().GetAllCurrentAircraft().Return([]models.AircraftCurrentModel{}, errors.New("no new aircraft"))
+				mockDB.EXPECT().GetCurrentAircraft().Return([]models.AircraftCurrentModel{}, errors.New("no new aircraft"))
 			},
 			errorMsg: errors2.ErrorRetrievingCurrentAircraft,
 		},
@@ -111,7 +111,7 @@ func TestValidRequests(t *testing.T) {
 			statusCode: http.StatusOK,
 			mockData:   testUtility.CreateMockAircraft(10),
 			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel) {
-				mockDB.EXPECT().GetAllCurrentAircraft().Return(mockData, nil)
+				mockDB.EXPECT().GetCurrentAircraft().Return(mockData, nil)
 			},
 		},
 		{
@@ -120,7 +120,7 @@ func TestValidRequests(t *testing.T) {
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
 			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel) {
-				mockDB.EXPECT().GetAllCurrentAircraft().Return([]models.AircraftCurrentModel{}, nil)
+				mockDB.EXPECT().GetCurrentAircraft().Return([]models.AircraftCurrentModel{}, nil)
 			},
 		},
 	}
