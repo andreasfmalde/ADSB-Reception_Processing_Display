@@ -1,21 +1,21 @@
 package aircraftCurrentHandler
 
 import (
-	"adsb-api/internal/db"
 	"adsb-api/internal/global/errors"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/logger"
+	"adsb-api/internal/service"
 	"adsb-api/internal/utility/apiUtility"
 	"fmt"
 	"net/http"
 )
 
 // CurrentAircraftHandler handles HTTP requests for /aircraft/current/ endpoint.
-func CurrentAircraftHandler(db db.Database) http.HandlerFunc {
+func CurrentAircraftHandler(svc service.RestService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			handleCurrentAircraftGetRequest(w, r, db)
+			handleCurrentAircraftGetRequest(w, r, svc)
 		default:
 			http.Error(w, fmt.Sprintf(errors.MethodNotSupported, r.Method), http.StatusMethodNotAllowed)
 		}
@@ -24,8 +24,8 @@ func CurrentAircraftHandler(db db.Database) http.HandlerFunc {
 
 // handleCurrentAircraftGetRequest handles GET requests for the /aircraft/current/ endpoint.
 // Sends all current aircraft in the database to the client.
-func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, db db.Database) {
-	res, err := db.GetCurrentAircraft()
+func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc service.RestService) {
+	res, err := svc.GetCurrentAircraft()
 	if err != nil {
 		http.Error(w, errors.ErrorRetrievingCurrentAircraft, http.StatusInternalServerError)
 		logger.Error.Printf(errors.ErrorRetrievingCurrentAircraft+": %q Path: %q", err, r.URL)

@@ -185,8 +185,7 @@ func (db *AdsbDB) DeleteOldCurrent() error {
 	return tx.Commit()
 }
 
-// GetCurrentAircraft retrieves a list of all aircraft from aircraft_current that are considered 'current'
-// (i.e., aircraft that are currently in the air).
+// GetCurrentAircraft retrieves a list of all aircraft from aircraft_current that are older than global.WaitingTime + 2
 func (db *AdsbDB) GetCurrentAircraft() ([]models.AircraftCurrentModel, error) {
 	var query = `SELECT * FROM aircraft_current 
 				 WHERE timestamp > (select max(timestamp)-($1 * interval '1 second') 
