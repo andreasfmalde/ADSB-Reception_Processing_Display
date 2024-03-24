@@ -57,9 +57,6 @@ type geometryLineString struct {
 }
 
 func ConvertCurrentModelToGeoJson(aircraft []models.AircraftCurrentModel) (FeatureCollectionPoint, error) {
-	if len(aircraft) == 0 {
-		return FeatureCollectionPoint{}, nil
-	}
 	var features []featurePoint
 	for _, ac := range aircraft {
 		var feature featurePoint
