@@ -90,7 +90,6 @@ func TestAdsbDB_CreateAdsbTables(t *testing.T) {
 		t.Errorf("creating ADS-B tables failed: %q", err)
 	}
 
-	// Define the expected column names and types for each table
 	expectedCurrentTimeAircraftColumns := map[string]string{
 		"icao":      "character varying(6)",
 		"callsign":  "character varying(10)",
@@ -110,7 +109,6 @@ func TestAdsbDB_CreateAdsbTables(t *testing.T) {
 		"timestamp": "timestamp without time zone",
 	}
 
-	// Check the columns for each table
 	checkTableColumns(t, db, "current_time_aircraft", expectedCurrentTimeAircraftColumns)
 	checkTableColumns(t, db, "history_aircraft", expectedHistoryAircraftColumns)
 }
