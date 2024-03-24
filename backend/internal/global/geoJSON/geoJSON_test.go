@@ -1,7 +1,7 @@
 package geoJSON
 
 import (
-	"adsb-api/internal/global"
+	"adsb-api/internal/global/errors"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/testUtility"
 	"github.com/xeipuuv/gojsonschema"
@@ -89,6 +89,6 @@ func TestConvertHistoryModelToGeoJson_TooFewCoordinates(t *testing.T) {
 	var mockData = testUtility.CreateMockHistAircraft(1)
 	_, err := ConvertHistoryModelToGeoJson(mockData)
 	if err == nil {
-		t.Errorf("expected error: %s", global.ErrorGeoJsonTooFewCoordinates)
+		t.Errorf("expected error: %s", errors.ErrorGeoJsonTooFewCoordinates)
 	}
 }

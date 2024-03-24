@@ -1,7 +1,7 @@
 package adsbhub
 
 import (
-	"adsb-api/internal/db/models"
+	"adsb-api/internal/global/models"
 	"adsb-api/internal/utility/converter"
 	"bufio"
 	"errors"

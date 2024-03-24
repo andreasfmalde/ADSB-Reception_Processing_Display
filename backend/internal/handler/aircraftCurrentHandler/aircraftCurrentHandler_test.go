@@ -2,9 +2,10 @@ package aircraftCurrentHandler
 
 import (
 	"adsb-api/internal/db"
-	"adsb-api/internal/db/models"
 	"adsb-api/internal/global"
+	errors2 "adsb-api/internal/global/errors"
 	"adsb-api/internal/global/geoJSON"
+	"adsb-api/internal/global/models"
 	"adsb-api/internal/utility/testUtility"
 	"encoding/json"
 	"errors"
@@ -40,14 +41,14 @@ func TestInvalidRequests(t *testing.T) {
 			url:        currentEndpoint.URL + global.CurrentAircraftPath,
 			httpMethod: http.MethodPost,
 			statusCode: http.StatusMethodNotAllowed,
-			errorMsg:   fmt.Sprintf(global.MethodNotSupported, http.MethodPost),
+			errorMsg:   fmt.Sprintf(errors2.MethodNotSupported, http.MethodPost),
 		},
 		{
 			name:       "Delete request",
 			url:        currentEndpoint.URL + global.CurrentAircraftPath,
 			httpMethod: http.MethodDelete,
 			statusCode: http.StatusMethodNotAllowed,
-			errorMsg:   fmt.Sprintf(global.MethodNotSupported, http.MethodDelete),
+			errorMsg:   fmt.Sprintf(errors2.MethodNotSupported, http.MethodDelete),
 		},
 		{
 			name:       "Database returns nil",
@@ -57,7 +58,7 @@ func TestInvalidRequests(t *testing.T) {
 			setup: func(mockDB *db.MockDatabase) {
 				mockDB.EXPECT().GetAllCurrentAircraft().Return([]models.AircraftCurrentModel{}, errors.New("no new aircraft"))
 			},
-			errorMsg: global.ErrorRetrievingCurrentAircraft,
+			errorMsg: errors2.ErrorRetrievingCurrentAircraft,
 		},
 	}
 

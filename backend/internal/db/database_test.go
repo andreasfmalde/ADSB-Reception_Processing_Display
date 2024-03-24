@@ -1,8 +1,8 @@
 package db
 
 import (
-	"adsb-api/internal/db/models"
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/models"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/testUtility"
 	"fmt"

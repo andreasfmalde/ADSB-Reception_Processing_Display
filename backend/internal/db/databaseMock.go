@@ -5,7 +5,7 @@
 package db
 
 import (
-	models "adsb-api/internal/db/models"
+	models2 "adsb-api/internal/global/models"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -49,7 +49,7 @@ func (mr *MockDatabaseMockRecorder) AddHistoryFromCurrent() *gomock.Call {
 }
 
 // BulkInsertCurrentTimeAircraftTable mocks base method.
-func (m *MockDatabase) BulkInsertCurrentTimeAircraftTable(aircraft []models.AircraftCurrentModel) error {
+func (m *MockDatabase) BulkInsertCurrentTimeAircraftTable(aircraft []models2.AircraftCurrentModel) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BulkInsertCurrentTimeAircraftTable", aircraft)
 	ret0, _ := ret[0].(error)
@@ -105,10 +105,10 @@ func (mr *MockDatabaseMockRecorder) DeleteOldCurrentAircraft() *gomock.Call {
 }
 
 // GetAllCurrentAircraft mocks base method.
-func (m *MockDatabase) GetAllCurrentAircraft() ([]models.AircraftCurrentModel, error) {
+func (m *MockDatabase) GetAllCurrentAircraft() ([]models2.AircraftCurrentModel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllCurrentAircraft")
-	ret0, _ := ret[0].([]models.AircraftCurrentModel)
+	ret0, _ := ret[0].([]models2.AircraftCurrentModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -120,10 +120,10 @@ func (mr *MockDatabaseMockRecorder) GetAllCurrentAircraft() *gomock.Call {
 }
 
 // GetHistoryByIcao mocks base method.
-func (m *MockDatabase) GetHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
+func (m *MockDatabase) GetHistoryByIcao(search string) ([]models2.AircraftHistoryModel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHistoryByIcao", search)
-	ret0, _ := ret[0].([]models.AircraftHistoryModel)
+	ret0, _ := ret[0].([]models2.AircraftHistoryModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

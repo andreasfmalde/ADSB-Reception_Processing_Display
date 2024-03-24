@@ -1,4 +1,4 @@
-package global
+package errors
 
 const (
 	MethodNotSupported              = "method %s is not supported"
