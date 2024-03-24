@@ -10,25 +10,6 @@ import (
 	"net/http"
 )
 
-/*
-CurrentAircraftHandler handles HTTP requests for /aircraft/current/ endpoint.
-Endpoints:
-	- GET /aircraft/current/
-
-Planned options:
-	- ?icao=
-	- ?callsign=
-	- altitude=
-		- ?minAlt=
-		- ?maxAlt=
-	- position=
-		- circle
-			- ?center= (lat,long)
-			- ?radius=
-		- polygon
-			- ?points= (lat,long),(lat,long),...
-*/
-
 // CurrentAircraftHandler handles HTTP requests for /aircraft/current/ endpoint.
 func CurrentAircraftHandler(db db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
