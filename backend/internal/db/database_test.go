@@ -6,10 +6,11 @@ import (
 	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/testUtility"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -68,7 +69,7 @@ func TestInitCloseDB(t *testing.T) {
 	defer func(db *AdsbDB) {
 		err := db.Close()
 		if err != nil {
-
+			logger.Error.Fatalf("error closing database: %q", err)
 		}
 	}(db)
 
