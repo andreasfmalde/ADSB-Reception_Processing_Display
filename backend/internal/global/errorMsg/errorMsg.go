@@ -9,4 +9,7 @@ const (
 	ErrorConvertingDataToGeoJson    = "error converting aircraft data to Geo Json"
 	ErrorGeoJsonTooFewCoordinates   = "coordinates array must have at least 2 items"
 	ErrorEncodingJsonData           = "error encoding json data"
+	ErrorClosingDatabase            = "error closing database: %q"
+	ErrorCreatingDatabaseTables     = "error creating database tables: %q"
+	ErrorInsertingNewSbsData        = "could not insert new SBS data: %q"
 )

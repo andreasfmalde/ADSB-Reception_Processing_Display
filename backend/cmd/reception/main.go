@@ -2,6 +2,7 @@ package main
 
 import (
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/service"
 	"adsb-api/internal/utility/adsbhub"
@@ -24,12 +25,12 @@ func main() {
 	defer func() {
 		err := sbsSvc.DB.Close()
 		if err != nil {
-			logger.Error.Fatalf("error closing database: %q", err)
+			logger.Error.Fatalf(errorMsg.ErrorClosingDatabase, err)
 		}
 	}()
 
 	if err := sbsSvc.CreateAdsbTables(); err != nil {
-		logger.Error.Fatalf("error creating tables for database: %q", err)
+		logger.Error.Fatalf(errorMsg.ErrorCreatingDatabaseTables, err)
 	}
 
 	timer := time.Now()
@@ -42,7 +43,7 @@ func main() {
 		}
 		err = sbsSvc.InsertNewAircraft(aircraft)
 		if err != nil {
-			logger.Error.Fatalf("could not insert new SBS data: %q", err)
+			logger.Error.Fatalf(errorMsg.ErrorInsertingNewSbsData, err)
 		}
 		logger.Info.Println("new SBS data inserted")
 		err = sbsSvc.UpdateHistory()
