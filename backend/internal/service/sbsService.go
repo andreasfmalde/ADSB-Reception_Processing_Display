@@ -17,12 +17,12 @@ type SbsServiceImpl struct {
 }
 
 // InitSbsService initializes SbsServiceImpl struct and database connection
-func InitSbsService() (*RestServiceImpl, error) {
+func InitSbsService() (*SbsServiceImpl, error) {
 	dbConn, err := db.InitDB()
 	if err != nil {
 		return nil, err
 	}
-	return &RestServiceImpl{DB: dbConn}, nil
+	return &SbsServiceImpl{DB: dbConn}, nil
 }
 
 // CreateAdsbTables creates all tables for the database schema
