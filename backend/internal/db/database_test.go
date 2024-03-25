@@ -1,12 +1,16 @@
 package db
 
 import (
+	"adsb-api/internal/db/models"
 	"adsb-api/internal/global"
+	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/testUtility"
-	"github.com/stretchr/testify/assert"
-	"log"
+	"fmt"
+	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -14,32 +18,46 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func setupTestDB() (*AdsbDB, error) {
+func setupTestDB() *AdsbDB {
 	db, err := InitDB()
 	if err != nil {
-		log.Fatalf("Failed to initialize service: %v", err)
+		logger.Error.Fatalf("Failed to initialize service: %v", err)
 	}
-	err = db.CreateCurrentTimeAircraftTable()
+
+	err = db.createCurrentTimeAircraftTable()
 	if err != nil {
-		log.Fatalf("error creating table: %q", err)
+		logger.Error.Fatalf("error creating current_time_aircraft table: %q", err)
 	}
-	return db, err
+
+	err = db.createHistoryAircraft()
+	if err != nil {
+		logger.Error.Fatalf("error creating history_aircraft table: %q", err)
+	}
+
+	return db
 }
 
 func teardownTestDB(db *AdsbDB) {
-	_, err := db.Conn.Exec("DROP TABLE IF EXISTS current_time_aircraft")
-	if err != nil {
-		log.Fatalf("error dropping table: %q", err)
-	}
+	dropCurrentTimeAircraft(db)
+	dropHistoryAircraft(db)
 
-	err = db.CreateCurrentTimeAircraftTable()
+	err := db.Close()
 	if err != nil {
-		log.Fatalf("error creating table: %q", err)
+		logger.Error.Fatalf("error closing database: %q", err)
 	}
+}
 
-	err = db.Close()
+func dropCurrentTimeAircraft(db *AdsbDB) {
+	_, err := db.Conn.Exec("DROP TABLE IF EXISTS current_time_aircraft CASCADE")
 	if err != nil {
-		log.Fatalf("error closing database: %q", err)
+		logger.Error.Fatalf("error droppint current_time_aircraft: %q", err.Error())
+	}
+}
+
+func dropHistoryAircraft(db *AdsbDB) {
+	_, err := db.Conn.Exec("DROP TABLE IF EXISTS history_aircraft CASCADE")
+	if err != nil {
+		logger.Error.Fatalf("error droppint current_time_aircraft: %q", err.Error())
 	}
 }
 
@@ -51,7 +69,7 @@ func TestInitCloseDB(t *testing.T) {
 	defer func(db *AdsbDB) {
 		err := db.Close()
 		if err != nil {
-
+			logger.Error.Fatalf("error closing database: %q", err)
 		}
 	}(db)
 
@@ -61,48 +79,77 @@ func TestInitCloseDB(t *testing.T) {
 	}
 }
 
-func TestAdsbDB_CreateCurrentTimeAircraftTable(t *testing.T) {
-	db, err := setupTestDB()
-	if err != nil {
-		t.Fatalf("Failed to initialize test database: %v", err)
-	}
-
+func TestAdsbDB_CreateAdsbTables(t *testing.T) {
+	db := setupTestDB()
 	defer teardownTestDB(db)
 
-	err = db.CreateCurrentTimeAircraftTable()
+	dropCurrentTimeAircraft(db)
+	dropHistoryAircraft(db)
+
+	err := db.CreateAdsbTables()
 	if err != nil {
-		t.Errorf("Create current_time_aircraft table failed: %q", err)
+		t.Errorf("creating ADS-B tables failed: %q", err)
 	}
 
-	query := `SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'current_time_aircraft')`
-
-	var exists bool
-	err = db.Conn.QueryRow(query).Scan(&exists)
-	if err != nil {
-		t.Fatalf("table does not exists: %q", err)
+	// Define the expected column names and types for each table
+	expectedCurrentTimeAircraftColumns := map[string]string{
+		"icao":      "character varying(6)",
+		"callsign":  "character varying(10)",
+		"altitude":  "integer",
+		"lat":       "numeric",
+		"long":      "numeric",
+		"speed":     "integer",
+		"track":     "integer",
+		"vspeed":    "integer",
+		"timestamp": "timestamp without time zone",
 	}
 
-	query = `SELECT EXISTS (SELECT 1 FROM   pg_indexes WHERE  indexname = $1 AND    tablename = $2)`
+	expectedHistoryAircraftColumns := map[string]string{
+		"icao":      "character varying(6)",
+		"lat":       "numeric",
+		"long":      "numeric",
+		"timestamp": "timestamp without time zone",
+	}
 
-	err = db.Conn.QueryRow(query, "timestamp_index", "current_time_aircraft").Scan(&exists)
+	// Check the columns for each table
+	checkTableColumns(t, db, "current_time_aircraft", expectedCurrentTimeAircraftColumns)
+	checkTableColumns(t, db, "history_aircraft", expectedHistoryAircraftColumns)
+}
+
+func checkTableColumns(t *testing.T, db *AdsbDB, tableName string, expectedColumns map[string]string) {
+	rows, err := db.Conn.Query(`SELECT column_name, data_type, character_maximum_length FROM information_schema.columns WHERE table_name = $1`, tableName)
 	if err != nil {
-		t.Fatalf("index does not exists: %q", err)
+		t.Fatalf("error executing column info query: %q", err.Error())
+	}
+	defer rows.Close()
+
+	actualColumns := make(map[string]string)
+	for rows.Next() {
+		var columnName, dataType string
+		var maxLength *int
+		if err := rows.Scan(&columnName, &dataType, &maxLength); err != nil {
+			t.Fatalf("error scanning column info: %q", err.Error())
+		}
+		if maxLength != nil {
+			dataType = fmt.Sprintf("%s(%d)", dataType, *maxLength)
+		}
+		actualColumns[columnName] = dataType
+	}
+
+	if !reflect.DeepEqual(expectedColumns, actualColumns) {
+		t.Fatalf("columns for table %s do not match expected. \n Expected: %v \n Got     : %v", tableName, expectedColumns, actualColumns)
 	}
 }
 
 func TestAdsbDB_BulkInsertCurrentTimeAircraftTable(t *testing.T) {
-	db, err := setupTestDB()
-	if err != nil {
-		t.Fatalf("Failed to initialize test database: %v", err)
-	}
-
+	db := setupTestDB()
 	defer teardownTestDB(db)
 
 	var nAircraft = 100
 
 	aircraft := testUtility.CreateMockAircraft(nAircraft)
 
-	err = db.BulkInsertCurrentTimeAircraftTable(aircraft)
+	err := db.BulkInsertCurrentTimeAircraftTable(aircraft)
 	if err != nil {
 		t.Fatalf("error inserting aircraft: %q", err)
 	}
@@ -117,18 +164,14 @@ func TestAdsbDB_BulkInsertCurrentTimeAircraftTable(t *testing.T) {
 }
 
 func TestAdsbDB_BulkInsertCurrentTimeAircraftTable_MaxPostgresParameters(t *testing.T) {
-	db, err := setupTestDB()
-	if err != nil {
-		t.Fatalf("Failed to initialize test database: %v", err)
-	}
-
+	db := setupTestDB()
 	defer teardownTestDB(db)
 
 	var maxAircraft = 65535/9 + 1
 
 	aircraft := testUtility.CreateMockAircraft(maxAircraft)
 
-	err = db.BulkInsertCurrentTimeAircraftTable(aircraft)
+	err := db.BulkInsertCurrentTimeAircraftTable(aircraft)
 	if err != nil {
 		t.Fatalf("error inserting aircraft: %q", err)
 	}
@@ -143,15 +186,11 @@ func TestAdsbDB_BulkInsertCurrentTimeAircraftTable_MaxPostgresParameters(t *test
 }
 
 func TestAdsbDB_BulkInsertCurrentTimeAircraftTable_InvalidType(t *testing.T) {
-	db, err := setupTestDB()
-	if err != nil {
-		t.Fatalf("Failed to initialize test database: %v", err)
-	}
-
+	db := setupTestDB()
 	defer teardownTestDB(db)
 
 	// Create an aircraft with a null icao value
-	aircraft := []global.Aircraft{
+	aircraft := []models.AircraftCurrentModel{
 		{
 			Icao:         "", // null icao value
 			Callsign:     "",
@@ -165,19 +204,42 @@ func TestAdsbDB_BulkInsertCurrentTimeAircraftTable_InvalidType(t *testing.T) {
 		},
 	}
 
-	err = db.BulkInsertCurrentTimeAircraftTable(aircraft)
+	err := db.BulkInsertCurrentTimeAircraftTable(aircraft)
 
 	if err == nil {
 		t.Fatalf("Expected an error when inserting invalid data, got nil")
 	}
 }
 
-func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
-	db, err := setupTestDB()
+func TestAdsbDB_AddHistoryFromCurrent(t *testing.T) {
+	db := setupTestDB()
+	defer teardownTestDB(db)
+
+	var nAircraft = 100
+
+	mockAircraft := testUtility.CreateMockAircraft(nAircraft)
+
+	err := db.BulkInsertCurrentTimeAircraftTable(mockAircraft)
 	if err != nil {
-		t.Fatalf("Failed to initialize test database: %v", err)
+		t.Fatalf("error inserting mockAircraft: %q", err)
 	}
 
+	err = db.AddHistoryFromCurrent()
+	if err != nil {
+		t.Fatalf("error adding history data: %q", err)
+	}
+
+	n := 0
+	err = db.Conn.QueryRow("SELECT COUNT(*) FROM history_aircraft").Scan(&n)
+	if err != nil {
+		t.Fatalf("error counting mockAircraft: %q", err)
+	}
+
+	assert.Equal(t, nAircraft, n)
+}
+
+func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
+	db := setupTestDB()
 	defer teardownTestDB(db)
 
 	acAfter := testUtility.CreateMockAircraftWithTimestamp("TEST1",
@@ -186,7 +248,7 @@ func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
 	acNow := testUtility.CreateMockAircraftWithTimestamp("TEST2",
 		time.Now().Format(time.DateTime))
 
-	err = db.BulkInsertCurrentTimeAircraftTable([]global.Aircraft{acAfter, acNow})
+	err := db.BulkInsertCurrentTimeAircraftTable([]models.AircraftCurrentModel{acAfter, acNow})
 	if err != nil {
 		t.Fatalf("Error inserting aircraft: %q", err)
 	}
@@ -218,11 +280,7 @@ func TestAdsbDB_DeleteOldCurrentAircraft(t *testing.T) {
 }
 
 func TestAdsbDB_GetAllCurrentAircraft(t *testing.T) {
-	db, err := setupTestDB()
-	if err != nil {
-		t.Fatalf("Failed to initialize test database: %v", err)
-	}
-
+	db := setupTestDB()
 	defer teardownTestDB(db)
 
 	acAfter := testUtility.CreateMockAircraftWithTimestamp("TEST1",
@@ -233,32 +291,80 @@ func TestAdsbDB_GetAllCurrentAircraft(t *testing.T) {
 		time.Now().Format(time.DateTime))
 
 	var count = 0
-	geoJsonFeatureCollection, err := db.GetAllCurrentAircraft()
+	aircraft, err := db.GetAllCurrentAircraft()
 	if err != nil {
-		t.Fatalf("Error getting all current geoJsonFeatureCollection: %q", err)
+		t.Fatalf("Error getting all current aircraft: %q", err)
 	}
 
-	count = len(geoJsonFeatureCollection.Features)
+	count = len(aircraft)
 	if count != 0 {
 		t.Fatalf("Expected error, db should not contain any elements")
 	}
 
-	err = db.BulkInsertCurrentTimeAircraftTable([]global.Aircraft{acAfter, acNow})
+	err = db.BulkInsertCurrentTimeAircraftTable([]models.AircraftCurrentModel{acAfter, acNow})
 	if err != nil {
-		t.Fatalf("Error inserting geoJsonFeatureCollection: %q", err)
+		t.Fatalf("Error inserting aircraft: %q", err)
 	}
 
-	geoJsonFeatureCollection, err = db.GetAllCurrentAircraft()
+	aircraft, err = db.GetAllCurrentAircraft()
 	if err != nil {
-		t.Fatalf("Error getting all current geoJsonFeatureCollection: %q", err)
+		t.Fatalf("Error getting all current aircraft: %q", err)
 	}
 
-	count = len(geoJsonFeatureCollection.Features)
+	count = len(aircraft)
 
 	if count != 1 {
 		t.Fatalf("Expected error, list should only contain 1 element")
 
 	}
 
-	assert.Equal(t, icaoTest2, geoJsonFeatureCollection.Features[0].Properties.Icao)
+	assert.Equal(t, icaoTest2, aircraft[0].Icao)
+}
+
+func TestAdsbDB_GetHistoryByIcao(t *testing.T) {
+	db := setupTestDB()
+	defer teardownTestDB(db)
+
+	var nAircraft = 100
+	var icao = "TEST"
+	mockAircraft := testUtility.CreateMockAircraftWithIcao(nAircraft, icao)
+
+	err := db.BulkInsertCurrentTimeAircraftTable(mockAircraft)
+	if err != nil {
+		t.Fatalf("error inserting aircraft: %q", err.Error())
+	}
+
+	err = db.AddHistoryFromCurrent()
+	if err != nil {
+		t.Fatalf("error inserting history data: %q", err.Error())
+	}
+
+	aircraft, err := db.GetHistoryByIcao(icao)
+	if err != nil {
+		t.Fatalf("error retriving history data: %q", err.Error())
+	}
+
+	assert.Equal(t, nAircraft, len(aircraft))
+	for i, ac := range aircraft {
+		assert.Equal(t, mockAircraft[i].Icao, ac.Icao)
+		assert.Equal(t, mockAircraft[i].Latitude, ac.Latitude)
+		assert.Equal(t, mockAircraft[i].Longitude, ac.Longitude)
+	}
+}
+
+func TestAdsbDB_GetHistoryByIcao_InvalidIcao(t *testing.T) {
+	db := setupTestDB()
+	defer teardownTestDB(db)
+
+	err := db.AddHistoryFromCurrent()
+	if err != nil {
+		t.Fatalf("error inserting history data: %q", err.Error())
+	}
+
+	aircraft, err := db.GetHistoryByIcao("")
+	if err != nil {
+		t.Fatalf("error retriving history data: %q", err.Error())
+	}
+
+	assert.Equal(t, 0, len(aircraft))
 }

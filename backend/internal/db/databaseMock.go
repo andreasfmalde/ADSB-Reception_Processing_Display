@@ -5,7 +5,7 @@
 package db
 
 import (
-	global "adsb-api/internal/global"
+	models "adsb-api/internal/db/models"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -34,8 +34,22 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 	return m.recorder
 }
 
+// AddHistoryFromCurrent mocks base method.
+func (m *MockDatabase) AddHistoryFromCurrent() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddHistoryFromCurrent")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddHistoryFromCurrent indicates an expected call of AddHistoryFromCurrent.
+func (mr *MockDatabaseMockRecorder) AddHistoryFromCurrent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddHistoryFromCurrent", reflect.TypeOf((*MockDatabase)(nil).AddHistoryFromCurrent))
+}
+
 // BulkInsertCurrentTimeAircraftTable mocks base method.
-func (m *MockDatabase) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error {
+func (m *MockDatabase) BulkInsertCurrentTimeAircraftTable(aircraft []models.AircraftCurrentModel) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BulkInsertCurrentTimeAircraftTable", aircraft)
 	ret0, _ := ret[0].(error)
@@ -62,18 +76,18 @@ func (mr *MockDatabaseMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close))
 }
 
-// CreateCurrentTimeAircraftTable mocks base method.
-func (m *MockDatabase) CreateCurrentTimeAircraftTable() error {
+// CreateAdsbTables mocks base method.
+func (m *MockDatabase) CreateAdsbTables() error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateCurrentTimeAircraftTable")
+	ret := m.ctrl.Call(m, "CreateAdsbTables")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateCurrentTimeAircraftTable indicates an expected call of CreateCurrentTimeAircraftTable.
-func (mr *MockDatabaseMockRecorder) CreateCurrentTimeAircraftTable() *gomock.Call {
+// CreateAdsbTables indicates an expected call of CreateAdsbTables.
+func (mr *MockDatabaseMockRecorder) CreateAdsbTables() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCurrentTimeAircraftTable", reflect.TypeOf((*MockDatabase)(nil).CreateCurrentTimeAircraftTable))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAdsbTables", reflect.TypeOf((*MockDatabase)(nil).CreateAdsbTables))
 }
 
 // DeleteOldCurrentAircraft mocks base method.
@@ -91,10 +105,10 @@ func (mr *MockDatabaseMockRecorder) DeleteOldCurrentAircraft() *gomock.Call {
 }
 
 // GetAllCurrentAircraft mocks base method.
-func (m *MockDatabase) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error) {
+func (m *MockDatabase) GetAllCurrentAircraft() ([]models.AircraftCurrentModel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllCurrentAircraft")
-	ret0, _ := ret[0].(global.GeoJsonFeatureCollection)
+	ret0, _ := ret[0].([]models.AircraftCurrentModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -105,17 +119,17 @@ func (mr *MockDatabaseMockRecorder) GetAllCurrentAircraft() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCurrentAircraft", reflect.TypeOf((*MockDatabase)(nil).GetAllCurrentAircraft))
 }
 
-// InitDB mocks base method.
-func (m *MockDatabase) InitDB() (*AdsbDB, error) {
+// GetHistoryByIcao mocks base method.
+func (m *MockDatabase) GetHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitDB")
-	ret0, _ := ret[0].(*AdsbDB)
+	ret := m.ctrl.Call(m, "GetHistoryByIcao", search)
+	ret0, _ := ret[0].([]models.AircraftHistoryModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// InitDB indicates an expected call of InitDB.
-func (mr *MockDatabaseMockRecorder) InitDB() *gomock.Call {
+// GetHistoryByIcao indicates an expected call of GetHistoryByIcao.
+func (mr *MockDatabaseMockRecorder) GetHistoryByIcao(search interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitDB", reflect.TypeOf((*MockDatabase)(nil).InitDB))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistoryByIcao", reflect.TypeOf((*MockDatabase)(nil).GetHistoryByIcao), search)
 }

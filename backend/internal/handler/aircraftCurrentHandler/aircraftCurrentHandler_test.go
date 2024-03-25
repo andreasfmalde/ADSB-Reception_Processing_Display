@@ -1,18 +1,21 @@
-package currentAircraftHandler
+package aircraftCurrentHandler
 
 import (
 	"adsb-api/internal/db"
+	"adsb-api/internal/db/models"
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/utility/testUtility"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -35,25 +38,25 @@ func TestInvalidRequests(t *testing.T) {
 	}{
 		{
 			name:       "Post request",
-			url:        currentEndpoint.URL + global.CurrentAircraftPath,
+			url:        currentEndpoint.URL + global.AircraftCurrentPath,
 			httpMethod: http.MethodPost,
 			statusCode: http.StatusMethodNotAllowed,
 			errorMsg:   fmt.Sprintf(global.MethodNotSupported, http.MethodPost),
 		},
 		{
 			name:       "Delete request",
-			url:        currentEndpoint.URL + global.CurrentAircraftPath,
+			url:        currentEndpoint.URL + global.AircraftCurrentPath,
 			httpMethod: http.MethodDelete,
 			statusCode: http.StatusMethodNotAllowed,
 			errorMsg:   fmt.Sprintf(global.MethodNotSupported, http.MethodDelete),
 		},
 		{
 			name:       "Database returns nil",
-			url:        currentEndpoint.URL + global.CurrentAircraftPath,
+			url:        currentEndpoint.URL + global.AircraftCurrentPath,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusInternalServerError,
 			setup: func(mockDB *db.MockDatabase) {
-				mockDB.EXPECT().GetAllCurrentAircraft().Return(global.GeoJsonFeatureCollection{}, errors.New("no new aircraft"))
+				mockDB.EXPECT().GetAllCurrentAircraft().Return([]models.AircraftCurrentModel{}, errors.New("no new aircraft"))
 			},
 			errorMsg: global.ErrorRetrievingCurrentAircraft,
 		},
@@ -98,26 +101,26 @@ func TestValidRequests(t *testing.T) {
 	tests := []struct {
 		name, url, httpMethod string
 		statusCode            int
-		mockData              global.GeoJsonFeatureCollection
-		setup                 func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollection)
+		mockData              []models.AircraftCurrentModel
+		setup                 func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel)
 	}{
 		{
 			name:       "Get request without parameters",
-			url:        currentEndpoint.URL + global.CurrentAircraftPath,
+			url:        currentEndpoint.URL + global.AircraftCurrentPath,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
-			mockData:   testUtility.CreateMockFeatureCollection(10),
-			setup: func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollection) {
+			mockData:   testUtility.CreateMockAircraft(10),
+			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel) {
 				mockDB.EXPECT().GetAllCurrentAircraft().Return(mockData, nil)
 			},
 		},
 		{
 			name:       "Get request with empty current_time_aircraft table",
-			url:        currentEndpoint.URL + global.CurrentAircraftPath,
+			url:        currentEndpoint.URL + global.AircraftCurrentPath,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
-			setup: func(mockDB *db.MockDatabase, mockData global.GeoJsonFeatureCollection) {
-				mockDB.EXPECT().GetAllCurrentAircraft().Return(mockData, nil)
+			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel) {
+				mockDB.EXPECT().GetAllCurrentAircraft().Return([]models.AircraftCurrentModel{}, nil)
 			},
 		},
 	}
@@ -138,11 +141,19 @@ func TestValidRequests(t *testing.T) {
 
 			assert.Equal(t, tt.statusCode, res.StatusCode)
 
-			var actual global.GeoJsonFeatureCollection
-			_ = json.NewDecoder(res.Body).Decode(&actual)
+			if tt.mockData == nil {
+				return
+			}
 
-			assert.Equal(t, tt.mockData, actual)
+			var actual geoJSON.FeatureCollectionPoint
+			err = json.NewDecoder(res.Body).Decode(&actual)
+			if err != nil {
+				t.Errorf("Test: %s. Error decoing response body: %s", tt.name, err.Error())
+			}
 
+			mockFeatureCollection, _ := geoJSON.ConvertCurrentModelToGeoJson(tt.mockData)
+
+			assert.Equal(t, mockFeatureCollection, actual)
 		})
 	}
 }

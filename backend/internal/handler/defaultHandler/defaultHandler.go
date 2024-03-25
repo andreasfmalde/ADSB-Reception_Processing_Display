@@ -18,7 +18,8 @@ func DefaultHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		endpoints := make(map[string]string)
-		endpoints["current_aircraft"] = global.CurrentAircraftPath
+		endpoints["aircraft_current"] = global.AircraftCurrentPath
+		endpoints["aircraft_history"] = global.AircraftHistoryPath
 
 		madeBy := []string{"Andreas Follevaag Malde", "Fredrik Sundt-Hansen"}
 

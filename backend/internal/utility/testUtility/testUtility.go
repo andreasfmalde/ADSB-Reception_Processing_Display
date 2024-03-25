@@ -1,16 +1,16 @@
 package testUtility
 
 import (
-	"adsb-api/internal/global"
+	"adsb-api/internal/db/models"
 	"strconv"
 	"time"
 )
 
-func CreateMockAircraft(n int) []global.Aircraft {
-	var aircraft []global.Aircraft
+func CreateMockAircraft(n int) []models.AircraftCurrentModel {
+	var aircraft []models.AircraftCurrentModel
 
 	for i := 0; i < n; i++ {
-		ac := global.Aircraft{
+		ac := models.AircraftCurrentModel{
 			Icao:         strconv.Itoa(i),
 			Callsign:     strconv.Itoa(i),
 			Altitude:     i,
@@ -27,8 +27,24 @@ func CreateMockAircraft(n int) []global.Aircraft {
 	return aircraft
 }
 
-func CreateMockAircraftWithTimestamp(icao string, timestamp string) global.Aircraft {
-	return global.Aircraft{
+func CreateMockHistAircraft(n int) []models.AircraftHistoryModel {
+	var aircraft []models.AircraftHistoryModel
+
+	for i := 0; i < n; i++ {
+		ac := models.AircraftHistoryModel{
+			Icao:      strconv.Itoa(i),
+			Latitude:  float32(i),
+			Longitude: float32(i),
+			Timestamp: time.Now().Format(time.DateTime),
+		}
+		aircraft = append(aircraft, ac)
+	}
+
+	return aircraft
+}
+
+func CreateMockAircraftWithTimestamp(icao string, timestamp string) models.AircraftCurrentModel {
+	return models.AircraftCurrentModel{
 		Icao:         icao,
 		Callsign:     "TEST",
 		Altitude:     10000,
@@ -41,38 +57,23 @@ func CreateMockAircraftWithTimestamp(icao string, timestamp string) global.Aircr
 	}
 }
 
-func CreateMockFeatureCollection(n int) global.GeoJsonFeatureCollection {
-	featureCollection := global.GeoJsonFeatureCollection{}
-	featureCollection.Type = "FeatureCollection"
+func CreateMockAircraftWithIcao(n int, icao string) []models.AircraftCurrentModel {
+	var aircraft []models.AircraftCurrentModel
 
 	for i := 0; i < n; i++ {
-		var lat float32 = 51.5074
-		var long float32 = 51.5074
-
-		ac := global.GeoJsonFeature{
-			Type: "Feature",
-			Properties: global.AircraftProperties{
-				Icao:         "TEST",
-				Callsign:     "TEST",
-				Altitude:     0,
-				Speed:        0,
-				Track:        0,
-				VerticalRate: 0,
-				Timestamp:    "",
-			},
-			Geometry: struct {
-				Coordinates []float32 `json:"coordinates"`
-				Type        string    `json:"type"`
-			}{},
+		ac := models.AircraftCurrentModel{
+			Icao:         icao,
+			Callsign:     strconv.Itoa(i),
+			Altitude:     i,
+			Latitude:     float32(i),
+			Longitude:    float32(i),
+			Speed:        i,
+			Track:        i,
+			VerticalRate: i,
+			Timestamp:    time.Now().Add(time.Duration(i) * time.Second).Format(time.DateTime),
 		}
-
-		feature := global.GeoJsonFeature{}
-		feature.Properties = ac.Properties
-		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, lat, long)
-		feature.Geometry.Type = "Point"
-
-		featureCollection.Features = append(featureCollection.Features, feature)
+		aircraft = append(aircraft, ac)
 	}
 
-	return featureCollection
+	return aircraft
 }

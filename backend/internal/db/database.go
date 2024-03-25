@@ -1,6 +1,7 @@
 package db
 
 import (
+	"adsb-api/internal/db/models"
 	"adsb-api/internal/global"
 	"database/sql"
 	"fmt"
@@ -11,10 +12,12 @@ import (
 
 type Database interface {
 	Close() error
-	CreateCurrentTimeAircraftTable() error
-	BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error
+	CreateAdsbTables() error
+	BulkInsertCurrentTimeAircraftTable(aircraft []models.AircraftCurrentModel) error
+	AddHistoryFromCurrent() error
 	DeleteOldCurrentAircraft() error
-	GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error)
+	GetAllCurrentAircraft() ([]models.AircraftCurrentModel, error)
+	GetHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
 }
 
 type AdsbDB struct {
@@ -34,8 +37,21 @@ func (db *AdsbDB) Close() error {
 	return db.Conn.Close()
 }
 
-// CreateCurrentTimeAircraftTable creates current_time_aircraft table in database if it does not already exist
-func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
+func (db *AdsbDB) CreateAdsbTables() error {
+	err := db.createCurrentTimeAircraftTable()
+	if err != nil {
+		return err
+	}
+
+	err = db.createHistoryAircraft()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// createCurrentTimeAircraftTable creates current_time_aircraft table in database if it does not already exist
+func (db *AdsbDB) createCurrentTimeAircraftTable() error {
 	// Begin a transaction
 	tx, err := db.Conn.Begin()
 	if err != nil {
@@ -74,9 +90,32 @@ func (db *AdsbDB) CreateCurrentTimeAircraftTable() error {
 	return tx.Commit()
 }
 
+// createHistoryAircraft creates table for storing aircraft history
+func (db *AdsbDB) createHistoryAircraft() error {
+	tx, err := db.Conn.Begin()
+	if err != nil {
+		return err
+	}
+
+	var query = `CREATE TABLE IF NOT EXISTS history_aircraft(
+				 icao VARCHAR(6) NOT NULL,
+				 lat DECIMAL NOT NULL,
+				 long DECIMAL NOT NULL,
+				 timestamp TIMESTAMP NOT NULL,
+				 PRIMARY KEY (icao,timestamp))`
+
+	_, err = tx.Exec(query)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
 // BulkInsertCurrentTimeAircraftTable updates the current_time_aircraft table with the new aircraft records provided from
 // the parameter 'aircraft'
-func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft) error {
+func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []models.AircraftCurrentModel) error {
 	// Maximum number of aircraft per query
 	// (65535 is the max amount of parameters postgres supports and there are 9 aircraft parameters)
 	const maxAircraft = 65535 / 9
@@ -111,6 +150,16 @@ func (db *AdsbDB) BulkInsertCurrentTimeAircraftTable(aircraft []global.Aircraft)
 	return nil
 }
 
+func (db *AdsbDB) AddHistoryFromCurrent() error {
+	query := `INSERT INTO history_aircraft (icao, lat, long, timestamp) 
+			  SELECT icao, lat, long, timestamp
+			  FROM current_time_aircraft
+			  ON CONFLICT (icao, timestamp) 
+			      DO UPDATE SET timestamp = excluded.timestamp`
+	_, err := db.Conn.Exec(query)
+	return err
+}
+
 // DeleteOldCurrentAircraft will delete rows older than 6 seconds from the latest entry.
 func (db *AdsbDB) DeleteOldCurrentAircraft() error {
 	// Begin transaction
@@ -136,7 +185,7 @@ func (db *AdsbDB) DeleteOldCurrentAircraft() error {
 }
 
 // GetAllCurrentAircraft retrieves a list of all current aircraft in the current_time_aircraft table
-func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, error) {
+func (db *AdsbDB) GetAllCurrentAircraft() ([]models.AircraftCurrentModel, error) {
 	// Make the query to the database
 
 	var query = `SELECT * FROM current_time_aircraft 
@@ -145,33 +194,45 @@ func (db *AdsbDB) GetAllCurrentAircraft() (global.GeoJsonFeatureCollection, erro
 
 	rows, err := db.Conn.Query(query, global.WaitingTime+2)
 	if err != nil {
-		return global.GeoJsonFeatureCollection{}, err
+		return nil, err
 	}
 	defer rows.Close()
 
-	featureCollection := global.GeoJsonFeatureCollection{}
-	featureCollection.Type = "FeatureCollection"
+	var aircraft []models.AircraftCurrentModel
 
 	for rows.Next() {
-		properties := global.AircraftProperties{}
-		var lat float32
-		var long float32
-
-		err := rows.Scan(&properties.Icao, &properties.Callsign, &properties.Altitude, &lat,
-			&long, &properties.Speed, &properties.Track,
-			&properties.VerticalRate, &properties.Timestamp)
+		var ac models.AircraftCurrentModel
+		err := rows.Scan(&ac.Icao, &ac.Callsign, &ac.Altitude, &ac.Latitude, &ac.Longitude, &ac.Speed, &ac.Track,
+			&ac.VerticalRate, &ac.Timestamp)
 		if err != nil {
-			return global.GeoJsonFeatureCollection{}, err
+			return nil, err
 		}
 
-		feature := global.GeoJsonFeature{}
-		feature.Type = "Feature"
-		feature.Properties = properties
-		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, lat, long)
-		feature.Geometry.Type = "Point"
-
-		featureCollection.Features = append(featureCollection.Features, feature)
+		aircraft = append(aircraft, ac)
 	}
 
-	return featureCollection, nil
+	return aircraft, nil
+}
+
+func (db *AdsbDB) GetHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
+	var query = `SELECT icao, long, lat FROM history_aircraft WHERE icao = $1`
+	rows, err := db.Conn.Query(query, search)
+	if err != nil {
+		return []models.AircraftHistoryModel{}, err
+	}
+	defer rows.Close()
+
+	var aircraft []models.AircraftHistoryModel
+
+	for rows.Next() {
+		var ac models.AircraftHistoryModel
+		err := rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude)
+		if err != nil {
+			return nil, err
+		}
+
+		aircraft = append(aircraft, ac)
+	}
+
+	return aircraft, nil
 }

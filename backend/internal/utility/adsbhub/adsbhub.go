@@ -1,7 +1,7 @@
 package adsbhub
 
 import (
-	"adsb-api/internal/global"
+	"adsb-api/internal/db/models"
 	"adsb-api/internal/utility/converter"
 	"bufio"
 	"errors"
@@ -19,16 +19,16 @@ func CloseTCPConnection(connection net.Conn) error {
 	return connection.Close()
 }
 
-func ProcessSBSstream() ([]global.Aircraft, error) {
+func ProcessSBSstream() ([]models.AircraftCurrentModel, error) {
 	conn, err := MakeTCPConnection("data.adsbhub.org:5002")
 	if err != nil {
-		return []global.Aircraft{}, err
+		return []models.AircraftCurrentModel{}, err
 
 	}
 
 	defer CloseTCPConnection(conn)
 	scanner := bufio.NewScanner(conn)
-	var aircrafts []global.Aircraft
+	var aircrafts []models.AircraftCurrentModel
 
 	for {
 		timer := time.Now()
@@ -70,7 +70,7 @@ func ProcessSBSstream() ([]global.Aircraft, error) {
 
 			timestamp := converter.MakeTimeStamp(date, time)
 
-			aircraft := global.Aircraft{
+			aircraft := models.AircraftCurrentModel{
 				Icao:         icao,
 				Callsign:     callsign,
 				Altitude:     altitude,
@@ -85,7 +85,7 @@ func ProcessSBSstream() ([]global.Aircraft, error) {
 			aircrafts = append(aircrafts, aircraft)
 
 		} else {
-			return []global.Aircraft{}, errors.New("could not connect to stream")
+			return []models.AircraftCurrentModel{}, errors.New("could not connect to stream")
 		}
 
 	}
