@@ -102,11 +102,7 @@ func (db *AdsbDB) createHistoryAircraft() error {
 				 lat DECIMAL NOT NULL,
 				 long DECIMAL NOT NULL,
 				 timestamp TIMESTAMP NOT NULL,
-				 PRIMARY KEY (icao,timestamp),
-				 CONSTRAINT fk_history_current
-                    FOREIGN KEY (icao, timestamp)
-                    	REFERENCES current_time_aircraft(icao, timestamp)
-                        ON DELETE NO ACTION)`
+				 PRIMARY KEY (icao,timestamp))`
 
 	_, err = tx.Exec(query)
 	if err != nil {
