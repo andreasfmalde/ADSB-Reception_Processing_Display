@@ -27,7 +27,7 @@ type AdsbDB struct {
 // InitDB initializes the PostgresSQL database and returns the connection pointer.
 func InitDB() (*AdsbDB, error) {
 	dbLogin := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
-		global.Host, global.Port, global.User, global.Password, global.Dbname)
+		global.Host, global.Port, global.DbUser, global.DbPassword, global.Dbname)
 
 	dbConn, err := sql.Open("postgres", dbLogin)
 	return &AdsbDB{Conn: dbConn}, err

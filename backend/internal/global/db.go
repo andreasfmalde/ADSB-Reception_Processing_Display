@@ -2,9 +2,9 @@ package global
 
 // Database variables
 var (
-	User     string
-	Password string
-	Dbname   = "adsb_db"
+	DbUser     string
+	DbPassword string
+	Dbname     = "adsb_db"
 )
 
 // Database constants
