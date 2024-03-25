@@ -230,7 +230,7 @@ func (db *AdsbDB) GetHistoryByIcao(search string) ([]models.AircraftHistoryModel
 
 	for rows.Next() {
 		var ac models.AircraftHistoryModel
-		err := rows.Scan(&ac.Icao, &ac.Longitude, &ac.Latitude)
+		err := rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude)
 		if err != nil {
 			return nil, err
 		}
