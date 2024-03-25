@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import Map, {Marker} from 'react-map-gl/maplibre';
+import Map, {Layer, Marker, Source} from 'react-map-gl/maplibre';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
-import {style, geojson} from './data/MapData';
+import {style, geojson, trail, trailLayer} from './data/MapData';
 import { IoMdAirplane } from "react-icons/io";
 
 import './App.css';
@@ -18,6 +18,7 @@ function App() {
   const [currentRender, setCurrentRender] = useState(null);
   const [selected, setSelected] = useState(null);
   const [selectedImg, setSelectedImg] = useState(null);
+  const [historyTrail, setHistoryTrail] = useState(null);
 
   const isInBounds = (p,mapBounds) =>{
       
@@ -50,6 +51,16 @@ function App() {
       console.log("API retrieval failed")
     } 
   };
+
+  const retrieveHistory = async (icao) =>{
+    try{
+      const response = await fetch(`http://localhost:8080/aircraft/history?icao=${icao}`);
+      const data = await response.json();
+      setHistoryTrail(data.features[0]);
+    }catch(error){
+      console.log("History not found")
+    }
+  }
 
   useEffect(()=>{
     //  const seconds = 10;
@@ -101,6 +112,7 @@ function App() {
                 if(selected?.properties.icao !== p.properties.icao){
                   setSelected(p);
                   retrieveImage(p.properties.icao);
+                  retrieveHistory(p.properties.icao);
                 }
                 
               }}
@@ -114,6 +126,11 @@ function App() {
           </Marker>
         </div>
         ))}
+        {selected === null ? "":
+          <Source id='trail' type='geojson' data={historyTrail}>
+            <Layer {... trailLayer} />
+          </Source>
+        }
         </Map>
         <Sidebar aircraft={selected} image={selectedImg} />
       </div>
