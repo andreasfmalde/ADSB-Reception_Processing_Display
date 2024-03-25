@@ -215,7 +215,7 @@ func (db *AdsbDB) GetAllCurrentAircraft() ([]models.AircraftCurrentModel, error)
 }
 
 func (db *AdsbDB) GetHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
-	var query = `SELECT icao, long, lat FROM history_aircraft WHERE icao = $1`
+	var query = `SELECT icao, long, lat FROM history_aircraft WHERE icao = $1  order by timestamp asc`
 	rows, err := db.Conn.Query(query, search)
 	if err != nil {
 		return []models.AircraftHistoryModel{}, err
