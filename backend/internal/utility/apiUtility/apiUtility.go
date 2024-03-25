@@ -17,7 +17,7 @@ func EncodeJsonData(w http.ResponseWriter, data interface{}) {
 	encoder.SetIndent("", "\t")
 	err := encoder.Encode(data)
 	if err != nil {
-		http.Error(w, "Failed to encode data", http.StatusInternalServerError)
+		http.Error(w, global.ErrorEncodingJsonData, http.StatusInternalServerError)
 		logger.Error.Printf("Failed to encode data: %q", err)
 	}
 }
