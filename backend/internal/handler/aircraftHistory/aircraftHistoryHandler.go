@@ -41,7 +41,7 @@ func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, db 
 		return
 	}
 	if len(res) == 0 {
-		http.Error(w, global.NoAircraftFound, http.StatusNoContent)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
