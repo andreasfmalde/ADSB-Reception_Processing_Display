@@ -28,8 +28,8 @@ func main() {
 		}
 	}()
 
-	if err := adsbDB.CreateCurrentTimeAircraftTable(); err != nil {
-		logger.Error.Fatalf("current_time_aircraft table was not created: %q", err)
+	if err := adsbDB.CreateAdsbTables(); err != nil {
+		logger.Error.Fatalf("error creating tables for database: %q", err)
 	}
 
 	timer := time.Now()
@@ -45,6 +45,11 @@ func main() {
 			logger.Error.Fatalf("could not insert new SBS data: %q", err)
 		}
 		logger.Info.Println("new SBS data inserted")
+		err = adsbDB.AddHistoryFromCurrent()
+		if err != nil {
+			logger.Error.Fatalf("could not add history data: %q", err)
+		}
+		logger.Info.Println("new history data inserted")
 		// Delete old rows every 2 minutes (120 seconds)
 		if diff := time.Since(timer).Seconds(); diff > 120 {
 			if e := adsbDB.DeleteOldCurrentAircraft(); e == nil {
