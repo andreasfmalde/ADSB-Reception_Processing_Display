@@ -9,12 +9,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -150,7 +151,7 @@ func TestValidRequests(t *testing.T) {
 				t.Errorf("Test: %s. Error decoing response body: %s", tt.name, err.Error())
 			}
 
-			mockFeatureCollection, err := geoJSON.ConvertCurrentModelToGeoJson(tt.mockData)
+			mockFeatureCollection, _ := geoJSON.ConvertCurrentModelToGeoJson(tt.mockData)
 
 			assert.Equal(t, mockFeatureCollection, actual)
 		})
