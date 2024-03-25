@@ -1,6 +1,7 @@
 package aircraftCurrentHandler
 
 import (
+	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/logger"
@@ -13,6 +14,11 @@ import (
 // CurrentAircraftHandler handles HTTP requests for /aircraft/current/ endpoint.
 func CurrentAircraftHandler(svc service.RestService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := apiUtility.ValidateURL(r.URL.Path, r.URL.Query(), len(global.AircraftHistoryPath), []string{})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		switch r.Method {
 		case http.MethodGet:
 			handleCurrentAircraftGetRequest(w, r, svc)
