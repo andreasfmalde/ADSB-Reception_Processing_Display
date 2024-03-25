@@ -1,7 +1,7 @@
 package apiUtility
 
 import (
-	errors2 "adsb-api/internal/global/errors"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/logger"
 	"encoding/json"
 	"errors"
@@ -17,7 +17,7 @@ func EncodeJsonData(w http.ResponseWriter, data interface{}) {
 	encoder.SetIndent("", "\t")
 	err := encoder.Encode(data)
 	if err != nil {
-		http.Error(w, "Failed to encode data", http.StatusInternalServerError)
+		http.Error(w, errorMsg.ErrorEncodingJsonData, http.StatusInternalServerError)
 		logger.Error.Printf("Failed to encode data: %q", err)
 	}
 }
@@ -30,7 +30,7 @@ func EncodeJsonData(w http.ResponseWriter, data interface{}) {
 func ValidateURL(url string, query map[string][]string, maxLength int, params []string) error {
 	url = path.Clean(url)
 	if len(url) > maxLength {
-		return errors.New(errors2.ErrorTongURL)
+		return errors.New(errorMsg.ErrorTongURL)
 	}
 
 	if params == nil {
@@ -38,13 +38,13 @@ func ValidateURL(url string, query map[string][]string, maxLength int, params []
 	}
 
 	if len(query) != len(params) {
-		return errors.New(errors2.ErrorInvalidQueryParams + strings.Join(params, ", "))
+		return errors.New(errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "))
 	}
 
 	for _, param := range params {
 		values, ok := query[param]
 		if !ok || len(values) == 0 || values[0] == "" {
-			return errors.New(errors2.ErrorInvalidQueryParams + strings.Join(params, ", "))
+			return errors.New(errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "))
 		}
 	}
 

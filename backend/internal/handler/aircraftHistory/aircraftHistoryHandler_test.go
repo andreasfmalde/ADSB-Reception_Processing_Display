@@ -3,7 +3,7 @@ package aircraftHistory
 import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global"
-	errors2 "adsb-api/internal/global/errors"
+	errors2 "adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/global/models"
 	"adsb-api/internal/utility/testUtility"

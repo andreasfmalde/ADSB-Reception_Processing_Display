@@ -1,7 +1,7 @@
 package geoJSON
 
 import (
-	errors2 "adsb-api/internal/global/errors"
+	errors2 "adsb-api/internal/global/errorMsg"
 	models2 "adsb-api/internal/global/models"
 	"errors"
 )

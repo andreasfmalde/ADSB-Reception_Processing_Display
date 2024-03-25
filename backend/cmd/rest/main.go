@@ -33,7 +33,7 @@ func main() {
 	}()
 
 	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
-	http.HandleFunc(global.CurrentAircraftPath, aircraftCurrentHandler.CurrentAircraftHandler(restSvc))
+	http.HandleFunc(global.AircraftCurrentPath, aircraftCurrentHandler.CurrentAircraftHandler(restSvc))
 	http.HandleFunc(global.AircraftHistoryPath, aircraftHistory.HistoryAircraftHandler(restSvc))
 
 	port := os.Getenv("PORT")

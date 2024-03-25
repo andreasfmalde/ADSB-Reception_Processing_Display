@@ -1,7 +1,7 @@
 package aircraftCurrentHandler
 
 import (
-	"adsb-api/internal/global/errors"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/service"
@@ -17,7 +17,7 @@ func CurrentAircraftHandler(svc service.RestService) http.HandlerFunc {
 		case http.MethodGet:
 			handleCurrentAircraftGetRequest(w, r, svc)
 		default:
-			http.Error(w, fmt.Sprintf(errors.MethodNotSupported, r.Method), http.StatusMethodNotAllowed)
+			http.Error(w, fmt.Sprintf(errorMsg.MethodNotSupported, r.Method), http.StatusMethodNotAllowed)
 		}
 	}
 }
@@ -27,19 +27,19 @@ func CurrentAircraftHandler(svc service.RestService) http.HandlerFunc {
 func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc service.RestService) {
 	res, err := svc.GetCurrentAircraft()
 	if err != nil {
-		http.Error(w, errors.ErrorRetrievingCurrentAircraft, http.StatusInternalServerError)
-		logger.Error.Printf(errors.ErrorRetrievingCurrentAircraft+": %q Path: %q", err, r.URL)
+		http.Error(w, errorMsg.ErrorRetrievingCurrentAircraft, http.StatusInternalServerError)
+		logger.Error.Printf(errorMsg.ErrorRetrievingCurrentAircraft+": %q Path: %q", err, r.URL)
 		return
 	}
 	if len(res) == 0 {
-		http.Error(w, errors.NoAircraftFound, http.StatusNoContent)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
 	aircraft, err := geoJSON.ConvertCurrentModelToGeoJson(res)
 	if err != nil {
-		http.Error(w, errors.ErrorConvertingDataToGeoJson, http.StatusInternalServerError)
-		logger.Error.Printf(errors.ErrorConvertingDataToGeoJson+": %q", err)
+		http.Error(w, errorMsg.ErrorConvertingDataToGeoJson, http.StatusInternalServerError)
+		logger.Error.Printf(errorMsg.ErrorConvertingDataToGeoJson+": %q", err)
 		return
 	}
 

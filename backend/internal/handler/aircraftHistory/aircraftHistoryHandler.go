@@ -2,7 +2,7 @@ package aircraftHistory
 
 import (
 	"adsb-api/internal/global"
-	"adsb-api/internal/global/errors"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/service"
@@ -25,7 +25,7 @@ func HistoryAircraftHandler(svc service.RestService) http.HandlerFunc {
 		case http.MethodGet:
 			handleHistoryAircraftGetRequest(w, r, svc)
 		default:
-			http.Error(w, fmt.Sprintf(errors.MethodNotSupported, r.Method), http.StatusMethodNotAllowed)
+			http.Error(w, fmt.Sprintf(errorMsg.MethodNotSupported, r.Method), http.StatusMethodNotAllowed)
 		}
 	}
 }
@@ -37,19 +37,19 @@ func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 	var search = r.URL.Query().Get("icao")
 	res, err := svc.GetHistoryByIcao(search)
 	if err != nil {
-		http.Error(w, errors.ErrorRetrievingAircraftWithIcao+search, http.StatusInternalServerError)
-		logger.Error.Printf(errors.ErrorRetrievingAircraftWithIcao+search+": %q URL: %q", err, r.URL)
+		http.Error(w, errorMsg.ErrorRetrievingAircraftWithIcao+search, http.StatusInternalServerError)
+		logger.Error.Printf(errorMsg.ErrorRetrievingAircraftWithIcao+search+": %q URL: %q", err, r.URL)
 		return
 	}
 	if len(res) == 0 {
-		http.Error(w, errors.NoAircraftFound, http.StatusNoContent)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
 	aircraft, err := geoJSON.ConvertHistoryModelToGeoJson(res)
 	if err != nil {
-		http.Error(w, errors.ErrorConvertingDataToGeoJson, http.StatusInternalServerError)
-		logger.Error.Printf(errors.ErrorConvertingDataToGeoJson+": %q", err)
+		http.Error(w, errorMsg.ErrorConvertingDataToGeoJson, http.StatusInternalServerError)
+		logger.Error.Printf(errorMsg.ErrorConvertingDataToGeoJson+": %q", err)
 		return
 	}
 

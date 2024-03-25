@@ -3,7 +3,7 @@ package aircraftCurrentHandler
 import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global"
-	errors2 "adsb-api/internal/global/errors"
+	errors2 "adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/global/models"
 	"adsb-api/internal/utility/testUtility"
@@ -38,21 +38,21 @@ func TestInvalidRequests(t *testing.T) {
 	}{
 		{
 			name:       "Post request",
-			url:        currentEndpoint.URL + global.CurrentAircraftPath,
+			url:        currentEndpoint.URL + global.AircraftCurrentPath,
 			httpMethod: http.MethodPost,
 			statusCode: http.StatusMethodNotAllowed,
 			errorMsg:   fmt.Sprintf(errors2.MethodNotSupported, http.MethodPost),
 		},
 		{
 			name:       "Delete request",
-			url:        currentEndpoint.URL + global.CurrentAircraftPath,
+			url:        currentEndpoint.URL + global.AircraftCurrentPath,
 			httpMethod: http.MethodDelete,
 			statusCode: http.StatusMethodNotAllowed,
 			errorMsg:   fmt.Sprintf(errors2.MethodNotSupported, http.MethodDelete),
 		},
 		{
 			name:       "Database returns nil",
-			url:        currentEndpoint.URL + global.CurrentAircraftPath,
+			url:        currentEndpoint.URL + global.AircraftCurrentPath,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusInternalServerError,
 			setup: func(mockDB *db.MockDatabase) {
@@ -106,7 +106,7 @@ func TestValidRequests(t *testing.T) {
 	}{
 		{
 			name:       "Get request without parameters",
-			url:        currentEndpoint.URL + global.CurrentAircraftPath,
+			url:        currentEndpoint.URL + global.AircraftCurrentPath,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
 			mockData:   testUtility.CreateMockAircraft(10),
@@ -116,7 +116,7 @@ func TestValidRequests(t *testing.T) {
 		},
 		{
 			name:       "Get request with empty current_time_aircraft table",
-			url:        currentEndpoint.URL + global.CurrentAircraftPath,
+			url:        currentEndpoint.URL + global.AircraftCurrentPath,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
 			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel) {
