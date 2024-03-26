@@ -59,6 +59,8 @@ function App() {
       setHistoryTrail(data.features[0]);
     }catch(error){
       console.log("History not found")
+      setSelected(null);
+      setHistoryTrail(null);
     }
   }
 
@@ -81,6 +83,7 @@ function App() {
           onMove={(e)=>{
             setViewport(e.viewState);
           }}
+          onClick={e => console.log("Hei")}
           onMoveEnd={(e)=>{
             let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,e.target.getBounds()))
             if(aircraftInBounds !== undefined){
@@ -101,6 +104,8 @@ function App() {
             
             setCurrentRender(aircraftInBounds);
           }}
+          
+  
         >
           {currentRender?.map((p) =>(
           <div key={p.properties.icao}>
@@ -108,13 +113,13 @@ function App() {
               latitude={p.geometry.coordinates[0]}
               longitude={p.geometry.coordinates[1]}
               rotation={p.properties.track}
-              onClick={()=>{
+              onClick={e=>{
                 if(selected?.properties.icao !== p.properties.icao){
                   setSelected(p);
                   retrieveImage(p.properties.icao);
                   retrieveHistory(p.properties.icao);
                 }
-                
+                e.originalEvent.stopPropagation();
               }}
             >
             <IoMdAirplane 
