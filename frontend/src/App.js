@@ -21,7 +21,6 @@ function App() {
   const [historyTrail, setHistoryTrail] = useState(null);
 
   const isInBounds = (p,mapBounds) =>{
-      
     if (p.geometry.coordinates[0] > mapBounds._ne.lat || p.geometry.coordinates[0] < mapBounds._sw.lat ){
       return false;
     }
@@ -59,8 +58,6 @@ function App() {
       setHistoryTrail(data.features[0]);
     }catch(error){
       console.log("History not found")
-      setSelected(null);
-      setHistoryTrail(null);
     }
   }
 
@@ -83,7 +80,10 @@ function App() {
           onMove={(e)=>{
             setViewport(e.viewState);
           }}
-          onClick={e => console.log("Hei")}
+          onClick={()=>{
+            setHistoryTrail(null);
+            setSelected(null);
+          }}
           onMoveEnd={(e)=>{
             let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,e.target.getBounds()))
             if(aircraftInBounds !== undefined){
@@ -100,11 +100,9 @@ function App() {
               }else if (aircraftInBounds.length > 500){
                 aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.15)
               }
-            }
-            
+            }  
             setCurrentRender(aircraftInBounds);
-          }}
-          
+          }}  
   
         >
           {currentRender?.map((p) =>(
@@ -114,12 +112,12 @@ function App() {
               longitude={p.geometry.coordinates[1]}
               rotation={p.properties.track}
               onClick={e=>{
+                e.originalEvent.stopPropagation();
                 if(selected?.properties.icao !== p.properties.icao){
                   setSelected(p);
                   retrieveImage(p.properties.icao);
                   retrieveHistory(p.properties.icao);
                 }
-                e.originalEvent.stopPropagation();
               }}
             >
             <IoMdAirplane 
@@ -131,7 +129,7 @@ function App() {
           </Marker>
         </div>
         ))}
-        {selected === null ? "":
+        {selected === null || historyTrail === null ? "":
           <Source id='trail' type='geojson' data={historyTrail}>
             <Layer {... trailLayer} />
           </Source>
