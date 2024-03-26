@@ -61,6 +61,27 @@ function App() {
     }
   }
 
+  const aircraftRenderFilter = (bounds) =>{
+    let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,bounds))
+    if(aircraftInBounds !== undefined){
+      if (aircraftInBounds.length > 3500){
+        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.9)
+      }else if (aircraftInBounds.length > 2500){
+        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.8)
+      }else if (aircraftInBounds.length > 2000){
+        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.7)
+      }else if (aircraftInBounds.length > 1250){
+        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.5)
+      }else if (aircraftInBounds.length > 900){
+        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.3)
+      }else if (aircraftInBounds.length > 500){
+        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.15)
+      }
+    }  
+    setCurrentRender(aircraftInBounds);
+
+  }
+
   useEffect(()=>{
     //  const seconds = 10;
     retrievePlanes();
@@ -77,33 +98,13 @@ function App() {
           maxZoom={10}
           style={{width: 'calc(100vw - 300px)', height: 'calc(100vh - 78px)',gridColumn:'1/2'}}
           mapStyle={style}
-          onMove={(e)=>{
-            setViewport(e.viewState);
-          }}
+          onLoad={(e)=>aircraftRenderFilter(e.target.getBounds())}
+          onMoveEnd={(e)=>aircraftRenderFilter(e.target.getBounds())}
+          onMove={(e)=>setViewport(e.viewState)}
           onClick={()=>{
             setHistoryTrail(null);
             setSelected(null);
           }}
-          onMoveEnd={(e)=>{
-            let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,e.target.getBounds()))
-            if(aircraftInBounds !== undefined){
-              if (aircraftInBounds.length > 3500){
-                aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.9)
-              }else if (aircraftInBounds.length > 2500){
-                aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.8)
-              }else if (aircraftInBounds.length > 2000){
-                aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.7)
-              }else if (aircraftInBounds.length > 1250){
-                aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.5)
-              }else if (aircraftInBounds.length > 900){
-                aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.3)
-              }else if (aircraftInBounds.length > 500){
-                aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.15)
-              }
-            }  
-            setCurrentRender(aircraftInBounds);
-          }}  
-  
         >
           {currentRender?.map((p) =>(
           <div key={p.properties.icao}>
