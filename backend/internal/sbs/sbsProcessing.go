@@ -1,4 +1,4 @@
-package adsbhub
+package sbs
 
 import (
 	"adsb-api/internal/global/models"
