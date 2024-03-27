@@ -4,12 +4,13 @@ export const Sidebar = (props) =>{
     return(
         <div className='Sidebar'>
         {props?.aircraft == null ? 
-            <div>
-                No Content
+            <div className='sidebar-unselected'>
+                Select aircraft to view information
             </div>:
             // Render aircraft
             <div className='aircraft-info'>
-                <img src={props?.image != null ? props?.image.thumbnail_large.src : "https://eagle-sensors.com/wp-content/uploads/unavailable-image.jpg" } />
+                <img src={props?.image != null ? props?.image.thumbnail_large.src : "https://eagle-sensors.com/wp-content/uploads/unavailable-image.jpg" } 
+                alt='selected aircraft'/>
                 {props?.image != null ? <a href={props?.image.link}><span>&copy; {props?.image.photographer}</span></a> : ""}
                 <div className='callsign'>{props?.aircraft.properties.callsign}</div>
                 <div className='property'><div className='label'>ALTITUDE:</div> {props?.aircraft.properties.altitude} feet</div>
