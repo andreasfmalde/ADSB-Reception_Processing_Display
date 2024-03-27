@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Map, {Layer, Marker, Source} from 'react-map-gl/maplibre';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
@@ -19,6 +19,7 @@ function App() {
   const [selected, setSelected] = useState(null);
   const [selectedImg, setSelectedImg] = useState(null);
   const [historyTrail, setHistoryTrail] = useState(null);
+  const map = useRef(null);
 
   const isInBounds = (p,mapBounds) =>{
     if (p.geometry.coordinates[0] > mapBounds._ne.lat || p.geometry.coordinates[0] < mapBounds._sw.lat ){
@@ -61,6 +62,31 @@ function App() {
     }
   }
 
+  const retrieveSearch = (search) =>{
+    if (search === null || search === undefined || search.length < 3 || search.length > 15){
+      return
+    }
+    let aircraft = findAircraftByIcaoOrCallsign(search);
+    if (aircraft !== null){
+      setSelected(aircraft);
+      retrieveImage(aircraft.properties.icao);
+      retrieveHistory(aircraft.properties.icao);
+      map.current.flyTo({center:[aircraft.geometry.coordinates[1],aircraft.geometry.coordinates[0]],zoom:9})
+    }
+    
+  }
+
+  const findAircraftByIcaoOrCallsign = (search) =>{
+    if (aircraftJSON !== null){
+      for (let ac of aircraftJSON){
+        if (ac.properties.icao === search || ac.properties.callsign === search){
+          return ac
+        }
+      }
+    }
+    return null;
+  }
+
   const aircraftRenderFilter = (bounds) =>{
     let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,bounds))
     if(aircraftInBounds !== undefined){
@@ -90,9 +116,10 @@ function App() {
   
   return (
     <div className="App">
-      <Navbar />
+      <Navbar callback={retrieveSearch}/>
       <div className="main-content">
         <Map
+          ref={map}
           initialViewState={viewport}
           minZoom={3}
           maxZoom={10}
@@ -136,7 +163,7 @@ function App() {
           </Source>
         }
         </Map>
-        <Sidebar aircraft={selected} image={selectedImg} />
+        <Sidebar aircraft={selected} image={selectedImg}/>
       </div>
     </div>
   );
