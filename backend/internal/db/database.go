@@ -69,25 +69,13 @@ func (db *AdsbDB) CreateAircraftCurrentTable(tx *sql.Tx) error {
 				 vspeed INT NOT NULL,
 				 timestamp TIMESTAMP NOT NULL,
 				 PRIMARY KEY (icao,timestamp))`
-	if tx != nil {
-		_, err := tx.Exec(query)
-		return err
-	} else {
-		_, err := db.Conn.Exec(query)
-		return err
-	}
+	return db.exec(query, tx)
 }
 
 func (db *AdsbDB) CreateAircraftCurrentTimestampIndex(tx *sql.Tx) error {
 	var query = `CREATE INDEX IF NOT EXISTS timestamp_index ON aircraft_current(timestamp)`
 
-	if tx != nil {
-		_, err := tx.Exec(query)
-		return err
-	} else {
-		_, err := db.Conn.Exec(query)
-		return err
-	}
+	return db.exec(query, tx)
 }
 
 // CreateAircraftHistory creates a table for storing aircraft history data if it does not already exist
@@ -99,25 +87,13 @@ func (db *AdsbDB) CreateAircraftHistory(tx *sql.Tx) error {
 				 timestamp TIMESTAMP NOT NULL,
 				 PRIMARY KEY (icao,timestamp))`
 
-	if tx != nil {
-		_, err := tx.Exec(query)
-		return err
-	} else {
-		_, err := db.Conn.Exec(query)
-		return err
-	}
+	return db.exec(query, tx)
 }
 
 func (db *AdsbDB) DropAircraftCurrentTable(tx *sql.Tx) error {
 	query := `DROP TABLE IF EXISTS aircraft_current CASCADE`
 
-	if tx != nil {
-		_, err := tx.Exec(query)
-		return err
-	} else {
-		_, err := db.Conn.Exec(query)
-		return err
-	}
+	return db.exec(query, tx)
 }
 
 // BulkInsertAircraftCurrent inserts an array of new aircraft data into aircraft_current
@@ -172,13 +148,7 @@ func (db *AdsbDB) InsertHistoryFromCurrent(tx *sql.Tx) error {
 			  FROM aircraft_current
 			  ON CONFLICT (icao, timestamp) 
 			      DO UPDATE SET timestamp = excluded.timestamp`
-	if tx != nil {
-		_, err := tx.Exec(query)
-		return err
-	} else {
-		_, err := db.Conn.Exec(query)
-		return err
-	}
+	return db.exec(query, tx)
 }
 
 // DeleteOldCurrent will delete rows in aircraft_current older than global.WaitingTime seconds from the latest entry.
@@ -235,7 +205,16 @@ func (db *AdsbDB) GetCurrentAircraft(tx *sql.Tx) ([]models.AircraftCurrentModel,
 // GetHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
 func (db *AdsbDB) GetHistoryByIcao(search string, tx *sql.Tx) ([]models.AircraftHistoryModel, error) {
 	var query = `SELECT icao, long, lat FROM aircraft_history WHERE icao = $1`
-	rows, err := db.Conn.Query(query, search)
+
+	var rows *sql.Rows
+	var err error
+
+	if tx != nil {
+		rows, err = tx.Query(query, search)
+	} else {
+		rows, err = db.Conn.Query(query, search)
+	}
+
 	if err != nil {
 		return []models.AircraftHistoryModel{}, err
 	}
@@ -254,4 +233,14 @@ func (db *AdsbDB) GetHistoryByIcao(search string, tx *sql.Tx) ([]models.Aircraft
 	}
 
 	return aircraft, nil
+}
+
+func (db *AdsbDB) exec(query string, tx *sql.Tx) error {
+	if tx != nil {
+		_, err := tx.Exec(query)
+		return err
+	} else {
+		_, err := db.Conn.Exec(query)
+		return err
+	}
 }
