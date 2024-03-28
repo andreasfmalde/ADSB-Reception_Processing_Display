@@ -79,7 +79,9 @@ func InitDB() (*Context, error) {
 		global.Host, global.Port, global.DbUser, global.DbPassword, global.Dbname)
 
 	dbConn, err := sql.Open("postgres", dbLogin)
-	// TODO: add ping
+	if err = dbConn.Ping(); err != nil {
+		return nil, err
+	}
 	return &Context{conn: dbConn}, err
 }
 
