@@ -1,4 +1,4 @@
-package service
+package sbsService
 
 import (
 	"adsb-api/internal/db"

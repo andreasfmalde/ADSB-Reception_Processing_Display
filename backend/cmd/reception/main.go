@@ -5,7 +5,7 @@ import (
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/sbs"
-	"adsb-api/internal/service"
+	"adsb-api/internal/service/sbsService"
 	"time"
 )
 
@@ -16,7 +16,7 @@ func main() {
 	// Initialize environment variables
 	global.InitEnvironment()
 	// Initialize the database
-	sbsSvc, err := service.InitSbsService()
+	sbsSvc, err := sbsService.InitSbsService()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
