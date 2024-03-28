@@ -11,53 +11,84 @@ import (
 )
 
 type Database interface {
+	CreateAircraftCurrentTable() error
+	CreateAircraftCurrentTimestampIndex() error
+	DropAircraftCurrentTable() error
+	BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentModel) error
+	GetCurrentAircraft() ([]models.AircraftCurrentModel, error)
+
+	CreateAircraftHistory() error
+	InsertHistoryFromCurrent() error
+	GetHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
+
+	DeleteOldCurrent() error
+
+	BeginTx() error
+	Commit() error
+	Rollback() error
+
 	Close() error
-	Begin() (*sql.Tx, error)
-	Commit(tx *sql.Tx) error
-	Rollback(tx *sql.Tx) error
-	CreateAircraftCurrentTable(tx *sql.Tx) error
-	CreateAircraftCurrentTimestampIndex(tx *sql.Tx) error
-	CreateAircraftHistory(tx *sql.Tx) error
-	DropAircraftCurrentTable(tx *sql.Tx) error
-	BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentModel, tx *sql.Tx) error
-	InsertHistoryFromCurrent(tx *sql.Tx) error
-	DeleteOldCurrent(tx *sql.Tx) error
-	GetCurrentAircraft(tx *sql.Tx) ([]models.AircraftCurrentModel, error)
-	GetHistoryByIcao(search string, tx *sql.Tx) ([]models.AircraftHistoryModel, error)
 }
 
-type AdsbDB struct {
-	Conn *sql.DB
+type Context struct {
+	conn *sql.DB
+	tx   *sql.Tx
+}
+
+func (ctx *Context) Exec(query string, args ...interface{}) (sql.Result, error) {
+	if ctx.tx != nil {
+		return ctx.tx.Exec(query, args...)
+	}
+	return ctx.conn.Exec(query, args...)
+}
+
+func (ctx *Context) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	if ctx.tx != nil {
+		return ctx.tx.Query(query, args...)
+	}
+	return ctx.conn.Query(query, args...)
+}
+
+func (ctx *Context) BeginTx() error {
+	var err error
+	ctx.tx, err = ctx.conn.Begin()
+	return err
+}
+
+func (ctx *Context) Commit() error {
+	if ctx.tx != nil {
+		err := ctx.tx.Commit()
+		ctx.tx = nil
+		return err
+	}
+	return nil
+}
+
+func (ctx *Context) Rollback() error {
+	if ctx.tx != nil {
+		err := ctx.tx.Rollback()
+		ctx.tx = nil
+		return err
+	}
+	return nil
 }
 
 // InitDB initializes the PostgresSQL database and returns the connection pointer.
-func InitDB() (*AdsbDB, error) {
+func InitDB() (*Context, error) {
 	dbLogin := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
 		global.Host, global.Port, global.DbUser, global.DbPassword, global.Dbname)
 
 	dbConn, err := sql.Open("postgres", dbLogin)
 	// TODO: add ping
-	return &AdsbDB{Conn: dbConn}, err
+	return &Context{conn: dbConn}, err
 }
 
-func (db *AdsbDB) Close() error {
-	return db.Conn.Close()
-}
-
-func (db *AdsbDB) Begin() (*sql.Tx, error) {
-	return db.Conn.Begin()
-}
-
-func (db *AdsbDB) Commit(tx *sql.Tx) error {
-	return tx.Commit()
-}
-
-func (db *AdsbDB) Rollback(tx *sql.Tx) error {
-	return tx.Rollback()
+func (ctx *Context) Close() error {
+	return ctx.conn.Close()
 }
 
 // CreateAircraftCurrentTable creates a table for storing current aircraft data if it does not already exist
-func (db *AdsbDB) CreateAircraftCurrentTable(tx *sql.Tx) error {
+func (ctx *Context) CreateAircraftCurrentTable() error {
 	var query = `CREATE TABLE IF NOT EXISTS aircraft_current(
 				 icao VARCHAR(6) NOT NULL,
 				 callsign VARCHAR(10) NOT NULL,
@@ -69,17 +100,19 @@ func (db *AdsbDB) CreateAircraftCurrentTable(tx *sql.Tx) error {
 				 vspeed INT NOT NULL,
 				 timestamp TIMESTAMP NOT NULL,
 				 PRIMARY KEY (icao,timestamp))`
-	return db.exec(query, tx)
+	_, err := ctx.Exec(query)
+	return err
 }
 
-func (db *AdsbDB) CreateAircraftCurrentTimestampIndex(tx *sql.Tx) error {
+func (ctx *Context) CreateAircraftCurrentTimestampIndex() error {
 	var query = `CREATE INDEX IF NOT EXISTS timestamp_index ON aircraft_current(timestamp)`
 
-	return db.exec(query, tx)
+	_, err := ctx.Exec(query)
+	return err
 }
 
 // CreateAircraftHistory creates a table for storing aircraft history data if it does not already exist
-func (db *AdsbDB) CreateAircraftHistory(tx *sql.Tx) error {
+func (ctx *Context) CreateAircraftHistory() error {
 	var query = `CREATE TABLE IF NOT EXISTS aircraft_history(
 				 icao VARCHAR(6) NOT NULL,
 				 lat DECIMAL NOT NULL,
@@ -87,17 +120,19 @@ func (db *AdsbDB) CreateAircraftHistory(tx *sql.Tx) error {
 				 timestamp TIMESTAMP NOT NULL,
 				 PRIMARY KEY (icao,timestamp))`
 
-	return db.exec(query, tx)
+	_, err := ctx.Exec(query)
+	return err
 }
 
-func (db *AdsbDB) DropAircraftCurrentTable(tx *sql.Tx) error {
+func (ctx *Context) DropAircraftCurrentTable() error {
 	query := `DROP TABLE IF EXISTS aircraft_current CASCADE`
 
-	return db.exec(query, tx)
+	_, err := ctx.Exec(query)
+	return err
 }
 
 // BulkInsertAircraftCurrent inserts an array of new aircraft data into aircraft_current
-func (db *AdsbDB) BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentModel, tx *sql.Tx) error {
+func (ctx *Context) BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentModel) error {
 	/*
 		Maximum number of aircraft per query
 		(65535 is the max number of parameters postgres supports and there are 9 aircraft parameters)
@@ -125,16 +160,9 @@ func (db *AdsbDB) BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentMod
 
 		query := `INSERT INTO aircraft_current (icao, callsign, altitude, lat, long, speed, track, vspeed, timestamp) VALUES %s`
 		stmt := fmt.Sprintf(query, strings.Join(placeholders, ","))
-		if tx != nil {
-			_, err := tx.Exec(stmt, vals...)
-			if err != nil {
-				return err
-			}
-		} else {
-			_, err := db.Conn.Exec(stmt, vals...)
-			if err != nil {
-				return err
-			}
+		_, err := ctx.conn.Exec(stmt, vals...)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -142,45 +170,33 @@ func (db *AdsbDB) BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentMod
 }
 
 // InsertHistoryFromCurrent inserts all data from aircraft_current table to aircraft_history.
-func (db *AdsbDB) InsertHistoryFromCurrent(tx *sql.Tx) error {
+func (ctx *Context) InsertHistoryFromCurrent() error {
 	query := `INSERT INTO aircraft_history (icao, lat, long, timestamp) 
 			  SELECT icao, lat, long, timestamp
 			  FROM aircraft_current
 			  ON CONFLICT (icao, timestamp) 
 			      DO UPDATE SET timestamp = excluded.timestamp`
-	return db.exec(query, tx)
+	_, err := ctx.Exec(query)
+	return err
 }
 
 // DeleteOldCurrent will delete rows in aircraft_current older than global.WaitingTime seconds from the latest entry.
-func (db *AdsbDB) DeleteOldCurrent(tx *sql.Tx) error {
+func (ctx *Context) DeleteOldCurrent() error {
 	var query = `DELETE FROM aircraft_current 
        			 WHERE timestamp < (select max(timestamp)-($1 * interval '1 second') 
                  FROM aircraft_current)`
 
-	if tx != nil {
-		_, err := tx.Exec(query, global.WaitingTime+2)
-		return err
-	} else {
-		_, err := db.Conn.Exec(query, global.WaitingTime+2)
-		return err
-	}
+	_, err := ctx.Exec(query, global.WaitingTime+2)
+	return err
 }
 
 // GetCurrentAircraft retrieves a list of all aircraft from aircraft_current that are older than global.WaitingTime + 2
-func (db *AdsbDB) GetCurrentAircraft(tx *sql.Tx) ([]models.AircraftCurrentModel, error) {
+func (ctx *Context) GetCurrentAircraft() ([]models.AircraftCurrentModel, error) {
 	var query = `SELECT * FROM aircraft_current 
 				 WHERE timestamp > (select max(timestamp)-($1 * interval '1 second') 
 				 FROM aircraft_current)`
 
-	var rows *sql.Rows
-	var err error
-
-	if tx != nil {
-		rows, err = tx.Query(query, global.WaitingTime+2)
-	} else {
-		rows, err = db.Conn.Query(query, global.WaitingTime+2)
-	}
-
+	rows, err := ctx.Query(query, global.WaitingTime+2)
 	if err != nil {
 		return nil, err
 	}
@@ -203,20 +219,12 @@ func (db *AdsbDB) GetCurrentAircraft(tx *sql.Tx) ([]models.AircraftCurrentModel,
 }
 
 // GetHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
-func (db *AdsbDB) GetHistoryByIcao(search string, tx *sql.Tx) ([]models.AircraftHistoryModel, error) {
+func (ctx *Context) GetHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
 	var query = `SELECT icao, long, lat FROM aircraft_history WHERE icao = $1`
 
-	var rows *sql.Rows
-	var err error
-
-	if tx != nil {
-		rows, err = tx.Query(query, search)
-	} else {
-		rows, err = db.Conn.Query(query, search)
-	}
-
+	rows, err := ctx.conn.Query(query, search)
 	if err != nil {
-		return []models.AircraftHistoryModel{}, err
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -233,14 +241,4 @@ func (db *AdsbDB) GetHistoryByIcao(search string, tx *sql.Tx) ([]models.Aircraft
 	}
 
 	return aircraft, nil
-}
-
-func (db *AdsbDB) exec(query string, tx *sql.Tx) error {
-	if tx != nil {
-		_, err := tx.Exec(query)
-		return err
-	} else {
-		_, err := db.Conn.Exec(query)
-		return err
-	}
 }

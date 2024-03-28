@@ -27,12 +27,29 @@ func InitSbsService() (*SbsServiceImpl, error) {
 
 // CreateAdsbTables creates all tables for the database schema
 func (svc *SbsServiceImpl) CreateAdsbTables() error {
-	err := svc.DB.CreateAircraftCurrentTable(nil)
+	err := svc.DB.BeginTx()
 	if err != nil {
 		return err
 	}
 
-	err = svc.DB.CreateAircraftHistory(nil)
+	err = svc.DB.CreateAircraftCurrentTable()
+	if err != nil {
+		svc.DB.Rollback()
+		return err
+	}
+
+	err = svc.DB.CreateAircraftCurrentTimestampIndex()
+	if err != nil {
+		svc.DB.Rollback()
+		return err
+	}
+
+	err = svc.DB.Commit()
+	if err != nil {
+		return err
+	}
+
+	err = svc.DB.CreateAircraftHistory()
 	if err != nil {
 		return err
 	}
@@ -43,7 +60,7 @@ func (svc *SbsServiceImpl) CreateAdsbTables() error {
 // InsertNewSbsData adds new SBS data to the database.
 // First process the SBS stream and then add that data to the database.
 func (svc *SbsServiceImpl) InsertNewSbsData() error {
-	err := svc.DB.InsertHistoryFromCurrent(nil)
+	err := svc.DB.InsertHistoryFromCurrent()
 	if err != nil {
 		return err
 	}
@@ -53,27 +70,30 @@ func (svc *SbsServiceImpl) InsertNewSbsData() error {
 		return err
 	}
 
-	tx, err := svc.DB.Begin()
-
-	err = svc.DB.DropAircraftCurrentTable(tx)
+	err = svc.DB.BeginTx()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	err = svc.DB.CreateAircraftCurrentTable(tx)
+	err = svc.DB.DropAircraftCurrentTable()
 	if err != nil {
-		tx.Rollback()
+		svc.DB.Rollback()
 		return err
 	}
 
-	err = svc.DB.BulkInsertAircraftCurrent(aircraft, tx)
+	err = svc.DB.CreateAircraftCurrentTable()
 	if err != nil {
-		tx.Rollback()
+		svc.DB.Rollback()
 		return err
 	}
 
-	err = svc.DB.Commit(tx)
+	err = svc.DB.BulkInsertAircraftCurrent(aircraft)
+	if err != nil {
+		svc.DB.Rollback()
+		return err
+	}
+
+	err = svc.DB.Commit()
 	if err != nil {
 		return err
 	}
@@ -83,5 +103,5 @@ func (svc *SbsServiceImpl) InsertNewSbsData() error {
 
 // Cleanup remove old rows to save space
 func (svc *SbsServiceImpl) Cleanup() error {
-	return svc.DB.DeleteOldCurrent(nil)
+	return svc.DB.DeleteOldCurrent()
 }
