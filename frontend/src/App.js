@@ -2,18 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import Map, {Layer, Marker, Source} from 'react-map-gl/maplibre';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
-import {style, geojson, trail, trailLayer} from './data/MapData';
+import {style, geojson, trail, trailLayer, initialView} from './data/MapData';
+import { isInBounds, findAircraftByIcaoOrCallsign, trimAircraftList, callAPI } from './utils';
 import { IoMdAirplane } from "react-icons/io";
 
 import './App.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 function App() {
-  const [viewport,setViewport] =  useState({
-    longitude: 10,
-    latitude: 60.6,
-    zoom: 5
-  });
+  const [viewport,setViewport] =  useState(initialView);
   const [aircraftJSON,setAircraftJSON] = useState(null);
   const [currentRender, setCurrentRender] = useState(null);
   const [selected, setSelected] = useState(null);
@@ -21,20 +18,11 @@ function App() {
   const [historyTrail, setHistoryTrail] = useState(null);
   const map = useRef(null);
 
-  const isInBounds = (p,mapBounds) =>{
-    if (p.geometry.coordinates[0] > mapBounds._ne.lat || p.geometry.coordinates[0] < mapBounds._sw.lat ){
-      return false;
-    }
-    if (p.geometry.coordinates[1] > mapBounds._ne.long || p.geometry.coordinates[1] < mapBounds._sw.long ){
-      return false;
-    }
-    return true
-  }
 
   const retrievePlanes = async () =>{
     try{
-      const response = await fetch("http://localhost:8080/aircraft/current/"); // http://129.241.150.147:8080/aircraft/current/
-      const data = await response.json()
+      const data = await callAPI(`${process.env.REACT_APP_SERVER}/aircraft/current/`);
+      console.log(data)
       setAircraftJSON(data.features);
     }catch(error){
       console.log("Something went wrong")
@@ -44,8 +32,7 @@ function App() {
 
   const retrieveImage = async (icao) =>{
     try{
-      const response = await fetch(`https://api.planespotters.net/pub/photos/hex/${icao}`);
-      const data = await response.json();
+      const data = await callAPI(`https://api.planespotters.net/pub/photos/hex/${icao}`);
       data.error ? setSelectedImg(null) : setSelectedImg(data.photos[0]);
     }catch(error){
       console.log("API retrieval failed")
@@ -54,8 +41,7 @@ function App() {
 
   const retrieveHistory = async (icao) =>{
     try{
-      const response = await fetch(`http://localhost:8080/aircraft/history?icao=${icao}`);
-      const data = await response.json();
+      const data = await callAPI(`${process.env.REACT_APP_SERVER}/aircraft/history?icao=${icao}`);
       setHistoryTrail(data.features[0]);
     }catch(error){
       console.log("History not found")
@@ -66,7 +52,7 @@ function App() {
     if (search === null || search === undefined || search.length < 3 || search.length > 15){
       return
     }
-    let aircraft = findAircraftByIcaoOrCallsign(search);
+    let aircraft = findAircraftByIcaoOrCallsign(search,aircraftJSON);
     if (aircraft !== null){
       setSelected(aircraft);
       retrieveImage(aircraft.properties.icao);
@@ -76,35 +62,9 @@ function App() {
     
   }
 
-  const findAircraftByIcaoOrCallsign = (search) =>{
-    if (aircraftJSON !== null){
-      for (let ac of aircraftJSON){
-        if (ac.properties.icao === search || ac.properties.callsign === search){
-          return ac
-        }
-      }
-    }
-    return null;
-  }
-
   const aircraftRenderFilter = (bounds) =>{
     let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,bounds))
-    if(aircraftInBounds !== undefined){
-      if (aircraftInBounds.length > 3500){
-        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.9)
-      }else if (aircraftInBounds.length > 2500){
-        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.8)
-      }else if (aircraftInBounds.length > 2000){
-        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.7)
-      }else if (aircraftInBounds.length > 1250){
-        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.5)
-      }else if (aircraftInBounds.length > 900){
-        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.3)
-      }else if (aircraftInBounds.length > 500){
-        aircraftInBounds = aircraftInBounds.filter(() => Math.random() > 0.15)
-      }
-    }  
-    setCurrentRender(aircraftInBounds);
+    setCurrentRender(trimAircraftList(aircraftInBounds));
 
   }
 

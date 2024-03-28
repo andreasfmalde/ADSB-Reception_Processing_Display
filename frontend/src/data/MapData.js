@@ -18,6 +18,12 @@ export const style = {
     ]
 };
 
+export const initialView = {
+    longitude: 10,
+    latitude: 60.6,
+    zoom: 5
+};
+
 
 export const geojson = {
     "type": "FeatureCollection",

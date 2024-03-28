@@ -1,4 +1,3 @@
-import logo from '../assets/logo.png'
 import './components.css';
 import { IoMdSearch } from "react-icons/io";
 import logoWhite from '../assets/logo_white.png';
