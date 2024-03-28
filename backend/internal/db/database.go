@@ -194,7 +194,7 @@ func (ctx *Context) DeleteOldCurrent() error {
 func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error) {
 	var query = `SELECT * FROM aircraft_current`
 
-	rows, err := ctx.Query(query, global.WaitingTime+2)
+	rows, err := ctx.Query(query)
 	if err != nil {
 		return nil, err
 	}
