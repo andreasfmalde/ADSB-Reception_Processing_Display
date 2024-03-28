@@ -4,6 +4,7 @@ import (
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/logger"
+	"adsb-api/internal/sbs"
 	"adsb-api/internal/service"
 	"time"
 )
@@ -34,12 +35,24 @@ func main() {
 
 	timer := time.Now()
 	for {
-		err = sbsSvc.InsertNewSbsData()
-		if diff := time.Since(timer).Seconds(); diff > 120 {
+		aircraft, err := sbs.ProcessSBSstream()
+		if err != nil {
+			logger.Info.Printf(err.Error()+" ... will try again in %s seconds", global.WaitingTime)
+			time.Sleep(global.WaitingTime * time.Second)
+			continue
+		}
+		err = sbsSvc.InsertNewSbsData(aircraft)
+		if err != nil {
+			logger.Error.Fatalf("could not insert new SBS data: %q", err)
+		}
+		logger.Info.Println("new SBS data inserted")
+
+		if diff := time.Since(timer).Seconds(); diff > global.CleaningPeriod {
 			if e := sbsSvc.Cleanup(); e == nil {
 				timer = time.Now()
+				logger.Info.Println("old SBS data deleted")
 			}
 		}
-		time.Sleep(global.WaitingTime * time.Second)
+		time.Sleep(global.UpdatingPeriod * time.Second)
 	}
 }

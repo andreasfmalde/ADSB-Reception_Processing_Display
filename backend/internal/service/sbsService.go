@@ -3,7 +3,6 @@ package service
 import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global/models"
-	"adsb-api/internal/sbs"
 )
 
 type SbsService interface {
@@ -32,15 +31,15 @@ func (svc *SbsServiceImpl) CreateAdsbTables() error {
 		return err
 	}
 
+	defer svc.DB.Rollback()
+
 	err = svc.DB.CreateAircraftCurrentTable()
 	if err != nil {
-		svc.DB.Rollback()
 		return err
 	}
 
 	err = svc.DB.CreateAircraftCurrentTimestampIndex()
 	if err != nil {
-		svc.DB.Rollback()
 		return err
 	}
 
@@ -59,13 +58,8 @@ func (svc *SbsServiceImpl) CreateAdsbTables() error {
 
 // InsertNewSbsData adds new SBS data to the database.
 // First process the SBS stream and then add that data to the database.
-func (svc *SbsServiceImpl) InsertNewSbsData() error {
+func (svc *SbsServiceImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) error {
 	err := svc.DB.InsertHistoryFromCurrent()
-	if err != nil {
-		return err
-	}
-
-	aircraft, err := sbs.ProcessSBSstream()
 	if err != nil {
 		return err
 	}
@@ -74,22 +68,20 @@ func (svc *SbsServiceImpl) InsertNewSbsData() error {
 	if err != nil {
 		return err
 	}
+	defer svc.DB.Rollback()
 
 	err = svc.DB.DropAircraftCurrentTable()
 	if err != nil {
-		svc.DB.Rollback()
 		return err
 	}
 
 	err = svc.DB.CreateAircraftCurrentTable()
 	if err != nil {
-		svc.DB.Rollback()
 		return err
 	}
 
 	err = svc.DB.BulkInsertAircraftCurrent(aircraft)
 	if err != nil {
-		svc.DB.Rollback()
 		return err
 	}
 

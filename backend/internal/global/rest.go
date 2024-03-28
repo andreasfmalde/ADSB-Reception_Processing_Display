@@ -6,6 +6,5 @@ const (
 	VERSION             = "1.0.0"
 	DefaultPath         = "/"
 	AircraftCurrentPath = "/aircraft/current"
-	WaitingTime         = 4
 	AircraftHistoryPath = "/aircraft/history"
 )
