@@ -119,9 +119,9 @@ func (mr *MockDatabaseMockRecorder) CreateAircraftCurrentTimestampIndex() *gomoc
 }
 
 // CreateAircraftHistory mocks base method.
-func (m *MockDatabase) CreateAircraftHistory() error {
+func (m *MockDatabase) CreateAircraftHistoryTable() error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAircraftHistory")
+	ret := m.ctrl.Call(m, "CreateAircraftHistoryTable")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -129,7 +129,7 @@ func (m *MockDatabase) CreateAircraftHistory() error {
 // CreateAircraftHistory indicates an expected call of CreateAircraftHistory.
 func (mr *MockDatabaseMockRecorder) CreateAircraftHistory() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAircraftHistory", reflect.TypeOf((*MockDatabase)(nil).CreateAircraftHistory))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAircraftHistoryTable", reflect.TypeOf((*MockDatabase)(nil).CreateAircraftHistoryTable))
 }
 
 // DeleteOldCurrent mocks base method.

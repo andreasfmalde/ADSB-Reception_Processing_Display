@@ -28,7 +28,7 @@ func setupTestDB() *Context {
 		logger.Error.Fatalf("error creating current_time_aircraft table: %q", err)
 	}
 
-	err = db.CreateAircraftHistory()
+	err = db.CreateAircraftHistoryTable()
 	if err != nil {
 		logger.Error.Fatalf("error creating history_aircraft table: %q", err)
 	}
@@ -95,7 +95,7 @@ func TestAdsbDB_CreateAdsbTables(t *testing.T) {
 		t.Fatalf("error creating aircraft_current timestamp index: %q", err)
 	}
 
-	err = db.CreateAircraftHistory()
+	err = db.CreateAircraftHistoryTable()
 	if err != nil {
 		t.Fatalf("error creating history_aircraft table: %q", err)
 	}

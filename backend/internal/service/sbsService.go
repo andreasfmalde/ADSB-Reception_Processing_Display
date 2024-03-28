@@ -48,7 +48,7 @@ func (svc *SbsServiceImpl) CreateAdsbTables() error {
 		return err
 	}
 
-	err = svc.DB.CreateAircraftHistory()
+	err = svc.DB.CreateAircraftHistoryTable()
 	if err != nil {
 		return err
 	}

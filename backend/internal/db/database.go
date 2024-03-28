@@ -17,7 +17,7 @@ type Database interface {
 	BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentModel) error
 	SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error)
 
-	CreateAircraftHistory() error
+	CreateAircraftHistoryTable() error
 	InsertHistoryFromCurrent() error
 	SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
 
@@ -111,8 +111,8 @@ func (ctx *Context) CreateAircraftCurrentTimestampIndex() error {
 	return err
 }
 
-// CreateAircraftHistory creates a table for storing aircraft history data if it does not already exist
-func (ctx *Context) CreateAircraftHistory() error {
+// CreateAircraftHistoryTable creates a table for storing aircraft history data if it does not already exist
+func (ctx *Context) CreateAircraftHistoryTable() error {
 	var query = `CREATE TABLE IF NOT EXISTS aircraft_history(
 				 icao VARCHAR(6) NOT NULL,
 				 lat DECIMAL NOT NULL,
