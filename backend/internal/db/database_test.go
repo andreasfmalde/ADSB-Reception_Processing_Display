@@ -86,6 +86,7 @@ func Test_InitDB_InvalidUsername(t *testing.T) {
 	}
 
 	assert.Nil(t, db)
+	global.DbUser = "test"
 }
 
 func TestAdsbDB_CreateAdsbTables(t *testing.T) {
@@ -328,24 +329,47 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 	db := setupTestDB()
 	defer teardownTestDB(db)
 
-	acAfter := testUtility.CreateMockAircraftWithTimestamp("TEST1",
+	ac1 := testUtility.CreateMockAircraftWithTimestamp("TEST1",
 		time.Now().Add(-(global.MaxDaysHistory+1)*24*time.Hour).Format(time.DateTime))
 
-	acNow := testUtility.CreateMockAircraftWithTimestamp("TEST2",
-		time.Now().Format(time.DateTime))
+	ac2 := testUtility.CreateMockAircraftWithTimestamp("TEST2",
+		time.Now().Add(-(global.MaxDaysHistory)*24*time.Hour).Format(time.DateTime))
 
-	_, err := db.conn.Exec("INSERT INTO aircraft_history VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)",
-		acNow.Icao, acNow.Latitude, acNow.Longitude, acNow.Timestamp,
-		acAfter.Icao, acAfter.Latitude, acAfter.Longitude, acAfter.Timestamp)
+	ac3 := testUtility.CreateMockAircraftWithTimestamp("TEST3",
+		time.Now().Add(-(global.MaxDaysHistory-1)*24*time.Hour).Format(time.DateTime))
+
+	_, err := db.conn.Exec(`
+		INSERT INTO aircraft_history 
+		VALUES ($1, $2, $3, $4), ($5, $6, $7, $8), ($9, $10, $11, $12)`,
+		ac1.Icao, ac1.Latitude, ac1.Longitude, ac1.Timestamp,
+		ac2.Icao, ac2.Latitude, ac2.Longitude, ac2.Timestamp,
+		ac3.Icao, ac3.Latitude, ac3.Longitude, ac3.Timestamp)
+
+	var count int
+	// check if the old aircraft is deleted
+	err = db.conn.QueryRow("SELECT COUNT(*) FROM aircraft_history").Scan(&count)
+	if err != nil {
+		t.Fatalf("Error querying the table: %q", err)
+	}
+	if count != 3 {
+		t.Fatalf("aircraft was not inserted correctly")
+	}
 
 	err = db.DeleteOldHistory(global.MaxDaysHistory)
 	if err != nil {
 		t.Fatalf("Error deleting old aircraft: %q", err)
 	}
 
-	var count int
 	// check if the old aircraft is deleted
-	err = db.conn.QueryRow("SELECT COUNT(*) FROM aircraft_history WHERE icao = $1", acAfter.Icao).Scan(&count)
+	err = db.conn.QueryRow("SELECT COUNT(*) FROM aircraft_history WHERE icao = $1", ac1.Icao).Scan(&count)
+	if err != nil {
+		t.Fatalf("Error querying the table: %q", err)
+	}
+	if count != 0 {
+		t.Fatalf("Old aircraft data was not deleted")
+	}
+
+	err = db.conn.QueryRow("SELECT COUNT(*) FROM aircraft_history WHERE icao = $1", ac2.Icao).Scan(&count)
 	if err != nil {
 		t.Fatalf("Error querying the table: %q", err)
 	}
@@ -354,7 +378,7 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 	}
 
 	// check if the recent aircraft data is still there
-	err = db.conn.QueryRow("SELECT COUNT(*) FROM aircraft_history WHERE icao = $1", acNow.Icao).Scan(&count)
+	err = db.conn.QueryRow("SELECT COUNT(*) FROM aircraft_history WHERE icao = $1", ac3.Icao).Scan(&count)
 	if err != nil {
 		t.Fatalf("Error querying the table: %q", err)
 	}
