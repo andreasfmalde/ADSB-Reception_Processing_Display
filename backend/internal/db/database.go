@@ -19,7 +19,7 @@ type Database interface {
 
 	CreateAircraftHistory() error
 	InsertHistoryFromCurrent() error
-	GetHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
+	SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
 
 	DeleteOldCurrent() error
 
@@ -218,9 +218,9 @@ func (ctx *Context) GetCurrentAircraft() ([]models.AircraftCurrentModel, error) 
 	return aircraft, nil
 }
 
-// GetHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
-func (ctx *Context) GetHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
-	var query = `SELECT icao, long, lat FROM aircraft_history WHERE icao = $1`
+// SelectAllColumnHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
+func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
+	var query = `SELECT * FROM aircraft_history WHERE icao = $1`
 
 	rows, err := ctx.conn.Query(query, search)
 	if err != nil {
@@ -232,7 +232,7 @@ func (ctx *Context) GetHistoryByIcao(search string) ([]models.AircraftHistoryMod
 
 	for rows.Next() {
 		var ac models.AircraftHistoryModel
-		err := rows.Scan(&ac.Icao, &ac.Longitude, &ac.Latitude)
+		err := rows.Scan(&ac.Icao, &ac.Longitude, &ac.Latitude, &ac.Timestamp)
 		if err != nil {
 			return nil, err
 		}

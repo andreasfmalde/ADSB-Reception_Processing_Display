@@ -1,11 +1,11 @@
 package aircraftCurrentHandler
 
 import (
-	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/global/models"
+	"adsb-api/internal/utility/mock"
 	"adsb-api/internal/utility/testUtility"
 	"encoding/json"
 	"errors"
@@ -27,8 +27,8 @@ func TestInvalidRequests(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := db.NewMockDatabase(ctrl)
-	currentEndpoint := httptest.NewServer(CurrentAircraftHandler(mockDB)) // Use mockDB here
+	mockSvc := mock.NewMockRestService(ctrl)
+	currentEndpoint := httptest.NewServer(CurrentAircraftHandler(mockSvc)) // Use mockSvc here
 	defer currentEndpoint.Close()
 
 	var endpoint = currentEndpoint.URL + global.AircraftCurrentPath
@@ -36,7 +36,7 @@ func TestInvalidRequests(t *testing.T) {
 	tests := []struct {
 		name, url, httpMethod, errorMsg string
 		statusCode, length              int
-		setup                           func(mockDB *db.MockDatabase)
+		setup                           func(mockDB *mock.MockRestService)
 	}{
 		{
 			name:       "Post request",
@@ -57,8 +57,8 @@ func TestInvalidRequests(t *testing.T) {
 			url:        endpoint,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusInternalServerError,
-			setup: func(mockDB *db.MockDatabase) {
-				mockDB.EXPECT().GetCurrentAircraft().Return([]models.AircraftCurrentModel{}, errors.New("no new aircraft"))
+			setup: func(mockSvc *mock.MockRestService) {
+				mockSvc.EXPECT().GetCurrentAircraft().Return([]models.AircraftCurrentModel{}, errors.New("no new aircraft"))
 			},
 			errorMsg: errorMsg.ErrorRetrievingCurrentAircraft,
 		},
@@ -81,7 +81,7 @@ func TestInvalidRequests(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.setup != nil {
-				tt.setup(mockDB)
+				tt.setup(mockSvc)
 			}
 
 			client := &http.Client{}
@@ -110,8 +110,8 @@ func TestValidRequests(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := db.NewMockDatabase(ctrl)
-	currentEndpoint := httptest.NewServer(CurrentAircraftHandler(mockDB)) // Use mockDB here
+	mockSvc := mock.NewMockRestService(ctrl)
+	currentEndpoint := httptest.NewServer(CurrentAircraftHandler(mockSvc)) // Use mockSvc here
 	defer currentEndpoint.Close()
 
 	var endpoint = currentEndpoint.URL + global.AircraftCurrentPath
@@ -120,7 +120,7 @@ func TestValidRequests(t *testing.T) {
 		name, url, httpMethod string
 		statusCode            int
 		mockData              []models.AircraftCurrentModel
-		setup                 func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel)
+		setup                 func(mockSvc *mock.MockRestService, mockData []models.AircraftCurrentModel)
 	}{
 		{
 			name:       "Get request without parameters",
@@ -128,8 +128,8 @@ func TestValidRequests(t *testing.T) {
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
 			mockData:   testUtility.CreateMockAircraft(10),
-			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel) {
-				mockDB.EXPECT().GetCurrentAircraft().Return(mockData, nil)
+			setup: func(mockSvc *mock.MockRestService, mockData []models.AircraftCurrentModel) {
+				mockSvc.EXPECT().GetCurrentAircraft().Return(mockData, nil)
 			},
 		},
 		{
@@ -137,15 +137,15 @@ func TestValidRequests(t *testing.T) {
 			url:        endpoint,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
-			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel) {
-				mockDB.EXPECT().GetCurrentAircraft().Return([]models.AircraftCurrentModel{}, nil)
+			setup: func(mockSvc *mock.MockRestService, mockData []models.AircraftCurrentModel) {
+				mockSvc.EXPECT().GetCurrentAircraft().Return([]models.AircraftCurrentModel{}, nil)
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			tt.setup(mockDB, tt.mockData)
+			tt.setup(mockSvc, tt.mockData)
 
 			client := &http.Client{}
 			req, err := http.NewRequest(tt.httpMethod, tt.url, nil)

@@ -346,7 +346,7 @@ func TestAdsbDB_GetHistoryByIcao(t *testing.T) {
 		t.Fatalf("error inserting history data: %q", err.Error())
 	}
 
-	aircraft, err := db.GetHistoryByIcao(icao)
+	aircraft, err := db.SelectAllColumnHistoryByIcao(icao)
 	if err != nil {
 		t.Fatalf("error retriving history data: %q", err.Error())
 	}
@@ -368,7 +368,7 @@ func TestAdsbDB_GetHistoryByIcao_InvalidIcao(t *testing.T) {
 		t.Fatalf("error inserting history data: %q", err.Error())
 	}
 
-	aircraft, err := db.GetHistoryByIcao("")
+	aircraft, err := db.SelectAllColumnHistoryByIcao("")
 	if err != nil {
 		t.Fatalf("error retriving history data: %q", err.Error())
 	}

@@ -1,11 +1,11 @@
 package aircraftHistory
 
 import (
-	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/global/models"
+	"adsb-api/internal/utility/mock"
 	"adsb-api/internal/utility/testUtility"
 	"encoding/json"
 	"errors"
@@ -28,8 +28,8 @@ func TestInvalidRequests(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := db.NewMockDatabase(ctrl)
-	currentEndpoint := httptest.NewServer(HistoryAircraftHandler(mockDB))
+	mockSvc := mock.NewMockRestService(ctrl)
+	currentEndpoint := httptest.NewServer(HistoryAircraftHandler(mockSvc))
 	defer currentEndpoint.Close()
 
 	var endpoint = currentEndpoint.URL + global.AircraftHistoryPath
@@ -37,7 +37,7 @@ func TestInvalidRequests(t *testing.T) {
 	tests := []struct {
 		name, url, httpMethod, errorMsg string
 		statusCode, length              int
-		setup                           func(mockDB *db.MockDatabase)
+		setup                           func(mockDB *mock.MockRestService)
 	}{
 		{
 			name:       "Post request",
@@ -58,8 +58,8 @@ func TestInvalidRequests(t *testing.T) {
 			url:        endpoint + "?icao=ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusInternalServerError,
-			setup: func(mockDB *db.MockDatabase) {
-				mockDB.EXPECT().GetHistoryByIcao("ABC123").Return([]models.AircraftHistoryModel{}, errors.New("expected error"))
+			setup: func(mockSvc *mock.MockRestService) {
+				mockSvc.EXPECT().GetAircraftHistoryByIcao("ABC123").Return([]models.AircraftHistoryModel{}, errors.New("expected error"))
 			},
 			errorMsg: errorMsg.ErrorRetrievingAircraftWithIcao + "ABC123",
 		},
@@ -103,7 +103,7 @@ func TestInvalidRequests(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.setup != nil {
-				tt.setup(mockDB)
+				tt.setup(mockSvc)
 			}
 
 			client := &http.Client{}
@@ -132,8 +132,8 @@ func TestValidRequests(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockDB := db.NewMockDatabase(ctrl)
-	currentEndpoint := httptest.NewServer(HistoryAircraftHandler(mockDB))
+	mockSvc := mock.NewMockRestService(ctrl)
+	currentEndpoint := httptest.NewServer(HistoryAircraftHandler(mockSvc))
 	defer currentEndpoint.Close()
 
 	var endpoint = currentEndpoint.URL + global.AircraftHistoryPath
@@ -142,7 +142,7 @@ func TestValidRequests(t *testing.T) {
 		name, url, httpMethod string
 		statusCode            int
 		mockData              []models.AircraftHistoryModel
-		setup                 func(mockDB *db.MockDatabase, mockData []models.AircraftHistoryModel)
+		setup                 func(mockDB *mock.MockRestService, mockData []models.AircraftHistoryModel)
 	}{
 		{
 			name:       "Get request with valid URl",
@@ -150,8 +150,8 @@ func TestValidRequests(t *testing.T) {
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
 			mockData:   testUtility.CreateMockHistAircraft(10),
-			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftHistoryModel) {
-				mockDB.EXPECT().GetHistoryByIcao("ABC123").Return(mockData, nil)
+			setup: func(mockSvc *mock.MockRestService, mockData []models.AircraftHistoryModel) {
+				mockSvc.EXPECT().GetAircraftHistoryByIcao("ABC123").Return(mockData, nil)
 			},
 		},
 		{
@@ -160,8 +160,8 @@ func TestValidRequests(t *testing.T) {
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
 			mockData:   testUtility.CreateMockHistAircraft(10),
-			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftHistoryModel) {
-				mockDB.EXPECT().GetHistoryByIcao("ABC123").Return(mockData, nil)
+			setup: func(mockSvc *mock.MockRestService, mockData []models.AircraftHistoryModel) {
+				mockSvc.EXPECT().GetAircraftHistoryByIcao("ABC123").Return(mockData, nil)
 			},
 		},
 		{
@@ -169,15 +169,15 @@ func TestValidRequests(t *testing.T) {
 			url:        endpoint + "?icao=ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
-			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftHistoryModel) {
-				mockDB.EXPECT().GetHistoryByIcao("ABC123").Return([]models.AircraftHistoryModel{}, nil)
+			setup: func(mockSvc *mock.MockRestService, mockData []models.AircraftHistoryModel) {
+				mockSvc.EXPECT().GetAircraftHistoryByIcao("ABC123").Return([]models.AircraftHistoryModel{}, nil)
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.setup != nil {
-				tt.setup(mockDB, tt.mockData)
+				tt.setup(mockSvc, tt.mockData)
 			}
 
 			client := &http.Client{}

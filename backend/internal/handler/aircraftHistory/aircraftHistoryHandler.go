@@ -35,7 +35,7 @@ func HistoryAircraftHandler(svc service.RestService) http.HandlerFunc {
 // A valid icao: "ABC123"
 func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc service.RestService) {
 	var search = r.URL.Query().Get("icao")
-	res, err := svc.GetHistoryByIcao(search)
+	res, err := svc.GetAircraftHistoryByIcao(search)
 	if err != nil {
 		http.Error(w, errorMsg.ErrorRetrievingAircraftWithIcao+search, http.StatusInternalServerError)
 		logger.Error.Printf(errorMsg.ErrorRetrievingAircraftWithIcao+search+": %q URL: %q", err, r.URL)
