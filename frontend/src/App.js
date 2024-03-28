@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Map, {Layer, Marker, Source} from 'react-map-gl/maplibre';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
-import {style, geojson, trail, trailLayer, initialView} from './data/MapData';
+import {style, trailLayer, initialView} from './data/MapData';
 import { isInBounds, findAircraftByIcaoOrCallsign, trimAircraftList, callAPI } from './utils';
 import { IoMdAirplane } from "react-icons/io";
 
@@ -16,13 +16,13 @@ function App() {
   const [selected, setSelected] = useState(null);
   const [selectedImg, setSelectedImg] = useState(null);
   const [historyTrail, setHistoryTrail] = useState(null);
+  const [currentBounds, setCurrentBounds] = useState(null);
   const map = useRef(null);
 
 
   const retrievePlanes = async () =>{
     try{
       const data = await callAPI(`${process.env.REACT_APP_SERVER}/aircraft/current/`);
-      console.log(data)
       setAircraftJSON(data.features);
     }catch(error){
       console.log("Something went wrong")
@@ -62,17 +62,19 @@ function App() {
     
   }
 
-  const aircraftRenderFilter = (bounds) =>{
-    let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,bounds))
-    setCurrentRender(trimAircraftList(aircraftInBounds));
-
-  }
+  useEffect(()=>{
+    retrievePlanes();
+    window.setInterval(()=>retrievePlanes(),30000)
+  },[]);
 
   useEffect(()=>{
-    //  const seconds = 10;
-    retrievePlanes();
-    //setInterval(()=>retrievePlanes(),1000 * seconds );
-  },[])
+    if(currentBounds !== null && aircraftJSON !== null){
+      let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,currentBounds));
+      setCurrentRender(trimAircraftList(aircraftInBounds));
+    }
+    
+  },[aircraftJSON, currentBounds])
+
   
   return (
     <div className="App">
@@ -85,8 +87,8 @@ function App() {
           maxZoom={10}
           style={{width: 'calc(100vw - 300px)', height: 'calc(100vh - 78px)',gridColumn:'1/2'}}
           mapStyle={style}
-          onLoad={(e)=>aircraftRenderFilter(e.target.getBounds())}
-          onMoveEnd={(e)=>aircraftRenderFilter(e.target.getBounds())}
+          onLoad={(e)=>setCurrentBounds(e.target.getBounds())}
+          onMoveEnd={(e)=>setCurrentBounds(e.target.getBounds())}
           onMove={(e)=>setViewport(e.viewState)}
           onClick={()=>{
             setHistoryTrail(null);
