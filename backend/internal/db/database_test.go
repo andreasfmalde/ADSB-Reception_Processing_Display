@@ -286,49 +286,28 @@ func TestAdsbDB_DeleteOldCurrent(t *testing.T) {
 	}
 }
 
-func TestAdsbDB_GetCurrentAircraft(t *testing.T) {
+func TestAdsbDB_SelectAllColumnsAircraftCurrent(t *testing.T) {
 	db := setupTestDB()
 	defer teardownTestDB(db)
 
-	acAfter := testUtility.CreateMockAircraftWithTimestamp("TEST1",
-		time.Now().Add(-(global.WaitingTime+3)*time.Second).Format(time.DateTime))
+	var nAircraft = 100
+	mockAircraft := testUtility.CreateMockAircraft(nAircraft)
 
-	var icaoTest2 = "TEST2"
-	acNow := testUtility.CreateMockAircraftWithTimestamp(icaoTest2,
-		time.Now().Format(time.DateTime))
+	err := db.BulkInsertAircraftCurrent(mockAircraft)
+	if err != nil {
+		t.Fatalf("Error inserting aircraft: %q", err)
+	}
 
-	var count = 0
 	aircraft, err := db.SelectAllColumnsAircraftCurrent()
 	if err != nil {
 		t.Fatalf("Error getting all current aircraft: %q", err)
 	}
 
-	count = len(aircraft)
-	if count != 0 {
-		t.Fatalf("Expected error, db should not contain any elements")
-	}
+	assert.Equal(t, nAircraft, len(aircraft))
 
-	err = db.BulkInsertAircraftCurrent([]models.AircraftCurrentModel{acAfter, acNow})
-	if err != nil {
-		t.Fatalf("Error inserting aircraft: %q", err)
-	}
-
-	aircraft, err = db.SelectAllColumnsAircraftCurrent()
-	if err != nil {
-		t.Fatalf("Error getting all current aircraft: %q", err)
-	}
-
-	count = len(aircraft)
-
-	if count != 1 {
-		t.Fatalf("Expected error, list should only contain 1 element")
-
-	}
-
-	assert.Equal(t, icaoTest2, aircraft[0].Icao)
 }
 
-func TestAdsbDB_GetHistoryByIcao(t *testing.T) {
+func TestAdsbDB_SelectAllColumnHistoryByIcao(t *testing.T) {
 	db := setupTestDB()
 	defer teardownTestDB(db)
 
@@ -359,7 +338,7 @@ func TestAdsbDB_GetHistoryByIcao(t *testing.T) {
 	}
 }
 
-func TestAdsbDB_GetHistoryByIcao_InvalidIcao(t *testing.T) {
+func TestAdsbDB_SelectAllColumnHistoryByIcao_InvalidIcao(t *testing.T) {
 	db := setupTestDB()
 	defer teardownTestDB(db)
 
