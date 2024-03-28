@@ -5,14 +5,14 @@ import (
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/logger"
-	"adsb-api/internal/service"
+	"adsb-api/internal/service/restService"
 	"adsb-api/internal/utility/apiUtility"
 	"fmt"
 	"net/http"
 )
 
 // CurrentAircraftHandler handles HTTP requests for /aircraft/current/ endpoint.
-func CurrentAircraftHandler(svc service.RestService) http.HandlerFunc {
+func CurrentAircraftHandler(svc restService.RestService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := apiUtility.ValidateURL(r.URL.Path, r.URL.Query(), len(global.AircraftHistoryPath), []string{})
 		if err != nil {
@@ -30,7 +30,7 @@ func CurrentAircraftHandler(svc service.RestService) http.HandlerFunc {
 
 // handleCurrentAircraftGetRequest handles GET requests for the /aircraft/current/ endpoint.
 // Sends all current aircraft in the database to the client.
-func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc service.RestService) {
+func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc restService.RestService) {
 	res, err := svc.GetCurrentAircraft()
 	if err != nil {
 		http.Error(w, errorMsg.ErrorRetrievingCurrentAircraft, http.StatusInternalServerError)

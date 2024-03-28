@@ -1,4 +1,4 @@
-package service
+package restService
 
 import (
 	"adsb-api/internal/db"

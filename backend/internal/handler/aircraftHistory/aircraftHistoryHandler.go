@@ -5,7 +5,7 @@ import (
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/logger"
-	"adsb-api/internal/service"
+	"adsb-api/internal/service/restService"
 	"adsb-api/internal/utility/apiUtility"
 	"fmt"
 	"net/http"
@@ -14,7 +14,7 @@ import (
 var params = []string{"icao"}
 
 // HistoryAircraftHandler handles HTTP requests for /aircraft/history endpoint.
-func HistoryAircraftHandler(svc service.RestService) http.HandlerFunc {
+func HistoryAircraftHandler(svc restService.RestService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := apiUtility.ValidateURL(r.URL.Path, r.URL.Query(), len(global.AircraftHistoryPath), params)
 		if err != nil {
@@ -33,7 +33,7 @@ func HistoryAircraftHandler(svc service.RestService) http.HandlerFunc {
 // handleHistoryAircraftGetRequest handles GET requests for the /aircraft/history endpoint.
 // Sends history data for aircraft given by the icao query parameter.
 // A valid icao: "ABC123"
-func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc service.RestService) {
+func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc restService.RestService) {
 	var search = r.URL.Query().Get("icao")
 	res, err := svc.GetAircraftHistoryByIcao(search)
 	if err != nil {
