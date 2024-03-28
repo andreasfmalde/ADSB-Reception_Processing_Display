@@ -32,7 +32,11 @@ func (svc *SbsServiceImpl) CreateAdsbTables() error {
 		return err
 	}
 
-	defer svc.DB.Rollback()
+	defer func() {
+		if err != nil {
+			svc.DB.Rollback()
+		}
+	}()
 
 	err = svc.DB.CreateAircraftCurrentTable()
 	if err != nil {
@@ -69,7 +73,11 @@ func (svc *SbsServiceImpl) InsertNewSbsData(aircraft []models.AircraftCurrentMod
 	if err != nil {
 		return err
 	}
-	defer svc.DB.Rollback()
+	defer func() {
+		if err != nil {
+			svc.DB.Rollback()
+		}
+	}()
 
 	err = svc.DB.DropAircraftCurrentTable()
 	if err != nil {
