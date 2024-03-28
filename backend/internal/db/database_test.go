@@ -78,6 +78,16 @@ func TestInitCloseDB(t *testing.T) {
 	}
 }
 
+func Test_InitDB_InvalidUsername(t *testing.T) {
+	global.DbUser = "user"
+	db, err := InitDB()
+	if err == nil {
+		t.Error("expected error when changing database username")
+	}
+
+	assert.Nil(t, db)
+}
+
 func TestAdsbDB_CreateAdsbTables(t *testing.T) {
 	db := setupTestDB()
 	defer teardownTestDB(db)
