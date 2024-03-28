@@ -133,9 +133,9 @@ func (mr *MockDatabaseMockRecorder) CreateAircraftHistory() *gomock.Call {
 }
 
 // DeleteOldCurrent mocks base method.
-func (m *MockDatabase) DeleteOldCurrent() error {
+func (m *MockDatabase) DeleteOldHistory() error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOldCurrent")
+	ret := m.ctrl.Call(m, "DeleteOldHistory")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -143,7 +143,7 @@ func (m *MockDatabase) DeleteOldCurrent() error {
 // DeleteOldCurrent indicates an expected call of DeleteOldCurrent.
 func (mr *MockDatabaseMockRecorder) DeleteOldCurrent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOldCurrent", reflect.TypeOf((*MockDatabase)(nil).DeleteOldCurrent))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOldHistory", reflect.TypeOf((*MockDatabase)(nil).DeleteOldHistory))
 }
 
 // DropAircraftCurrentTable mocks base method.

@@ -245,47 +245,6 @@ func TestAdsbDB_InsertHistoryFromCurrent(t *testing.T) {
 	assert.Equal(t, nAircraft, n)
 }
 
-func TestAdsbDB_DeleteOldCurrent(t *testing.T) {
-	db := setupTestDB()
-	defer teardownTestDB(db)
-
-	acAfter := testUtility.CreateMockAircraftWithTimestamp("TEST1",
-		time.Now().Add(-(global.WaitingTime+3)*time.Second).Format(time.DateTime))
-
-	acNow := testUtility.CreateMockAircraftWithTimestamp("TEST2",
-		time.Now().Format(time.DateTime))
-
-	err := db.BulkInsertAircraftCurrent([]models.AircraftCurrentModel{acAfter, acNow})
-	if err != nil {
-		t.Fatalf("Error inserting aircraft: %q", err)
-	}
-
-	err = db.DeleteOldCurrent()
-	if err != nil {
-		t.Fatalf("Error deleting old aircraft: %q", err)
-	}
-
-	var count int
-
-	// check if the old aircraft is deleted
-	err = db.conn.QueryRow("SELECT COUNT(*) FROM aircraft_current WHERE icao = $1", acAfter.Icao).Scan(&count)
-	if err != nil {
-		t.Fatalf("Error querying the table: %q", err)
-	}
-	if count != 0 {
-		t.Fatalf("Old aircraft data was not deleted")
-	}
-
-	// check if the recent aircraft data is still there
-	err = db.conn.QueryRow("SELECT COUNT(*) FROM aircraft_current WHERE icao = $1", acNow.Icao).Scan(&count)
-	if err != nil {
-		t.Fatalf("Error querying the table: %q", err)
-	}
-	if count != 1 {
-		t.Fatalf("Recent aircraft data was deleted")
-	}
-}
-
 func TestAdsbDB_SelectAllColumnsAircraftCurrent(t *testing.T) {
 	db := setupTestDB()
 	defer teardownTestDB(db)
@@ -353,4 +312,43 @@ func TestAdsbDB_SelectAllColumnHistoryByIcao_InvalidIcao(t *testing.T) {
 	}
 
 	assert.Equal(t, 0, len(aircraft))
+}
+
+func TestAdsbDB_DeleteOldHistory(t *testing.T) {
+	db := setupTestDB()
+	defer teardownTestDB(db)
+
+	acAfter := testUtility.CreateMockAircraftWithTimestamp("TEST1",
+		time.Now().Add(-(global.MaxDaysHistory+1)*24*time.Hour).Format(time.DateTime))
+
+	acNow := testUtility.CreateMockAircraftWithTimestamp("TEST2",
+		time.Now().Format(time.DateTime))
+
+	_, err := db.conn.Exec("INSERT INTO aircraft_history VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)",
+		acNow.Icao, acNow.Latitude, acNow.Longitude, acNow.Timestamp,
+		acAfter.Icao, acAfter.Latitude, acAfter.Longitude, acAfter.Timestamp)
+
+	err = db.DeleteOldHistory(global.MaxDaysHistory)
+	if err != nil {
+		t.Fatalf("Error deleting old aircraft: %q", err)
+	}
+
+	var count int
+	// check if the old aircraft is deleted
+	err = db.conn.QueryRow("SELECT COUNT(*) FROM aircraft_history WHERE icao = $1", acAfter.Icao).Scan(&count)
+	if err != nil {
+		t.Fatalf("Error querying the table: %q", err)
+	}
+	if count != 0 {
+		t.Fatalf("Old aircraft data was not deleted")
+	}
+
+	// check if the recent aircraft data is still there
+	err = db.conn.QueryRow("SELECT COUNT(*) FROM aircraft_history WHERE icao = $1", acNow.Icao).Scan(&count)
+	if err != nil {
+		t.Fatalf("Error querying the table: %q", err)
+	}
+	if count != 1 {
+		t.Fatalf("Recent aircraft data was deleted")
+	}
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"adsb-api/internal/db"
+	"adsb-api/internal/global"
 	"adsb-api/internal/global/models"
 )
 
@@ -95,5 +96,5 @@ func (svc *SbsServiceImpl) InsertNewSbsData(aircraft []models.AircraftCurrentMod
 
 // Cleanup remove old rows to save space
 func (svc *SbsServiceImpl) Cleanup() error {
-	return svc.DB.DeleteOldCurrent()
+	return svc.DB.DeleteOldHistory(global.MaxDaysHistory)
 }

@@ -21,7 +21,7 @@ type Database interface {
 	InsertHistoryFromCurrent() error
 	SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
 
-	DeleteOldCurrent() error
+	DeleteOldHistory(time int) error
 
 	BeginTx() error
 	Commit() error
@@ -180,16 +180,6 @@ func (ctx *Context) InsertHistoryFromCurrent() error {
 	return err
 }
 
-// DeleteOldCurrent will delete rows in aircraft_current older than global.WaitingTime seconds from the latest entry.
-func (ctx *Context) DeleteOldCurrent() error {
-	var query = `DELETE FROM aircraft_current 
-       			 WHERE timestamp < (select max(timestamp)-($1 * interval '1 second') 
-                 FROM aircraft_current)`
-
-	_, err := ctx.Exec(query, global.WaitingTime+2)
-	return err
-}
-
 // SelectAllColumnsAircraftCurrent retrieves a list of all aircraft from aircraft_current that are older than global.WaitingTime + 2
 func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error) {
 	var query = `SELECT * FROM aircraft_current`
@@ -239,4 +229,13 @@ func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.Aircra
 	}
 
 	return aircraft, nil
+}
+
+// DeleteOldHistory will delete rows in aircraft_history older than global.Deletion days from the latest entry.
+func (ctx *Context) DeleteOldHistory(days int) error {
+	var query = `DELETE FROM aircraft_history
+                 WHERE timestamp < (NOW() - ($1 * INTERVAL '1 day'))`
+
+	_, err := ctx.Exec(query, days)
+	return err
 }
