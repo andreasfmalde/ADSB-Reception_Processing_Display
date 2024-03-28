@@ -26,7 +26,7 @@ func InitRestService() (*RestServiceImpl, error) {
 // GetCurrentAircraft retrieves a list of all aircraft that are considered 'current'
 // (i.e., aircraft that are currently in the air).
 func (svc *RestServiceImpl) GetCurrentAircraft() ([]models.AircraftCurrentModel, error) {
-	return svc.DB.GetCurrentAircraft()
+	return svc.DB.SelectAllColumnsAircraftCurrent()
 }
 
 // GetAircraftHistoryByIcao retrieves aircraft history from given icao.

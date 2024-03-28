@@ -298,7 +298,7 @@ func TestAdsbDB_GetCurrentAircraft(t *testing.T) {
 		time.Now().Format(time.DateTime))
 
 	var count = 0
-	aircraft, err := db.GetCurrentAircraft()
+	aircraft, err := db.SelectAllColumnsAircraftCurrent()
 	if err != nil {
 		t.Fatalf("Error getting all current aircraft: %q", err)
 	}
@@ -313,7 +313,7 @@ func TestAdsbDB_GetCurrentAircraft(t *testing.T) {
 		t.Fatalf("Error inserting aircraft: %q", err)
 	}
 
-	aircraft, err = db.GetCurrentAircraft()
+	aircraft, err = db.SelectAllColumnsAircraftCurrent()
 	if err != nil {
 		t.Fatalf("Error getting all current aircraft: %q", err)
 	}

@@ -161,9 +161,9 @@ func (mr *MockDatabaseMockRecorder) DropAircraftCurrentTable() *gomock.Call {
 }
 
 // GetCurrentAircraft mocks base method.
-func (m *MockDatabase) GetCurrentAircraft() ([]models.AircraftCurrentModel, error) {
+func (m *MockDatabase) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCurrentAircraft")
+	ret := m.ctrl.Call(m, "SelectAllColumnsAircraftCurrent")
 	ret0, _ := ret[0].([]models.AircraftCurrentModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -172,7 +172,7 @@ func (m *MockDatabase) GetCurrentAircraft() ([]models.AircraftCurrentModel, erro
 // GetCurrentAircraft indicates an expected call of GetCurrentAircraft.
 func (mr *MockDatabaseMockRecorder) GetCurrentAircraft() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentAircraft", reflect.TypeOf((*MockDatabase)(nil).GetCurrentAircraft))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectAllColumnsAircraftCurrent", reflect.TypeOf((*MockDatabase)(nil).SelectAllColumnsAircraftCurrent))
 }
 
 // InsertHistoryFromCurrent mocks base method.

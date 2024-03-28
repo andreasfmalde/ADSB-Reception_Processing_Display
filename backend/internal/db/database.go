@@ -15,7 +15,7 @@ type Database interface {
 	CreateAircraftCurrentTimestampIndex() error
 	DropAircraftCurrentTable() error
 	BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentModel) error
-	GetCurrentAircraft() ([]models.AircraftCurrentModel, error)
+	SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error)
 
 	CreateAircraftHistory() error
 	InsertHistoryFromCurrent() error
@@ -190,11 +190,9 @@ func (ctx *Context) DeleteOldCurrent() error {
 	return err
 }
 
-// GetCurrentAircraft retrieves a list of all aircraft from aircraft_current that are older than global.WaitingTime + 2
-func (ctx *Context) GetCurrentAircraft() ([]models.AircraftCurrentModel, error) {
-	var query = `SELECT * FROM aircraft_current 
-				 WHERE timestamp > (select max(timestamp)-($1 * interval '1 second') 
-				 FROM aircraft_current)`
+// SelectAllColumnsAircraftCurrent retrieves a list of all aircraft from aircraft_current that are older than global.WaitingTime + 2
+func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error) {
+	var query = `SELECT * FROM aircraft_current`
 
 	rows, err := ctx.Query(query, global.WaitingTime+2)
 	if err != nil {
