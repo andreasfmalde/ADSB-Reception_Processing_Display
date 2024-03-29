@@ -6,3 +6,7 @@ const (
 	UpdatingPeriod = 10
 	MaxDaysHistory = 7
 )
+
+var (
+	SbsSource = "data.adsbhub.org:5002"
+)

@@ -1,6 +1,8 @@
 package sbs
 
 import (
+	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/models"
 	"adsb-api/internal/utility/converter"
 	"bufio"
@@ -20,7 +22,7 @@ func CloseTCPConnection(connection net.Conn) error {
 }
 
 func ProcessSBSstream() ([]models.AircraftCurrentModel, error) {
-	conn, err := MakeTCPConnection("data.adsbhub.org:5002")
+	conn, err := MakeTCPConnection(global.SbsSource)
 	if err != nil {
 		return []models.AircraftCurrentModel{}, err
 
@@ -85,7 +87,7 @@ func ProcessSBSstream() ([]models.AircraftCurrentModel, error) {
 			aircrafts = append(aircrafts, aircraft)
 
 		} else {
-			return []models.AircraftCurrentModel{}, errors.New("could not connect to stream")
+			return aircrafts, errors.New(errorMsg.ErrorCouldNotConnectToTcpStream)
 		}
 
 	}

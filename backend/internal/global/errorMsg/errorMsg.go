@@ -12,4 +12,5 @@ const (
 	ErrorClosingDatabase            = "error closing database: %q"
 	ErrorCreatingDatabaseTables     = "error creating database tables: %q"
 	ErrorInsertingNewSbsData        = "could not insert new SBS data: %q"
+	ErrorCouldNotConnectToTcpStream = "could not connect to TCP stream"
 )
