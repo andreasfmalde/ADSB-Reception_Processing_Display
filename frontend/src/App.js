@@ -81,11 +81,11 @@ function App() {
       <Navbar callback={retrieveSearch}/>
       <div className="main-content">
         <Map
+          className='main-map'
           ref={map}
           initialViewState={viewport}
           minZoom={3}
           maxZoom={10}
-          style={{width: 'calc(100vw - 300px)', height: 'calc(100vh - 78px)',gridColumn:'1/2'}}
           mapStyle={style}
           onLoad={(e)=>setCurrentBounds(e.target.getBounds())}
           onMoveEnd={(e)=>setCurrentBounds(e.target.getBounds())}

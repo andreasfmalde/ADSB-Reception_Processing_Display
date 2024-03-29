@@ -10,3 +10,19 @@
     width: 100%;
 }
 
+
+.main-map{
+    grid-column: 1/2;
+}
+
+@media screen and (max-width: 850px){
+    .main-content{
+        grid-template-rows: calc(100vh - 170px - 50px) 1fr;
+        grid-template-columns: 1fr;
+    }
+    .main-map{
+        grid-row: 1/2;
+        grid-column: 1/2;
+    }
+    
+}
