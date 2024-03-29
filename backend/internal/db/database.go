@@ -165,7 +165,7 @@ func (ctx *Context) BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentM
 
 		query := `INSERT INTO aircraft_current (icao, callsign, altitude, lat, long, speed, track, vspeed, timestamp) VALUES %s`
 		stmt := fmt.Sprintf(query, strings.Join(placeholders, ","))
-		_, err := ctx.db.Exec(stmt, vals...)
+		_, err := ctx.Exec(stmt, vals...)
 		if err != nil {
 			return err
 		}
@@ -215,7 +215,7 @@ func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentM
 func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
 	var query = `SELECT * FROM aircraft_history WHERE icao = $1`
 
-	rows, err := ctx.db.Query(query, search)
+	rows, err := ctx.Query(query, search)
 	if err != nil {
 		return nil, err
 	}
