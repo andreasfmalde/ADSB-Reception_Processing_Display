@@ -23,7 +23,7 @@ type Database interface {
 
 	DeleteOldHistory(time int) error
 
-	BeginTx() error
+	Begin() error
 	Commit() error
 	Rollback() error
 
@@ -31,45 +31,48 @@ type Database interface {
 }
 
 type Context struct {
-	conn *sql.DB
-	tx   *sql.Tx
+	db *sql.DB
+	tx *sql.Tx
 }
 
 func (ctx *Context) Exec(query string, args ...interface{}) (sql.Result, error) {
 	if ctx.tx != nil {
 		return ctx.tx.Exec(query, args...)
 	}
-	return ctx.conn.Exec(query, args...)
+	return ctx.db.Exec(query, args...)
 }
 
 func (ctx *Context) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	if ctx.tx != nil {
 		return ctx.tx.Query(query, args...)
 	}
-	return ctx.conn.Query(query, args...)
+	return ctx.db.Query(query, args...)
 }
 
-func (ctx *Context) BeginTx() error {
-	var err error
-	ctx.tx, err = ctx.conn.Begin()
-	return err
+func (ctx *Context) Begin() error {
+	tx, err := ctx.db.Begin()
+	if err != nil {
+		return err
+	}
+	ctx.tx = tx
+	return nil
 }
 
 func (ctx *Context) Commit() error {
-	if ctx.tx != nil {
-		err := ctx.tx.Commit()
-		ctx.tx = nil
+	err := ctx.tx.Commit()
+	if err != nil {
 		return err
 	}
+	ctx.tx = nil
 	return nil
 }
 
 func (ctx *Context) Rollback() error {
-	if ctx.tx != nil {
-		err := ctx.tx.Rollback()
-		ctx.tx = nil
+	err := ctx.tx.Rollback()
+	if err != nil {
 		return err
 	}
+	ctx.tx = nil
 	return nil
 }
 
@@ -82,11 +85,11 @@ func InitDB() (*Context, error) {
 	if err = dbConn.Ping(); err != nil {
 		return nil, err
 	}
-	return &Context{conn: dbConn}, err
+	return &Context{db: dbConn}, err
 }
 
 func (ctx *Context) Close() error {
-	return ctx.conn.Close()
+	return ctx.db.Close()
 }
 
 // CreateAircraftCurrentTable creates a table for storing current aircraft data if it does not already exist
@@ -162,7 +165,7 @@ func (ctx *Context) BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentM
 
 		query := `INSERT INTO aircraft_current (icao, callsign, altitude, lat, long, speed, track, vspeed, timestamp) VALUES %s`
 		stmt := fmt.Sprintf(query, strings.Join(placeholders, ","))
-		_, err := ctx.conn.Exec(stmt, vals...)
+		_, err := ctx.db.Exec(stmt, vals...)
 		if err != nil {
 			return err
 		}
@@ -212,7 +215,7 @@ func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentM
 func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
 	var query = `SELECT * FROM aircraft_history WHERE icao = $1`
 
-	rows, err := ctx.conn.Query(query, search)
+	rows, err := ctx.db.Query(query, search)
 	if err != nil {
 		return nil, err
 	}

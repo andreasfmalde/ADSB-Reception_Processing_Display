@@ -27,7 +27,7 @@ func InitSbsService() (*SbsServiceImpl, error) {
 
 // CreateAdsbTables creates all tables for the database schema
 func (svc *SbsServiceImpl) CreateAdsbTables() error {
-	err := svc.DB.BeginTx()
+	err := svc.DB.Begin()
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (svc *SbsServiceImpl) InsertNewSbsData(aircraft []models.AircraftCurrentMod
 		return err
 	}
 
-	err = svc.DB.BeginTx()
+	err = svc.DB.Begin()
 	if err != nil {
 		return err
 	}

@@ -35,9 +35,9 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // BeginTx mocks base method.
-func (m *MockDatabase) BeginTx() error {
+func (m *MockDatabase) Begin() error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BeginTx")
+	ret := m.ctrl.Call(m, "Begin")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -45,7 +45,7 @@ func (m *MockDatabase) BeginTx() error {
 // BeginTx indicates an expected call of BeginTx.
 func (mr *MockDatabaseMockRecorder) BeginTx() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginTx", reflect.TypeOf((*MockDatabase)(nil).BeginTx))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockDatabase)(nil).Begin))
 }
 
 // BulkInsertAircraftCurrent mocks base method.
