@@ -48,7 +48,7 @@ func main() {
 		logger.Info.Println("new SBS data inserted")
 
 		if diff := time.Since(timer).Seconds(); diff > global.CleaningPeriod {
-			if e := sbsSvc.Cleanup(); e == nil {
+			if err = sbsSvc.Cleanup(); err == nil {
 				timer = time.Now()
 				logger.Info.Println("old SBS data deleted")
 			}
