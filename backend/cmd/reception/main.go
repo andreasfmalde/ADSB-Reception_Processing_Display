@@ -41,6 +41,8 @@ func main() {
 			time.Sleep(global.WaitingTime * time.Second)
 			continue
 		}
+		logger.Info.Println("retrieved SBS data")
+
 		err = sbsSvc.InsertNewSbsData(aircraft)
 		if err != nil {
 			logger.Error.Fatalf("could not insert new SBS data: %q", err)
