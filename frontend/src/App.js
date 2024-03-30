@@ -9,6 +9,7 @@ import { IoMdAirplane } from "react-icons/io";
 import './App.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+// Main point of the application 
 function App() {
   const [viewport,setViewport] =  useState(initialView);
   const [aircraftJSON,setAircraftJSON] = useState(null);
@@ -19,7 +20,7 @@ function App() {
   const [currentBounds, setCurrentBounds] = useState(null);
   const map = useRef(null);
 
-
+  // Retrieve aircrafts from API and update the current aircraft list
   const retrievePlanes = async () =>{
     try{
       const data = await callAPI(`${process.env.REACT_APP_SERVER}/aircraft/current/`);
@@ -29,7 +30,8 @@ function App() {
     }
     
   }
-
+  // Retrieve an aircraft image from third party API based on
+  // aircraft icao
   const retrieveImage = async (icao) =>{
     try{
       const data = await callAPI(`https://api.planespotters.net/pub/photos/hex/${icao}`);
@@ -39,6 +41,8 @@ function App() {
     } 
   };
 
+  // Retrieve historical location coordinates for an aircraft
+  // with the specified icao
   const retrieveHistory = async (icao) =>{
     try{
       const data = await callAPI(`${process.env.REACT_APP_SERVER}/aircraft/history?icao=${icao}`);
@@ -48,7 +52,9 @@ function App() {
     }
   }
 
-  const retrieveSearch = (search) =>{
+  // Search for aircraft based on icao or callsign and 
+  // make the map fly to the aircrafts' location
+  const searchForAircraft = (search) =>{
     if (search === null || search === undefined || search.length < 3 || search.length > 15){
       return
     }
@@ -61,12 +67,10 @@ function App() {
     }
     
   }
-
-  useEffect(()=>{
-    retrievePlanes();
-    window.setInterval(()=>retrievePlanes(),30000)
-  },[]);
-
+  
+  // Update/render the aircrafts on the map every time updated
+  // aircraft information is retrieved from external API or when
+  // the map is moved to a new location
   useEffect(()=>{
     if(currentBounds !== null && aircraftJSON !== null){
       let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,currentBounds));
@@ -74,11 +78,10 @@ function App() {
     }
     
   },[aircraftJSON, currentBounds])
-
   
   return (
     <div className="App">
-      <Navbar callback={retrieveSearch}/>
+      <Navbar callback={searchForAircraft}/>
       <div className="main-content">
         <Map
           className='main-map'
@@ -87,7 +90,11 @@ function App() {
           minZoom={3}
           maxZoom={10}
           mapStyle={style}
-          onLoad={(e)=>setCurrentBounds(e.target.getBounds())}
+          onLoad={(e)=>{
+            retrievePlanes();
+            window.setInterval(()=>retrievePlanes(),30000)
+            setCurrentBounds(e.target.getBounds())
+          }}
           onMoveEnd={(e)=>setCurrentBounds(e.target.getBounds())}
           onMove={(e)=>setViewport(e.viewState)}
           onClick={()=>{
@@ -95,6 +102,7 @@ function App() {
             setSelected(null);
           }}
         >
+          {/* Render the aircrafts currently within the viewport */}
           {currentRender?.map((p) =>(
           <div key={p.properties.icao}>
             <Marker 
@@ -119,6 +127,7 @@ function App() {
           </Marker>
         </div>
         ))}
+        {/* Render the history trail behind a selected aircraft */}
         {selected === null || historyTrail === null ? "":
           <Source id='trail' type='geojson' data={historyTrail}>
             <Layer {... trailLayer} />
