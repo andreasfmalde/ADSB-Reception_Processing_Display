@@ -16,7 +16,7 @@ export const Navbar = (props) =>{
                 }}
                 >
                 <input type="text" placeholder='Search for callsign/icao...' name="searchbar"/>
-                <button type='submit'>
+                <button type='submit' data-testid='search-btn'>
                     <IoMdSearch />
                 </button>
             </form>
