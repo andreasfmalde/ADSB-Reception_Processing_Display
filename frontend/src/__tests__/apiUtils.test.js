@@ -1,4 +1,4 @@
-import { callAPI } from "./apiUtils";
+import { callAPI } from "../utils/api/apiUtils";
 
 describe('callAPI tests',()=>{
 
