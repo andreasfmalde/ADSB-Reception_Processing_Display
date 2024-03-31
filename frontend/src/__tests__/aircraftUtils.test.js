@@ -1,4 +1,4 @@
-import { findAircraftByIcaoOrCallsign, isInBounds, trimAircraftList} from "../utils/aircraft/aircraftUtils";
+import { findAircraftByIcaoOrCallsign, isInBounds, trimAircraftList} from "../utils";
 import { geojson, mapBounds } from "../data/TestData";
 
 
