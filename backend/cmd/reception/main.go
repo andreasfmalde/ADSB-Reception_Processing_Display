@@ -3,9 +3,9 @@ package main
 import (
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/logger"
 	"adsb-api/internal/sbs"
 	"adsb-api/internal/service/sbsService"
+	"adsb-api/internal/utility/logger"
 	"time"
 )
 

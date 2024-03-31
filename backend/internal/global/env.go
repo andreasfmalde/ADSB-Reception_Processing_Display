@@ -1,7 +1,7 @@
 package global
 
 import (
-	"adsb-api/internal/logger"
+	"adsb-api/internal/utility/logger"
 	"adsb-api/internal/utility/mock"
 	"github.com/joho/godotenv"
 	"os"

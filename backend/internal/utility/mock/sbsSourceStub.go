@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"adsb-api/internal/logger"
+	"adsb-api/internal/utility/logger"
 	"net"
 	"time"
 )

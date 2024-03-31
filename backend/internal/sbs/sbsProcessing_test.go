@@ -2,7 +2,7 @@ package sbs
 
 import (
 	"adsb-api/internal/global"
-	"adsb-api/internal/logger"
+	"adsb-api/internal/utility/logger"
 	"adsb-api/internal/utility/mock"
 	"github.com/stretchr/testify/assert"
 	"os"

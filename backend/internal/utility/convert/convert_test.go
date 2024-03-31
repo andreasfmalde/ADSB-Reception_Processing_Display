@@ -1,8 +1,8 @@
-package geoJSON
+package convert
 
 import (
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/logger"
+	"adsb-api/internal/utility/logger"
 	"adsb-api/internal/utility/testUtility"
 	"github.com/xeipuuv/gojsonschema"
 	"net/url"
@@ -41,7 +41,7 @@ func TestConvertCurrentModelToGeoJson(t *testing.T) {
 	schemaLoader := gojsonschema.NewReferenceLoader(geoJsonOverallSchema)
 
 	var mockData = testUtility.CreateMockAircraft(1)
-	geoJson, err := ConvertCurrentModelToGeoJson(mockData)
+	geoJson, err := CurrentModelToGeoJson(mockData)
 	if err != nil {
 		t.Errorf("error converting model data to GeoJSON: %q", err)
 	}
@@ -65,7 +65,7 @@ func TestConvertHistoryModelToGeoJson(t *testing.T) {
 	schemaLoader := gojsonschema.NewReferenceLoader(geoJsonOverallSchema)
 
 	var mockData = testUtility.CreateMockHistAircraft(2)
-	geoJson, err := ConvertHistoryModelToGeoJson(mockData)
+	geoJson, err := HistoryModelToGeoJson(mockData)
 	if err != nil {
 		t.Errorf("error converting model data to GeoJSON: %q", err)
 	}
@@ -87,7 +87,7 @@ func TestConvertHistoryModelToGeoJson(t *testing.T) {
 
 func TestConvertHistoryModelToGeoJson_TooFewCoordinates(t *testing.T) {
 	var mockData = testUtility.CreateMockHistAircraft(1)
-	_, err := ConvertHistoryModelToGeoJson(mockData)
+	_, err := HistoryModelToGeoJson(mockData)
 	if err == nil {
 		t.Errorf("expected error: %s", errorMsg.ErrorGeoJsonTooFewCoordinates)
 	}

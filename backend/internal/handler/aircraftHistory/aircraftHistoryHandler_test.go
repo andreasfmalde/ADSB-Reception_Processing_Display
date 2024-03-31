@@ -5,6 +5,7 @@ import (
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/global/models"
+	"adsb-api/internal/utility/convert"
 	"adsb-api/internal/utility/mock"
 	"adsb-api/internal/utility/testUtility"
 	"encoding/json"
@@ -195,7 +196,7 @@ func TestValidRequests(t *testing.T) {
 			var actual geoJSON.FeatureCollectionLineString
 			_ = json.NewDecoder(res.Body).Decode(&actual)
 
-			mockFeatureCollection, err := geoJSON.ConvertHistoryModelToGeoJson(tt.mockData)
+			mockFeatureCollection, err := convert.HistoryModelToGeoJson(tt.mockData)
 
 			assert.Equal(t, mockFeatureCollection, actual)
 		})

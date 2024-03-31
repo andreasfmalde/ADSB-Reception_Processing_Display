@@ -5,6 +5,7 @@ import (
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/global/models"
+	"adsb-api/internal/utility/convert"
 	"adsb-api/internal/utility/mock"
 	"adsb-api/internal/utility/testUtility"
 	"encoding/json"
@@ -169,7 +170,7 @@ func TestValidRequests(t *testing.T) {
 				t.Errorf("Test: %s. Error decoing response body: %s", tt.name, err.Error())
 			}
 
-			mockFeatureCollection, err := geoJSON.ConvertCurrentModelToGeoJson(tt.mockData)
+			mockFeatureCollection, err := convert.CurrentModelToGeoJson(tt.mockData)
 
 			assert.Equal(t, mockFeatureCollection, actual)
 		})

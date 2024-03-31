@@ -2,7 +2,7 @@ package apiUtility
 
 import (
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/logger"
+	"adsb-api/internal/utility/logger"
 	"encoding/json"
 	"errors"
 	"net/http"

@@ -3,10 +3,10 @@ package aircraftHistory
 import (
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/global/geoJSON"
-	"adsb-api/internal/logger"
 	"adsb-api/internal/service/restService"
 	"adsb-api/internal/utility/apiUtility"
+	"adsb-api/internal/utility/convert"
+	"adsb-api/internal/utility/logger"
 	"fmt"
 	"net/http"
 )
@@ -46,7 +46,7 @@ func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 		return
 	}
 
-	aircraft, err := geoJSON.ConvertHistoryModelToGeoJson(res)
+	aircraft, err := convert.HistoryModelToGeoJson(res)
 	if err != nil {
 		http.Error(w, errorMsg.ErrorConvertingDataToGeoJson, http.StatusInternalServerError)
 		logger.Error.Printf(errorMsg.ErrorConvertingDataToGeoJson+": %q", err)
