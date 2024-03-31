@@ -207,3 +207,9 @@ export const mapBounds = {
         "lat": 64.30804721004728
     }
 }
+
+export const testImage = {
+	thumbnail_large: { src: 'https://somewebsite.no/aircraft.jpg' },
+	photographer: 'Test Testesen',
+	link: 'https://somewebsite.no'
+  };
