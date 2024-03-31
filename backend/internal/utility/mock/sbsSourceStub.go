@@ -3,34 +3,32 @@ package mock
 import (
 	"adsb-api/internal/logger"
 	"net"
+	"time"
 )
 
 type TcpStub interface {
 	StartServer() (string, error)
-	CloseConn() error
-	CloseListener() error
+	Close() error
 	SetResponse(response []byte)
 }
 
 type StubImpl struct {
-	ln       net.Listener
-	conn     net.Conn
+	server   net.Listener
 	response []byte
+	addr     string
 }
 
-func InitStub(response []byte) *StubImpl {
-	return &StubImpl{response: response}
+func InitStub(addr string, response []byte) *StubImpl {
+	return &StubImpl{addr: addr, response: response}
 }
 
-func (stub *StubImpl) StartServer() (string, error) {
-	logger.Info.Println("starting mock TCP server")
-
-	ln, err := net.Listen("tcp", "localhost:0")
+func (stub *StubImpl) StartServer() (err error) {
+	stub.server, err = net.Listen("tcp", stub.addr)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	stub.ln = ln
+	logger.Info.Println("starting mock TCP server")
 
 	go func() {
 		defer func(ln net.Listener) {
@@ -38,35 +36,41 @@ func (stub *StubImpl) StartServer() (string, error) {
 			if err != nil {
 				return
 			}
-		}(stub.ln)
+		}(stub.server)
 
-		conn, err := stub.ln.Accept()
+		conn, err := stub.server.Accept()
 		if err != nil {
 			return
 		}
-
-		stub.conn = conn
 
 		defer func(conn net.Conn) {
 			err := conn.Close()
 			if err != nil {
 				return
 			}
-		}(stub.conn)
+		}(conn)
 
-		_, err = stub.conn.Write(stub.response)
+		_, err = conn.Write(stub.response)
 		if err != nil {
 			return
 		}
 	}()
 
-	return stub.ln.Addr().String(), nil
+	return nil
 }
 
-func (stub *StubImpl) CloseConn() error {
-	return stub.conn.Close()
+func (stub *StubImpl) Close() error {
+	return stub.server.Close()
 }
 
-func (stub *StubImpl) CloseListener() error {
-	return stub.ln.Close()
+func (stub *StubImpl) SimulateConnectionDrop(delay time.Duration) {
+	go func() {
+		time.Sleep(delay)
+		if stub.server != nil {
+			err := stub.server.Close()
+			if err != nil {
+				logger.Error.Printf("error closing connection: %v", err)
+			}
+		}
+	}()
 }

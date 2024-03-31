@@ -2,95 +2,122 @@ package sbs
 
 import (
 	"adsb-api/internal/global"
-	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/models"
 	"adsb-api/internal/utility/converter"
 	"bufio"
-	"errors"
 	"net"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func MakeTCPConnection(url string) (net.Conn, error) {
-	return net.Dial("tcp", url)
-}
-
-func CloseTCPConnection(connection net.Conn) error {
-	return connection.Close()
-}
-
-func ProcessSBSstream() ([]models.AircraftCurrentModel, error) {
-	conn, err := MakeTCPConnection(global.SbsSource)
+func ProcessSbsStream() ([]models.AircraftCurrentModel, error) {
+	conn, err := net.Dial("tcp", global.SbsSource)
 	if err != nil {
-		return []models.AircraftCurrentModel{}, err
-
+		return nil, err
 	}
 
-	defer CloseTCPConnection(conn)
-	scanner := bufio.NewScanner(conn)
-	var aircrafts []models.AircraftCurrentModel
+	defer func(conn net.Conn) {
+		err := conn.Close()
+		if err != nil {
+			return
+		}
+	}(conn)
 
-	for {
-		timer := time.Now()
-		scanner.Scan()
-		if diff := time.Since(timer).Seconds(); diff > 4 {
+	scanner := bufio.NewScanner(conn)
+
+	var aircraft []models.AircraftCurrentModel
+
+	timer := time.Now()
+	for scanner.Scan() {
+		if diff := time.Since(timer).Seconds(); diff > global.WaitingTime {
 			break
 		}
-		line := strings.Split(scanner.Text(), ",")
 
-		if len(line) > 10 {
-			icao := line[4]
-			date := line[8]
-			time := line[9]
-			callsign := line[10]
+		var ac models.AircraftCurrentModel
 
-			scanner.Scan()
-			line = strings.Split(scanner.Text(), ",")
-			altitudeStr := line[11]
-			latStr := line[14]
-			longStr := line[15]
-
-			scanner.Scan()
-			line = strings.Split(scanner.Text(), ",")
-			speedStr := line[12]
-			trackStr := line[13]
-			vspeedStr := line[16]
-
-			altitude, altERR := strconv.Atoi(altitudeStr)
-			speed, spdERR := strconv.ParseFloat(speedStr, 32)
-			track, trkERR := strconv.ParseFloat(trackStr, 32)
-			vspeed, vspdERR := strconv.Atoi(vspeedStr)
-			lat, latERR := strconv.ParseFloat(latStr, 32)
-			long, longERR := strconv.ParseFloat(longStr, 32)
-
-			if altERR != nil || spdERR != nil || trkERR != nil ||
-				vspdERR != nil || latERR != nil || longERR != nil {
-				continue
-			}
-
-			timestamp := converter.MakeTimeStamp(date, time)
-
-			aircraft := models.AircraftCurrentModel{
-				Icao:         icao,
-				Callsign:     callsign,
-				Altitude:     altitude,
-				Latitude:     float32(lat),
-				Longitude:    float32(long),
-				Speed:        int(speed),
-				Track:        int(track),
-				VerticalRate: vspeed,
-				Timestamp:    timestamp,
-			}
-
-			aircrafts = append(aircrafts, aircraft)
-
-		} else {
-			return aircrafts, errors.New(errorMsg.ErrorCouldNotConnectToTcpStream)
+		msg1 := strings.Split(scanner.Text(), ",")
+		if len(msg1) < 11 {
+			continue
 		}
 
+		if !scanner.Scan() {
+			break
+		}
+		msg3 := strings.Split(scanner.Text(), ",")
+		if len(msg3) < 16 {
+			continue
+		}
+
+		if !scanner.Scan() {
+			break
+		}
+		msg4 := strings.Split(scanner.Text(), ",")
+		if len(msg4) < 17 {
+			continue
+		}
+
+		ac, err := parseSbsToAircraftCurrent(msg1, msg3, msg4)
+		if err != nil {
+			continue
+		}
+
+		aircraft = append(aircraft, ac)
 	}
 
-	return aircrafts, nil
+	return aircraft, nil
+}
+
+func parseSbsToAircraftCurrent(msg1 []string, msg3 []string, msg4 []string) (models.AircraftCurrentModel, error) {
+	icao := msg1[4]
+	date := msg1[8]
+	hour := msg1[9]
+	callsign := msg1[10]
+	timestamp := converter.MakeTimeStamp(date, hour)
+
+	altitudeStr := msg3[11]
+	latStr := msg3[14]
+	longStr := msg3[15]
+
+	altitude, err := strconv.Atoi(altitudeStr)
+	if err != nil {
+		return models.AircraftCurrentModel{}, err
+	}
+	lat, err := strconv.ParseFloat(latStr, 32)
+	if err != nil {
+		return models.AircraftCurrentModel{}, err
+	}
+	long, err := strconv.ParseFloat(longStr, 32)
+	if err != nil {
+		return models.AircraftCurrentModel{}, err
+	}
+
+	speedStr := msg4[12]
+	trackStr := msg4[13]
+	vspeedStr := msg4[16]
+
+	speed, err := strconv.ParseFloat(speedStr, 32)
+	if err != nil {
+		return models.AircraftCurrentModel{}, err
+	}
+	track, err := strconv.ParseFloat(trackStr, 32)
+	if err != nil {
+		return models.AircraftCurrentModel{}, err
+	}
+	vspeed, err := strconv.Atoi(vspeedStr)
+	if err != nil {
+		return models.AircraftCurrentModel{}, err
+	}
+
+	return models.AircraftCurrentModel{
+		Icao:         icao,
+		Callsign:     callsign,
+		Altitude:     altitude,
+		Latitude:     float32(lat),
+		Longitude:    float32(long),
+		Speed:        int(speed),
+		Track:        int(track),
+		VerticalRate: vspeed,
+		Timestamp:    timestamp,
+	}, nil
 }

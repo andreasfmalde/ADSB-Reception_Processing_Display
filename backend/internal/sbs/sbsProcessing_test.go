@@ -2,14 +2,13 @@ package sbs
 
 import (
 	"adsb-api/internal/global"
-	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/global/models"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/mock"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -17,27 +16,31 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestProcessSbsStream(t *testing.T) {
+func TestProcessSbsStream_WithMockResponse(t *testing.T) {
 	err := os.Chdir("../../")
 	if err != nil {
 		logger.Error.Fatalf("could not change working directory: %q", err)
 	}
 
-	mockLen3, err := os.ReadFile("./resources/mock/mockSbsDataLen3.txt")
+	// 1 valid aircraft
+	mockLen1, err := os.ReadFile("./resources/mock/mockSbsDataLen1.txt")
 	if err != nil {
 		t.Errorf("error reading file: %q", err)
 	}
 
+	// missing MSG 4
 	mockIncompleteData, err := os.ReadFile("./resources/mock/mockSbsIncompleteData.txt")
 	if err != nil {
 		t.Errorf("error reading file: %q", err)
 	}
 
+	// speed value of MSG 2 is 'AAA'
 	mockParseError, err := os.ReadFile("./resources/mock/mockSbsParseError.txt")
 	if err != nil {
 		t.Errorf("error reading file: %q", err)
 	}
 
+	// data is valid but in incorrect order, MSG 4 before MSG 3
 	mockMalformedLines, err := os.ReadFile("./resources/mock/mockSbsMalformedDataLines.txt")
 	if err != nil {
 		t.Errorf("error reading file: %q", err)
@@ -51,31 +54,31 @@ func TestProcessSbsStream(t *testing.T) {
 	}{
 		{
 			name:           "Successful Data Retrieval",
-			expectedError:  errorMsg.ErrorCouldNotConnectToTcpStream,
-			expectedLength: 3,
-			mockResponse:   mockLen3,
+			expectedLength: 1,
+			mockResponse:   mockLen1,
+		},
+		{
+			name:           "Successful Data Retrieval with big data",
+			expectedLength: 1e5,
+			mockResponse:   generateMockAircraftResponses(1e5),
 		},
 		{
 			name:           "Incomplete Data Lines",
-			expectedError:  errorMsg.ErrorCouldNotConnectToTcpStream,
 			expectedLength: 0,
 			mockResponse:   mockIncompleteData,
 		},
 		{
 			name:           "Data Parsing Errors",
-			expectedError:  errorMsg.ErrorCouldNotConnectToTcpStream,
 			expectedLength: 0,
 			mockResponse:   mockParseError,
 		},
 		{
 			name:           "No Data Available",
-			expectedError:  errorMsg.ErrorCouldNotConnectToTcpStream,
 			expectedLength: 0,
 			mockResponse:   []byte{},
 		},
 		{
 			name:           "Malformed Data Lines",
-			expectedError:  errorMsg.ErrorCouldNotConnectToTcpStream,
 			expectedLength: 0,
 			mockResponse:   mockMalformedLines,
 		},
@@ -83,22 +86,33 @@ func TestProcessSbsStream(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			stub := mock.InitStub(tt.mockResponse)
-			addr, err := stub.StartServer()
+			stub := mock.InitStub(global.SbsSource, tt.mockResponse)
+			err := stub.StartServer()
 			if err != nil {
-				logger.Error.Fatalf("error starting stub server: %q", err)
+				t.Errorf("Test: %s Error = %s", tt.name, err)
 				return
 			}
 
-			global.SbsSource = addr
-
-			data, err := ProcessSBSstream()
-
-			if (err != nil) != (tt.expectedError != "") || (err != nil && err.Error() != tt.expectedError) {
-				t.Errorf("Test: %s Error = %s, expected %s", tt.name, err, tt.expectedError)
+			data, err := ProcessSbsStream()
+			if err != nil {
+				t.Errorf("Test: %s Error = %s", tt.name, err)
 			}
 
 			assert.Equal(t, tt.expectedLength, len(data))
+
+			if tt.expectedLength > 0 {
+				for i, ac := range data {
+					assert.NotEqualf(t, ac.Icao, "", "Test: %s Aircraft: %d Expected not nil: Icao", tt.name, i)
+					assert.NotEqualf(t, ac.Callsign, "", "Test: %s Aircraft: %d Expected not nil: Callsign", tt.name, i)
+					assert.NotEqualf(t, ac.Timestamp, "", "Test: %s Aircraft: %d Expected not nil: Timestamp", tt.name, i)
+					assert.NotEqualf(t, ac.Altitude, 0, "Test: %s Aircraft: %d Expected not nil: Altitude", tt.name, i)
+					assert.NotEqualf(t, ac.Latitude, 0, "Test: %s Aircraft: %d Expected not nil: Latitude", tt.name, i)
+					assert.NotEqualf(t, ac.Longitude, 0, "Test: %s Aircraft: %d Expected not nil: Longitude", tt.name, i)
+					assert.NotEqualf(t, ac.Track, 0, "Test: %s Aircraft: %d Expected not nil: Track", tt.name, i)
+					assert.NotEqualf(t, ac.Speed, 0, "Test: %s Aircraft: %d Expected not nil: Speed", tt.name, i)
+					assert.NotEqualf(t, ac.VerticalRate, 0, "Test: %s Aircraft: %d Expected not nil: VerticalRate", tt.name, i)
+				}
+			}
 		})
 	}
 }
@@ -106,73 +120,48 @@ func TestProcessSbsStream(t *testing.T) {
 func TestProcessSbsStream_ConnectionFailure(t *testing.T) {
 	global.SbsSource = "unknown:5432"
 
-	data, err := ProcessSBSstream()
-	if err == nil && err.Error() != errorMsg.ErrorCouldNotConnectToTcpStream {
-		t.Error("expected error")
-	}
-
-	assert.Equal(t, []models.AircraftCurrentModel{}, data)
-}
-
-func TestProcessSbsStream_Timeout(t *testing.T) {
-	stub := mock.InitStub([]byte{})
-
-	addr, err := stub.StartServer()
-	if err != nil {
-		logger.Error.Fatalf("error starting mock TCP server")
-		return
-	}
-	global.SbsSource = addr
-
-	stub.CloseConn()
-
-	data, err := ProcessSBSstream()
-	if err.Error() != errorMsg.ErrorCouldNotConnectToTcpStream {
-		t.Errorf("error processing SBS data stream: %q", err)
+	data, err := ProcessSbsStream()
+	if err == nil {
+		t.Error("expected error due to unknown host")
 	}
 
 	assert.Nil(t, data)
+
+	// resets SbsSource const
+	global.InitTestEnv()
 }
 
 func TestProcessSbsStream_ConnectionDrop(t *testing.T) {
-	stub := mock.InitStub([]byte{})
+	stub := mock.InitStub(global.SbsSource, generateMockAircraftResponses(10))
 
-	addr, err := stub.StartServer()
+	err := stub.StartServer()
 	if err != nil {
-		logger.Error.Fatalf("error starting mock TCP server")
-		return
+		t.Fatalf("Failed to start mock TCP server: %v", err)
 	}
-	global.SbsSource = addr
+	defer stub.Close()
 
-	stub.CloseListener()
+	stub.SimulateConnectionDrop(1 * time.Millisecond)
 
-	data, err := ProcessSBSstream()
-	if err.Error() != errorMsg.ErrorCouldNotConnectToTcpStream {
-		t.Errorf("error processing SBS data stream: %q", err)
+	data, err := ProcessSbsStream()
+	if err == nil {
+		t.Errorf("Expected an error due to connection drop, but got nil")
 	}
 
 	assert.Nil(t, data)
 }
 
-func TestProcessSbsStream_ContinuousDataStream(t *testing.T) {
-
-}
-
-func generateMockAircraftResponses(n int) string {
+func generateMockAircraftResponses(n int) []byte {
 	var builder strings.Builder
 
-	const aircraftResponseTemplate = `
-	MSG,1,0,0,E80451,0,2024/03/29,11:45:05.000,2024/03/29,11:45:05.000,TAM8112,,,,,,,,,,,
-	MSG,3,0,0,E80451,0,2024/03/29,11:45:05.000,2024/03/29,11:45:05.000,,9725,,,19.329620,-99.196991,,,,,,
-	MSG,4,0,0,E80451,0,2024/03/29,11:45:05.000,2024/03/29,11:45:05.000,,,184.317657,334.964325,,,-960,,,,,
-	`
+	const responseLine1 = "MSG,1,0,0,E80451,0,2024/03/29,11:45:05.000,2024/03/29,11:45:05.000,TAM8112,,,,,,,,,,,"
+	const responseLine2 = "MSG,3,0,0,E80451,0,2024/03/29,11:45:05.000,2024/03/29,11:45:05.000,,9725,,,19.329620,-99.196991,,,,,,"
+	const responseLine3 = "MSG,4,0,0,E80451,0,2024/03/29,11:45:05.000,2024/03/29,11:45:05.000,,,184.317657,334.964325,,,-960,,,,,"
 
 	for i := 0; i < n; i++ {
-		if i > 0 {
-			builder.WriteString("\n")
-		}
-		builder.WriteString(aircraftResponseTemplate)
+		builder.WriteString(responseLine1 + "\n")
+		builder.WriteString(responseLine2 + "\n")
+		builder.WriteString(responseLine3 + "\n")
 	}
 
-	return builder.String()
+	return []byte(builder.String())
 }
