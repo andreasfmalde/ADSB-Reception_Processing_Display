@@ -35,13 +35,17 @@ func main() {
 
 	timer := time.Now()
 	for {
-		aircraft, err := sbs.ProcessSBSstream()
+		aircraft, err := sbs.ProcessSbsStream()
 		if err != nil {
-			logger.Info.Printf(err.Error()+" ... will try again in %s seconds", global.WaitingTime)
+			logger.Error.Fatalf(errorMsg.ErrorCouldNotConnectToTcpStream)
+			return
+		} else if len(aircraft) == 0 {
+			logger.Warning.Printf("recieved no data from SBS data source, will try again in: %d seconds", global.WaitingTime)
 			time.Sleep(global.WaitingTime * time.Second)
 			continue
 		}
-		logger.Info.Println("retrieved SBS data")
+
+		logger.Info.Printf("retrieved SBS data: %d aircraft", len(aircraft))
 
 		err = sbsSvc.InsertNewSbsData(aircraft)
 		if err != nil {
@@ -55,6 +59,7 @@ func main() {
 				logger.Info.Println("old SBS data deleted")
 			}
 		}
+
 		time.Sleep(global.UpdatingPeriod * time.Second)
 	}
 }
