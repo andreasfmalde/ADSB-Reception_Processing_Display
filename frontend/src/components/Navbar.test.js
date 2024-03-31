@@ -23,13 +23,13 @@ describe('Navbar component tests',()=>{
     test('the search callback function is called when searched button is pressed',()=>{
         render(<Navbar callback={mockFunction}/>);
         const searchInput = screen.getByPlaceholderText("Search for callsign/icao...");
-        const searchButton = screen.getByTestId("search-btn");
+        const form = screen.getByTestId("form");
 
-        fireEvent.change(searchInput, {target: {searchbar: { value: 'ABCDEF'}}});
-        fireEvent.click(searchButton);
+        fireEvent.change(searchInput, { target: { value: 'ABCDEF' } });
+        fireEvent.submit(form);
 
-        //expect(mockFunction).toHaveBeenCalledTimes(1);
-        //expect(mockFunction).toHaveBeenCalledWith("ABCDEF");
+        expect(mockFunction).toHaveBeenCalledTimes(1);
+        expect(mockFunction).toHaveBeenCalledWith("ABCDEF");
 
     })
 })
