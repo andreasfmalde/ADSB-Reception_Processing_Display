@@ -12,10 +12,11 @@ export const Navbar = (props) =>{
                 onSubmit={e =>{
                     e.preventDefault();
                     props.callback(e.target.searchbar.value);
+                    console.log(e.target.searchbar.value)
                 }}
                 >
                 <input type="text" placeholder='Search for callsign/icao...' name="searchbar"/>
-                <button type='submit'>
+                <button type='submit' data-testid="search-btn">
                     <IoMdSearch />
                 </button>
             </form>
