@@ -26,7 +26,7 @@ function App() {
       const data = await callAPI(`${process.env.REACT_APP_SERVER}/aircraft/current/`);
       setAircraftJSON(data.features);
     }catch(error){
-      console.log("Something went wrong")
+      console.log("No aircrafts are fetched")
     }
     
   }
