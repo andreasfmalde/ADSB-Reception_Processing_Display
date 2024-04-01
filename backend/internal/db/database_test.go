@@ -6,10 +6,11 @@ import (
 	"adsb-api/internal/utility/logger"
 	"adsb-api/internal/utility/testUtility"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"reflect"
+	reflect "reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {

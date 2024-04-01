@@ -225,7 +225,7 @@ func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.Aircra
 
 	for rows.Next() {
 		var ac models.AircraftHistoryModel
-		err := rows.Scan(&ac.Icao, &ac.Longitude, &ac.Latitude, &ac.Timestamp)
+		err := rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude, &ac.Timestamp)
 		if err != nil {
 			return nil, err
 		}
