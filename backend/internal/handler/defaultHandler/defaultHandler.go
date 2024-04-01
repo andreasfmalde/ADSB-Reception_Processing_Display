@@ -1,0 +1,37 @@
+package defaultHandler
+
+import (
+	"adsb-api/internal/global"
+	"adsb-api/internal/utility/apiUtility"
+	"net/http"
+)
+
+type DefaultStruct struct {
+	Name      string            `json:"name"`
+	Version   string            `json:"version"`
+	MadeBy    []string          `json:"madeby"`
+	Endpoints map[string]string `json:"endpoints"`
+}
+
+// DefaultHandler function, which prints info about the service
+func DefaultHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		endpoints := make(map[string]string)
+		endpoints["aircraft_current"] = global.AircraftCurrentPath
+		endpoints["aircraft_history"] = global.AircraftHistoryPath
+
+		madeBy := []string{"Andreas Follevaag Malde", "Fredrik Sundt-Hansen"}
+
+		out := DefaultStruct{
+			Name:      "ADS-B Reception, Processing, Displaying and Analysis",
+			Version:   global.VERSION,
+			MadeBy:    madeBy,
+			Endpoints: endpoints,
+		}
+
+		apiUtility.EncodeJsonData(w, out)
+	default:
+		http.Error(w, "Method is not supported", http.StatusMethodNotAllowed)
+	}
+}
