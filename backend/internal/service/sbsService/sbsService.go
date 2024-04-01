@@ -4,6 +4,7 @@ import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/models"
+	"adsb-api/internal/sbs"
 )
 
 type SbsService interface {
@@ -12,21 +13,21 @@ type SbsService interface {
 	Cleanup() error
 }
 
-type SbsServiceImpl struct {
+type SbsImpl struct {
 	DB db.Database
 }
 
-// InitSbsService initializes SbsServiceImpl struct and database connection
-func InitSbsService() (*SbsServiceImpl, error) {
+// InitSbsService initializes SbsImpl struct and database connection
+func InitSbsService() (*SbsImpl, error) {
 	dbConn, err := db.InitDB()
 	if err != nil {
 		return nil, err
 	}
-	return &SbsServiceImpl{DB: dbConn}, nil
+	return &SbsImpl{DB: dbConn}, nil
 }
 
 // CreateAdsbTables creates all tables for the database schema
-func (svc *SbsServiceImpl) CreateAdsbTables() error {
+func (svc *SbsImpl) CreateAdsbTables() error {
 	err := svc.DB.Begin()
 	if err != nil {
 		return err
@@ -63,7 +64,7 @@ func (svc *SbsServiceImpl) CreateAdsbTables() error {
 
 // InsertNewSbsData adds new SBS data to the database.
 // First process the SBS stream and then add that data to the database.
-func (svc *SbsServiceImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) error {
+func (svc *SbsImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) error {
 	err := svc.DB.InsertHistoryFromCurrent()
 	if err != nil {
 		return err
@@ -103,6 +104,10 @@ func (svc *SbsServiceImpl) InsertNewSbsData(aircraft []models.AircraftCurrentMod
 }
 
 // Cleanup remove old rows to save space
-func (svc *SbsServiceImpl) Cleanup() error {
+func (svc *SbsImpl) Cleanup() error {
 	return svc.DB.DeleteOldHistory(global.MaxDaysHistory)
+}
+
+func (svc *SbsImpl) ProcessSbsData() ([]models.AircraftCurrentModel, error) {
+	return sbs.ProcessSbsStream()
 }

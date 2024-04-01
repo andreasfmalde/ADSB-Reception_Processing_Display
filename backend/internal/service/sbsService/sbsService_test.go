@@ -41,7 +41,7 @@ func TestSbsServiceImpl_CreateAdsbTables(t *testing.T) {
 
 	mockDB := mock.NewMockDatabase(ctrl)
 
-	svc := &SbsServiceImpl{DB: mockDB}
+	svc := &SbsImpl{DB: mockDB}
 
 	mockDB.EXPECT().BeginTx().Return(nil)
 	mockDB.EXPECT().CreateAircraftCurrentTable().Return(nil)
@@ -60,7 +60,7 @@ func TestSbsServiceImpl_CreateAdsbTables_WithRollback(t *testing.T) {
 
 	mockDB := mock.NewMockDatabase(ctrl)
 
-	svc := &SbsServiceImpl{DB: mockDB}
+	svc := &SbsImpl{DB: mockDB}
 
 	var errorMsg = "mocking errorMsg creating table, should rollback transaction"
 
@@ -79,7 +79,7 @@ func TestSbsServiceImpl_InsertNewSbsData(t *testing.T) {
 
 	mockDB := mock.NewMockDatabase(ctrl)
 
-	svc := &SbsServiceImpl{DB: mockDB}
+	svc := &SbsImpl{DB: mockDB}
 
 	mockData := testUtility.CreateMockAircraft(100)
 
@@ -101,7 +101,7 @@ func TestSbsServiceImpl_InsertNewSbsData_WithRollback(t *testing.T) {
 
 	mockDB := mock.NewMockDatabase(ctrl)
 
-	svc := &SbsServiceImpl{DB: mockDB}
+	svc := &SbsImpl{DB: mockDB}
 
 	mockData := testUtility.CreateMockAircraft(100)
 
@@ -123,7 +123,7 @@ func TestSbsServiceImpl_Cleanup(t *testing.T) {
 
 	mockDB := mock.NewMockDatabase(ctrl)
 
-	svc := &SbsServiceImpl{DB: mockDB}
+	svc := &SbsImpl{DB: mockDB}
 
 	mockDB.EXPECT().DeleteOldHistory(global.MaxDaysHistory).Return(nil)
 
@@ -138,7 +138,7 @@ func TestSbsServiceImpl_Cleanup_ErrorDeletingOldHistory(t *testing.T) {
 
 	mockDB := mock.NewMockDatabase(ctrl)
 
-	svc := &SbsServiceImpl{DB: mockDB}
+	svc := &SbsImpl{DB: mockDB}
 
 	var errorMsg = "mock error deleting old history data"
 

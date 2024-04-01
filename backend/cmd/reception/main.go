@@ -3,7 +3,6 @@ package main
 import (
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/sbs"
 	"adsb-api/internal/service/sbsService"
 	"adsb-api/internal/utility/logger"
 	"time"
@@ -23,31 +22,30 @@ func main() {
 	defer func() {
 		err := sbsSvc.DB.Close()
 		if err != nil {
-			logger.Error.Fatalf(errorMsg.ErrorClosingDatabase, err)
+			logger.Error.Fatalf(errorMsg.ErrorClosingDatabase+": %q", err)
 		}
 	}()
 
 	if err := sbsSvc.CreateAdsbTables(); err != nil {
-		logger.Error.Fatalf(errorMsg.ErrorCreatingDatabaseTables, err)
+		logger.Error.Fatalf(errorMsg.ErrorCreatingDatabaseTables+": %q", err)
 	}
 
 	timer := time.Now()
 	for {
-		aircraft, err := sbs.ProcessSbsStream()
+		aircraft, err := sbsSvc.ProcessSbsData()
 		if err != nil {
-			logger.Error.Fatalf(errorMsg.ErrorCouldNotConnectToTcpStream)
-			return
+			logger.Error.Printf(errorMsg.ErrorCouldNotConnectToTcpStream)
+			time.Sleep(global.WaitingTime * time.Second)
+			continue
 		} else if len(aircraft) == 0 {
 			logger.Warning.Printf("recieved no data from SBS data source, will try again in: %d seconds", global.WaitingTime)
 			time.Sleep(global.WaitingTime * time.Second)
 			continue
 		}
 
-		logger.Info.Printf("retrieved SBS data: %d aircraft", len(aircraft))
-
 		err = sbsSvc.InsertNewSbsData(aircraft)
 		if err != nil {
-			logger.Error.Fatalf("could not insert new SBS data: %q", err)
+			logger.Error.Fatalf(errorMsg.ErrorInsertingNewSbsData+": %q", err)
 		}
 		logger.Info.Println("new SBS data inserted")
 
