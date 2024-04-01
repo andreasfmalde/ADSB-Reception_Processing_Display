@@ -100,11 +100,7 @@ func (db *AdsbDB) createAircraftHistory() error {
 				 lat DECIMAL NOT NULL,
 				 long DECIMAL NOT NULL,
 				 timestamp TIMESTAMP NOT NULL,
-				 PRIMARY KEY (icao,timestamp),
-				 CONSTRAINT fk_history_current
-                    FOREIGN KEY (icao, timestamp)
-                    	REFERENCES aircraft_current(icao, timestamp)
-                        ON DELETE NO ACTION)`
+				 PRIMARY KEY (icao,timestamp))`
 
 	_, err = tx.Exec(query)
 	if err != nil {
@@ -226,7 +222,7 @@ func (db *AdsbDB) GetHistoryByIcao(search string) ([]models.AircraftHistoryModel
 
 	for rows.Next() {
 		var ac models.AircraftHistoryModel
-		err := rows.Scan(&ac.Icao, &ac.Longitude, &ac.Latitude)
+		err := rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude)
 		if err != nil {
 			return nil, err
 		}

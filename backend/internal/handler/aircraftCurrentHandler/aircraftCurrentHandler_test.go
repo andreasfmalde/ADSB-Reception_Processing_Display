@@ -10,12 +10,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {

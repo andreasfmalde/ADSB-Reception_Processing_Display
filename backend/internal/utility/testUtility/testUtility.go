@@ -1,16 +1,16 @@
 package testUtility
 
 import (
-	models2 "adsb-api/internal/global/models"
+	"adsb-api/internal/global/models"
 	"strconv"
 	"time"
 )
 
-func CreateMockAircraft(n int) []models2.AircraftCurrentModel {
-	var aircraft []models2.AircraftCurrentModel
+func CreateMockAircraft(n int) []models.AircraftCurrentModel {
+	var aircraft []models.AircraftCurrentModel
 
 	for i := 0; i < n; i++ {
-		ac := models2.AircraftCurrentModel{
+		ac := models.AircraftCurrentModel{
 			Icao:         strconv.Itoa(i),
 			Callsign:     strconv.Itoa(i),
 			Altitude:     i,
@@ -27,11 +27,11 @@ func CreateMockAircraft(n int) []models2.AircraftCurrentModel {
 	return aircraft
 }
 
-func CreateMockHistAircraft(n int) []models2.AircraftHistoryModel {
-	var aircraft []models2.AircraftHistoryModel
+func CreateMockHistAircraft(n int) []models.AircraftHistoryModel {
+	var aircraft []models.AircraftHistoryModel
 
 	for i := 0; i < n; i++ {
-		ac := models2.AircraftHistoryModel{
+		ac := models.AircraftHistoryModel{
 			Icao:      strconv.Itoa(i),
 			Latitude:  float32(i),
 			Longitude: float32(i),
@@ -43,8 +43,8 @@ func CreateMockHistAircraft(n int) []models2.AircraftHistoryModel {
 	return aircraft
 }
 
-func CreateMockAircraftWithTimestamp(icao string, timestamp string) models2.AircraftCurrentModel {
-	return models2.AircraftCurrentModel{
+func CreateMockAircraftWithTimestamp(icao string, timestamp string) models.AircraftCurrentModel {
+	return models.AircraftCurrentModel{
 		Icao:         icao,
 		Callsign:     "TEST",
 		Altitude:     10000,
@@ -57,11 +57,11 @@ func CreateMockAircraftWithTimestamp(icao string, timestamp string) models2.Airc
 	}
 }
 
-func CreateMockAircraftWithIcao(n int, icao string) []models2.AircraftCurrentModel {
-	var aircraft []models2.AircraftCurrentModel
+func CreateMockAircraftWithIcao(n int, icao string) []models.AircraftCurrentModel {
+	var aircraft []models.AircraftCurrentModel
 
 	for i := 0; i < n; i++ {
-		ac := models2.AircraftCurrentModel{
+		ac := models.AircraftCurrentModel{
 			Icao:         icao,
 			Callsign:     strconv.Itoa(i),
 			Altitude:     i,

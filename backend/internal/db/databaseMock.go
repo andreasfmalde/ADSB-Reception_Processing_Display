@@ -5,7 +5,7 @@
 package db
 
 import (
-	models "adsb-api/internal/global/models"
+	"adsb-api/internal/global/models"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"

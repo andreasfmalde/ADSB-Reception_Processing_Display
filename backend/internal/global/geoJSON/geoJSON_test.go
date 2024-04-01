@@ -4,11 +4,12 @@ import (
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/logger"
 	"adsb-api/internal/utility/testUtility"
-	"github.com/xeipuuv/gojsonschema"
 	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/xeipuuv/gojsonschema"
 )
 
 var geoJsonOverallSchema string
