@@ -1,12 +1,12 @@
 package main
 
 import (
-	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/handler/aircraftCurrentHandler"
 	"adsb-api/internal/handler/aircraftHistory"
 	"adsb-api/internal/handler/defaultHandler"
 	"adsb-api/internal/logger"
+	"adsb-api/internal/service"
 	"log"
 	"net/http"
 	"os"
@@ -19,22 +19,22 @@ func main() {
 	// Initialize environment variables
 	global.InitEnvironment()
 	// Initialize the database
-	adsbDB, err := db.InitDB()
+	restSvc, err := service.InitRestService()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
 	logger.Info.Println("successfully connected to database")
 
 	defer func() {
-		err := adsbDB.Close()
+		err := restSvc.DB.Close()
 		if err != nil {
 			logger.Error.Fatalf("error closing database: %q", err)
 		}
 	}()
 
 	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
-	http.HandleFunc(global.AircraftCurrentPath, aircraftCurrentHandler.CurrentAircraftHandler(adsbDB))
-	http.HandleFunc(global.AircraftHistoryPath, aircraftHistory.HistoryAircraftHandler(adsbDB))
+	http.HandleFunc(global.AircraftCurrentPath, aircraftCurrentHandler.CurrentAircraftHandler(restSvc))
+	http.HandleFunc(global.AircraftHistoryPath, aircraftHistory.HistoryAircraftHandler(restSvc))
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -1,8 +1,8 @@
 package geoJSON
 
 import (
-	"adsb-api/internal/db/models"
-	"adsb-api/internal/global"
+	errors2 "adsb-api/internal/global/errorMsg"
+	"adsb-api/internal/global/models"
 	"errors"
 )
 
@@ -84,7 +84,7 @@ func ConvertCurrentModelToGeoJson(aircraft []models.AircraftCurrentModel) (Featu
 
 func ConvertHistoryModelToGeoJson(aircraft []models.AircraftHistoryModel) (FeatureCollectionLineString, error) {
 	if len(aircraft) < 2 {
-		return FeatureCollectionLineString{}, errors.New(global.ErrorGeoJsonTooFewCoordinates)
+		return FeatureCollectionLineString{}, errors.New(errors2.ErrorGeoJsonTooFewCoordinates)
 	}
 
 	var coordinates [][]float32

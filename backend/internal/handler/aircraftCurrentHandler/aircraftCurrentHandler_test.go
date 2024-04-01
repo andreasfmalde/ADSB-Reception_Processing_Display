@@ -2,9 +2,10 @@ package aircraftCurrentHandler
 
 import (
 	"adsb-api/internal/db"
-	"adsb-api/internal/db/models"
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
+	"adsb-api/internal/global/models"
 	"adsb-api/internal/utility/testUtility"
 	"encoding/json"
 	"errors"
@@ -31,6 +32,8 @@ func TestInvalidRequests(t *testing.T) {
 	currentEndpoint := httptest.NewServer(CurrentAircraftHandler(mockDB)) // Use mockDB here
 	defer currentEndpoint.Close()
 
+	var endpoint = currentEndpoint.URL + global.AircraftCurrentPath
+
 	tests := []struct {
 		name, url, httpMethod, errorMsg string
 		statusCode, length              int
@@ -38,27 +41,41 @@ func TestInvalidRequests(t *testing.T) {
 	}{
 		{
 			name:       "Post request",
-			url:        currentEndpoint.URL + global.AircraftCurrentPath,
+			url:        endpoint,
 			httpMethod: http.MethodPost,
 			statusCode: http.StatusMethodNotAllowed,
-			errorMsg:   fmt.Sprintf(global.MethodNotSupported, http.MethodPost),
+			errorMsg:   fmt.Sprintf(errorMsg.MethodNotSupported, http.MethodPost),
 		},
 		{
 			name:       "Delete request",
-			url:        currentEndpoint.URL + global.AircraftCurrentPath,
+			url:        endpoint,
 			httpMethod: http.MethodDelete,
 			statusCode: http.StatusMethodNotAllowed,
-			errorMsg:   fmt.Sprintf(global.MethodNotSupported, http.MethodDelete),
+			errorMsg:   fmt.Sprintf(errorMsg.MethodNotSupported, http.MethodDelete),
 		},
 		{
 			name:       "Database returns nil",
-			url:        currentEndpoint.URL + global.AircraftCurrentPath,
+			url:        endpoint,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusInternalServerError,
 			setup: func(mockDB *db.MockDatabase) {
-				mockDB.EXPECT().GetAllCurrentAircraft().Return([]models.AircraftCurrentModel{}, errors.New("no new aircraft"))
+				mockDB.EXPECT().GetCurrentAircraft().Return([]models.AircraftCurrentModel{}, errors.New("no new aircraft"))
 			},
-			errorMsg: global.ErrorRetrievingCurrentAircraft,
+			errorMsg: errorMsg.ErrorRetrievingCurrentAircraft,
+		},
+		{
+			name:       "Get request with too long URL",
+			url:        endpoint + "endpoint/",
+			httpMethod: http.MethodGet,
+			statusCode: http.StatusBadRequest,
+			errorMsg:   errorMsg.ErrorTongURL,
+		},
+		{
+			name:       "Get request with invalid parameter",
+			url:        endpoint + "?param=123",
+			httpMethod: http.MethodGet,
+			statusCode: http.StatusBadRequest,
+			errorMsg:   errorMsg.ErrorInvalidQueryParams,
 		},
 	}
 
@@ -98,6 +115,8 @@ func TestValidRequests(t *testing.T) {
 	currentEndpoint := httptest.NewServer(CurrentAircraftHandler(mockDB)) // Use mockDB here
 	defer currentEndpoint.Close()
 
+	var endpoint = currentEndpoint.URL + global.AircraftCurrentPath
+
 	tests := []struct {
 		name, url, httpMethod string
 		statusCode            int
@@ -106,21 +125,21 @@ func TestValidRequests(t *testing.T) {
 	}{
 		{
 			name:       "Get request without parameters",
-			url:        currentEndpoint.URL + global.AircraftCurrentPath,
+			url:        endpoint,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
 			mockData:   testUtility.CreateMockAircraft(10),
 			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel) {
-				mockDB.EXPECT().GetAllCurrentAircraft().Return(mockData, nil)
+				mockDB.EXPECT().GetCurrentAircraft().Return(mockData, nil)
 			},
 		},
 		{
 			name:       "Get request with empty current_time_aircraft table",
-			url:        currentEndpoint.URL + global.AircraftCurrentPath,
+			url:        endpoint,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
 			setup: func(mockDB *db.MockDatabase, mockData []models.AircraftCurrentModel) {
-				mockDB.EXPECT().GetAllCurrentAircraft().Return([]models.AircraftCurrentModel{}, nil)
+				mockDB.EXPECT().GetCurrentAircraft().Return([]models.AircraftCurrentModel{}, nil)
 			},
 		},
 	}
@@ -151,7 +170,7 @@ func TestValidRequests(t *testing.T) {
 				t.Errorf("Test: %s. Error decoing response body: %s", tt.name, err.Error())
 			}
 
-			mockFeatureCollection, _ := geoJSON.ConvertCurrentModelToGeoJson(tt.mockData)
+			mockFeatureCollection, err := geoJSON.ConvertCurrentModelToGeoJson(tt.mockData)
 
 			assert.Equal(t, mockFeatureCollection, actual)
 		})
