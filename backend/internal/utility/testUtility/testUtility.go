@@ -1,7 +1,7 @@
 package testUtility
 
 import (
-	"adsb-api/internal/db/models"
+	"adsb-api/internal/global/models"
 	"strconv"
 	"time"
 )

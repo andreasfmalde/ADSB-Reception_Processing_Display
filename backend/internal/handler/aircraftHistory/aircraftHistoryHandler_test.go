@@ -2,20 +2,22 @@ package aircraftHistory
 
 import (
 	"adsb-api/internal/db"
-	"adsb-api/internal/db/models"
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
+	"adsb-api/internal/global/models"
 	"adsb-api/internal/utility/testUtility"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -43,14 +45,14 @@ func TestInvalidRequests(t *testing.T) {
 			httpMethod: http.MethodPost,
 			url:        endpoint + "?icao=ABC123",
 			statusCode: http.StatusMethodNotAllowed,
-			errorMsg:   fmt.Sprintf(global.MethodNotSupported, http.MethodPost),
+			errorMsg:   fmt.Sprintf(errorMsg.MethodNotSupported, http.MethodPost),
 		},
 		{
 			name:       "Delete request",
 			url:        endpoint + "?icao=ABC123",
 			httpMethod: http.MethodDelete,
 			statusCode: http.StatusMethodNotAllowed,
-			errorMsg:   fmt.Sprintf(global.MethodNotSupported, http.MethodDelete),
+			errorMsg:   fmt.Sprintf(errorMsg.MethodNotSupported, http.MethodDelete),
 		},
 		{
 			name:       "Database returns nil",
@@ -60,42 +62,42 @@ func TestInvalidRequests(t *testing.T) {
 			setup: func(mockDB *db.MockDatabase) {
 				mockDB.EXPECT().GetHistoryByIcao("ABC123").Return([]models.AircraftHistoryModel{}, errors.New("expected error"))
 			},
-			errorMsg: global.ErrorRetrievingAircraftWithIcao + "ABC123",
+			errorMsg: errorMsg.ErrorRetrievingAircraftWithIcao + "ABC123",
 		},
 		{
 			name:       "Get request with too long URL",
 			url:        endpoint + "endpoint/",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   global.ErrorTongURL,
+			errorMsg:   errorMsg.ErrorTongURL,
 		},
 		{
 			name:       "Get request with empty icao",
 			url:        endpoint + "?icao=",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   global.ErrorInvalidQueryParams + strings.Join(params, ", "),
+			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "),
 		},
 		{
 			name:       "Get request with invalid parameter",
 			url:        endpoint + "?param=123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   global.ErrorInvalidQueryParams + strings.Join(params, ", "),
+			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "),
 		},
 		{
 			name:       "Get request with too many parameters",
 			url:        endpoint + "?icao=ABC123&param=ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   global.ErrorInvalidQueryParams + strings.Join(params, ", "),
+			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "),
 		},
 		{
 			name:       "Get request without parameters",
 			url:        endpoint,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   global.ErrorInvalidQueryParams + strings.Join(params, ", "),
+			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "),
 		},
 	}
 

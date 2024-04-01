@@ -8,13 +8,13 @@ import (
 
 func InitEnvironment() {
 	_ = godotenv.Load("../.env")
-	User = os.Getenv("DB_USER")
-	Password = os.Getenv("DB_PASSWORD")
+	DbUser = os.Getenv("DB_USER")
+	DbPassword = os.Getenv("DB_PASSWORD")
 }
 
 func InitTestEnv() {
 	logger.InitLogger()
-	User = "test"
-	Password = "test"
+	DbUser = "test"
+	DbPassword = "test"
 	Dbname = "adsb_test_db"
 }

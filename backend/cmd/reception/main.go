@@ -1,9 +1,10 @@
 package main
 
 import (
-	"adsb-api/internal/db"
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/logger"
+	"adsb-api/internal/service"
 	"adsb-api/internal/utility/adsbhub"
 	"time"
 )
@@ -15,21 +16,21 @@ func main() {
 	// Initialize environment variables
 	global.InitEnvironment()
 	// Initialize the database
-	adsbDB, err := db.InitDB()
+	sbsSvc, err := service.InitSbsService()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
 	logger.Info.Println("successfully connected to database")
 
 	defer func() {
-		err := adsbDB.Close()
+		err := sbsSvc.DB.Close()
 		if err != nil {
-			logger.Error.Fatalf("error closing database: %q", err)
+			logger.Error.Fatalf(errorMsg.ErrorClosingDatabase, err)
 		}
 	}()
 
-	if err := adsbDB.CreateAdsbTables(); err != nil {
-		logger.Error.Fatalf("error creating tables for database: %q", err)
+	if err := sbsSvc.CreateAdsbTables(); err != nil {
+		logger.Error.Fatalf(errorMsg.ErrorCreatingDatabaseTables, err)
 	}
 
 	timer := time.Now()
@@ -40,19 +41,19 @@ func main() {
 			time.Sleep(global.WaitingTime * time.Second)
 			continue
 		}
-		err = adsbDB.BulkInsertCurrentTimeAircraftTable(aircraft)
+		err = sbsSvc.InsertNewAircraft(aircraft)
 		if err != nil {
-			logger.Error.Fatalf("could not insert new SBS data: %q", err)
+			logger.Error.Fatalf(errorMsg.ErrorInsertingNewSbsData, err)
 		}
 		logger.Info.Println("new SBS data inserted")
-		err = adsbDB.AddHistoryFromCurrent()
+		err = sbsSvc.UpdateHistory()
 		if err != nil {
 			logger.Error.Fatalf("could not add history data: %q", err)
 		}
 		logger.Info.Println("new history data inserted")
 		// Delete old rows every 2 minutes (120 seconds)
 		if diff := time.Since(timer).Seconds(); diff > 120 {
-			if e := adsbDB.DeleteOldCurrentAircraft(); e == nil {
+			if e := sbsSvc.Cleanup(); e == nil {
 				timer = time.Now()
 				logger.Info.Println("old SBS data deleted")
 			}
