@@ -12,7 +12,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	global.InitTestEnv()
+	global.InitTestEnvironment()
 	m.Run()
 }
 
@@ -128,7 +128,7 @@ func TestProcessSbsStream_ConnectionFailure(t *testing.T) {
 	assert.Nil(t, data)
 
 	// resets SbsSource const
-	global.InitTestEnv()
+	global.InitTestEnvironment()
 }
 
 func TestProcessSbsStream_ConnectionDrop(t *testing.T) {

@@ -11,10 +11,8 @@ import (
 
 // main method and starting point of the reception and processing part of the ADS-B API
 func main() {
-	// Initialize logger
-	logger.InitLogger()
 	// Initialize environment variables
-	global.InitEnvironment()
+	global.InitProdEnvironment()
 	// Initialize the database
 	sbsSvc, err := sbsService.InitSbsService()
 	if err != nil {

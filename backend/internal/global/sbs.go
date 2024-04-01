@@ -8,5 +8,5 @@ const (
 )
 
 var (
-	SbsSource = "data.adsbhub.org:5002"
+	SbsSource string
 )

@@ -13,7 +13,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	global.InitTestEnv()
+	global.InitTestEnvironment()
 	m.Run()
 }
 

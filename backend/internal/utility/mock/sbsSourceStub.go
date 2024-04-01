@@ -1,8 +1,10 @@
 package mock
 
 import (
+	"adsb-api/internal/global"
 	"adsb-api/internal/utility/logger"
 	"net"
+	"os"
 	"time"
 )
 
@@ -73,4 +75,19 @@ func (stub *StubImpl) SimulateConnectionDrop(delay time.Duration) {
 			}
 		}
 	}()
+}
+
+func StartStubServer() {
+	mockData, err := os.ReadFile("./resources/mock/mockSbsDataLen5.txt")
+	if err != nil {
+		logger.Error.Printf("error reading file: %q", err)
+	}
+
+	stub := InitStub(global.SbsSource, mockData)
+	err = stub.StartServer()
+	if err != nil {
+		logger.Error.Fatalf("error starting stub server: %q", err)
+		return
+	}
+
 }
