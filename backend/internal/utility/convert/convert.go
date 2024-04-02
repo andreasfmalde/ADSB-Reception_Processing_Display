@@ -48,7 +48,7 @@ func HistoryModelToGeoJson(aircraft []models.AircraftHistoryModel) (geoJSON.Feat
 
 	var coordinates [][]float32
 	for _, ac := range aircraft {
-		point := []float32{ac.Latitude, ac.Longitude}
+		point := []float32{ac.Longitude, ac.Latitude}
 		coordinates = append(coordinates, point)
 	}
 

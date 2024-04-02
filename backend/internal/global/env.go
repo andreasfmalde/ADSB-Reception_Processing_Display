@@ -2,8 +2,9 @@ package global
 
 import (
 	"adsb-api/internal/utility/logger"
-	"github.com/joho/godotenv"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 func InitProdEnvironment() {

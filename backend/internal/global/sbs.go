@@ -4,7 +4,7 @@ const (
 	WaitingTime    = 4
 	CleaningPeriod = 120
 	UpdatingPeriod = 10
-	MaxDaysHistory = 7
+	MaxDaysHistory = 1
 )
 
 var (
