@@ -31,7 +31,7 @@ func CurrentModelToGeoJson(aircraft []models.AircraftCurrentModel) (geoJSON.Feat
 		}
 		feature.Properties = properties
 		feature.Geometry.Type = "Point"
-		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, ac.Longitude, ac.Latitude)
+		feature.Geometry.Coordinates = append(feature.Geometry.Coordinates, ac.Latitude, ac.Longitude)
 		features = append(features, feature)
 	}
 
