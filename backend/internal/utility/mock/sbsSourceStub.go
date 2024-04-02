@@ -5,7 +5,6 @@ import (
 	"adsb-api/internal/utility/logger"
 	"net"
 	"os"
-	"time"
 )
 
 type TcpStub interface {
@@ -63,18 +62,6 @@ func (stub *StubImpl) StartServer() (err error) {
 
 func (stub *StubImpl) Close() error {
 	return stub.server.Close()
-}
-
-func (stub *StubImpl) SimulateConnectionDrop(delay time.Duration) {
-	go func() {
-		time.Sleep(delay)
-		if stub.server != nil {
-			err := stub.server.Close()
-			if err != nil {
-				logger.Error.Printf("error closing connection: %v", err)
-			}
-		}
-	}()
 }
 
 func StartStubServer() {
