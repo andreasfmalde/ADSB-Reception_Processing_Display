@@ -3,20 +3,17 @@ package main
 import (
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/logger"
-	"adsb-api/internal/service"
-	"adsb-api/internal/utility/adsbhub"
+	"adsb-api/internal/service/sbsService"
+	"adsb-api/internal/utility/logger"
 	"time"
 )
 
 // main method and starting point of the reception and processing part of the ADS-B API
 func main() {
-	// Initialize logger
-	logger.InitLogger()
 	// Initialize environment variables
-	global.InitEnvironment()
+	global.InitProdEnvironment()
 	// Initialize the database
-	sbsSvc, err := service.InitSbsService()
+	sbsSvc, err := sbsService.InitSbsService()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
@@ -25,39 +22,40 @@ func main() {
 	defer func() {
 		err := sbsSvc.DB.Close()
 		if err != nil {
-			logger.Error.Fatalf(errorMsg.ErrorClosingDatabase, err)
+			logger.Error.Fatalf(errorMsg.ErrorClosingDatabase+": %q", err)
 		}
 	}()
 
 	if err := sbsSvc.CreateAdsbTables(); err != nil {
-		logger.Error.Fatalf(errorMsg.ErrorCreatingDatabaseTables, err)
+		logger.Error.Fatalf(errorMsg.ErrorCreatingDatabaseTables+": %q", err)
 	}
 
 	timer := time.Now()
 	for {
-		aircraft, err := adsbhub.ProcessSBSstream()
+		aircraft, err := sbsSvc.ProcessSbsData()
 		if err != nil {
-			logger.Info.Println(err.Error() + " ... will try again in 4 seconds")
+			logger.Error.Printf(errorMsg.ErrorCouldNotConnectToTcpStream)
+			time.Sleep(global.WaitingTime * time.Second)
+			continue
+		} else if len(aircraft) == 0 {
+			logger.Warning.Printf("recieved no data from SBS data source, will try again in: %d seconds", global.WaitingTime)
 			time.Sleep(global.WaitingTime * time.Second)
 			continue
 		}
-		err = sbsSvc.InsertNewAircraft(aircraft)
+
+		err = sbsSvc.InsertNewSbsData(aircraft)
 		if err != nil {
-			logger.Error.Fatalf(errorMsg.ErrorInsertingNewSbsData, err)
+			logger.Error.Fatalf(errorMsg.ErrorInsertingNewSbsData+": %q", err)
 		}
 		logger.Info.Println("new SBS data inserted")
-		err = sbsSvc.UpdateHistory()
-		if err != nil {
-			logger.Error.Fatalf("could not add history data: %q", err)
-		}
-		logger.Info.Println("new history data inserted")
-		// Delete old rows every 2 minutes (120 seconds)
-		if diff := time.Since(timer).Seconds(); diff > 120 {
-			if e := sbsSvc.Cleanup(); e == nil {
+
+		if diff := time.Since(timer).Seconds(); diff > global.CleaningPeriod {
+			if err = sbsSvc.Cleanup(); err == nil {
 				timer = time.Now()
 				logger.Info.Println("old SBS data deleted")
 			}
 		}
-		time.Sleep(global.WaitingTime * time.Second)
+
+		time.Sleep(global.UpdatingPeriod * time.Second)
 	}
 }
