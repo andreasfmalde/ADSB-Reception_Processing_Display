@@ -2,7 +2,7 @@ package apiUtility
 
 import (
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/logger"
+	"adsb-api/internal/utility/logger"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -19,7 +19,7 @@ func EncodeJsonData(w http.ResponseWriter, data interface{}) {
 	err := encoder.Encode(data)
 	if err != nil {
 		http.Error(w, errorMsg.ErrorEncodingJsonData, http.StatusInternalServerError)
-		logger.Error.Printf("Failed to encode data: %q", err)
+		logger.Error.Printf(errorMsg.ErrorEncodingJsonData+": %q", err)
 	}
 }
 

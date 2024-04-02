@@ -5,8 +5,8 @@ import (
 	"adsb-api/internal/handler/aircraftCurrentHandler"
 	"adsb-api/internal/handler/aircraftHistory"
 	"adsb-api/internal/handler/defaultHandler"
-	"adsb-api/internal/logger"
-	"adsb-api/internal/service"
+	"adsb-api/internal/service/restService"
+	"adsb-api/internal/utility/logger"
 	"log"
 	"net/http"
 	"os"
@@ -14,12 +14,10 @@ import (
 
 // main method for the RESTFUL API
 func main() {
-	// Initialize logger
-	logger.InitLogger()
 	// Initialize environment variables
-	global.InitEnvironment()
+	global.InitProdEnvironment()
 	// Initialize the database
-	restSvc, err := service.InitRestService()
+	restSvc, err := restService.InitRestService()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
