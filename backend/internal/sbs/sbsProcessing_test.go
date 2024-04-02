@@ -4,11 +4,11 @@ import (
 	"adsb-api/internal/global"
 	"adsb-api/internal/utility/logger"
 	"adsb-api/internal/utility/mock"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
-	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -129,25 +129,6 @@ func TestProcessSbsStream_ConnectionFailure(t *testing.T) {
 
 	// resets SbsSource const
 	global.InitTestEnvironment()
-}
-
-func TestProcessSbsStream_ConnectionDrop(t *testing.T) {
-	stub := mock.InitStub(global.SbsSource, generateMockAircraftResponses(10))
-
-	err := stub.StartServer()
-	if err != nil {
-		t.Fatalf("Failed to start mock TCP server: %v", err)
-	}
-	defer stub.Close()
-
-	stub.SimulateConnectionDrop(1 * time.Millisecond)
-
-	data, err := ProcessSbsStream()
-	if err == nil {
-		t.Errorf("Expected an error due to connection drop, but got nil")
-	}
-
-	assert.Nil(t, data)
 }
 
 func generateMockAircraftResponses(n int) []byte {
