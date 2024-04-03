@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 		logger.Error.Fatalf("could not change working directory: %q", err)
 	}
 
-	absPath, err := filepath.Abs("./resources/schemas/geoJson.json")
+	absPath, err := filepath.Abs("./assets/schemas/geoJson.json")
 	if err != nil {
 		logger.Error.Fatalf("could not get absolute path: %q", err)
 	}
