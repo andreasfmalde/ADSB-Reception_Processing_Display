@@ -12,10 +12,12 @@ services:
       - '1234:5432'
     networks:
       - fullstack
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 3s
-      timeout: 10s
+      timeout: 5s
       retries: 5
 
   app:
@@ -30,6 +32,11 @@ services:
         condition: service_healthy
     networks:
       - fullstack
+    volumes:
+      - .env:/app/.env
+
+volumes:
+  pg_data:
 
 networks:
   fullstack:
