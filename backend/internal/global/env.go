@@ -9,10 +9,14 @@ import (
 
 func InitProdEnvironment() {
 	logger.InitLogger()
-	_ = godotenv.Load("../.env")
+	err := godotenv.Load(".env")
+	if err != nil {
+		logger.Error.Printf(err.Error())
+	}
 	DbUser = os.Getenv("DB_USER")
 	DbPassword = os.Getenv("DB_PASSWORD")
 	SbsSource = os.Getenv("SBS_SOURCE")
+	Host = os.Getenv("DB_HOST")
 }
 
 func InitTestEnvironment() {

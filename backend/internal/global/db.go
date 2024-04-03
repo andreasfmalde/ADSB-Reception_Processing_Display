@@ -8,7 +8,7 @@ var (
 )
 
 // Database constants
-const (
+var (
 	Host = "localhost"
 	Port = 5432
 )
