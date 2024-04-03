@@ -79,7 +79,7 @@ func (ctx *Context) Rollback() error {
 // InitDB initializes the PostgresSQL database and returns the connection pointer.
 func InitDB() (*Context, error) {
 	dbLogin := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
-		global.Host, global.Port, global.DbUser, global.DbPassword, global.Dbname)
+		global.DbHost, global.DbPort, global.DbUser, global.DbPassword, global.DbName)
 
 	dbConn, err := sql.Open("postgres", dbLogin)
 	if err = dbConn.Ping(); err != nil {
