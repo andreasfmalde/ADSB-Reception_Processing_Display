@@ -244,3 +244,29 @@ func (ctx *Context) DeleteOldHistory(days int) error {
 	_, err := ctx.Exec(query, days)
 	return err
 }
+
+func (ctx *Context) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) ([]models.AircraftHistoryModel, error) {
+	query := `SELECT * FROM aircraft_history 
+         		 WHERE icao = $1 AND timestamp > (NOW() - ($2 * INTERVAL '1 hour')) 
+         		 ORDER BY timestamp DESC;`
+
+	rows, err := ctx.Query(query, search, hour)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var aircraft []models.AircraftHistoryModel
+
+	for rows.Next() {
+		var ac models.AircraftHistoryModel
+		err := rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude, &ac.Timestamp)
+		if err != nil {
+			return nil, err
+		}
+
+		aircraft = append(aircraft, ac)
+	}
+
+	return aircraft, nil
+}

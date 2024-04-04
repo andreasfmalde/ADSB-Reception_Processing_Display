@@ -498,3 +498,72 @@ func TestAdsbDB_TestRollback(t *testing.T) {
 		t.Fatalf("Data was inserted")
 	}
 }
+
+func TestContext_SelectAllColumnHistoryByIcaoFilterByTimestamp(t *testing.T) {
+	ctx := setupTestDB()
+	defer teardownTestDB(ctx)
+
+	var nAircraft = 10
+	var icao = "TEST"
+
+	var mockAircraft []models.AircraftCurrentModel
+
+	// creates TEST aircraft with an hour between each instance
+	for i := 0; i < nAircraft; i++ {
+		ac := testUtility.CreateMockAircraftWithTimestamp("TEST", time.Now().Add(-time.Duration(i)*time.Hour).Format(time.DateTime))
+		mockAircraft = append(mockAircraft, ac)
+	}
+
+	for _, ac := range mockAircraft {
+		_, err := ctx.db.Exec("INSERT INTO aircraft_history VALUES ($1, $2, $3, $4)",
+			ac.Icao, ac.Latitude, ac.Longitude, ac.Timestamp)
+		if err != nil {
+			t.Fatalf("Error inserting data: %q", err)
+		}
+	}
+
+	// Selects half of the rows
+	aircraft, err := ctx.SelectAllColumnHistoryByIcaoFilterByTimestamp(icao, nAircraft/2)
+	if err != nil {
+		t.Fatalf("error retriving history data: %q", err.Error())
+	}
+
+	assert.Equal(t, nAircraft/2, len(aircraft))
+	for i, ac := range aircraft {
+		assert.Equal(t, mockAircraft[i].Icao, ac.Icao)
+		assert.Equal(t, mockAircraft[i].Latitude, ac.Latitude)
+		assert.Equal(t, mockAircraft[i].Longitude, ac.Longitude)
+	}
+}
+
+func TestContext_SelectAllColumnHistoryByIcaoFilterByTimestamp_NoHistory(t *testing.T) {
+	ctx := setupTestDB()
+	defer teardownTestDB(ctx)
+
+	var nAircraft = 10
+	var icao = "TEST"
+
+	var mockAircraft []models.AircraftCurrentModel
+
+	// creates TEST aircraft with an hour between each instance
+	for i := 0; i < nAircraft; i++ {
+		ac := testUtility.CreateMockAircraftWithTimestamp("TEST", time.Now().Add(-time.Duration(i)*time.Hour).Format(time.DateTime))
+		mockAircraft = append(mockAircraft, ac)
+	}
+
+	for _, ac := range mockAircraft {
+		_, err := ctx.db.Exec("INSERT INTO aircraft_history VALUES ($1, $2, $3, $4)",
+			ac.Icao, ac.Latitude, ac.Longitude, ac.Timestamp)
+		if err != nil {
+			t.Fatalf("Error inserting data: %q", err)
+		}
+	}
+
+	// Selects half of the rows
+	aircraft, err := ctx.SelectAllColumnHistoryByIcaoFilterByTimestamp(icao, 0)
+	if err != nil {
+		t.Fatalf("error retriving history data: %q", err.Error())
+	}
+
+	assert.Equal(t, 0, len(aircraft))
+}
