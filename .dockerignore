@@ -1,0 +1,7 @@
+.idea
+*.out
+backend/.env
+node_modules
+*_test.go
+/backend/internal/utility/mock
+/backend/resources/
