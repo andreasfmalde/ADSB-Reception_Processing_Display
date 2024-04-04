@@ -10,7 +10,7 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
     ports:
-      - '1234:${DB_PORT}'
+      - '1234:5432'
     volumes:
       - ./pg_data:/var/lib/postgresql/data
     networks:
@@ -27,7 +27,7 @@ services:
     build: ./backend/
     environment:
       - DB_HOST=postgres_database
-      - DB_PORT=${DB_PORT}
+      - DB_PORT=5432
     restart: 'unless-stopped'
     ports:
       - '8080:8080'
