@@ -10,7 +10,7 @@ import (
 
 func InitProdEnvironment() {
 	logger.InitLogger()
-	err := godotenv.Load(".env")
+	err := godotenv.Load("./.env")
 	if err != nil {
 		logger.Error.Printf(err.Error())
 	}
