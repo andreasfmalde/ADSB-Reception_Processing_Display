@@ -1,9 +1,7 @@
-FROM golang:alpine as builder
+FROM golang:latest
 
 LABEL maintainer="fredsu@stud.ntnu.no"
 LABEL deployedBy="Fredrik Sundt-Hansen"
-
-RUN apk update && apk add --no-cache git
 
 RUN mkdir /app
 WORKDIR /app
