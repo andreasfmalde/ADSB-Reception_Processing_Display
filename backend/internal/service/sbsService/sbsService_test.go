@@ -43,12 +43,11 @@ func TestSbsServiceImpl_CreateAdsbTables(t *testing.T) {
 
 	svc := &SbsImpl{DB: mockDB}
 
-	mockDB.EXPECT().BeginTx().Return(nil)
 	mockDB.EXPECT().CreateAircraftCurrentTable().Return(nil)
-	mockDB.EXPECT().CreateAircraftCurrentTimestampIndex().Return(nil)
-	mockDB.EXPECT().Commit().Return(nil)
+	mockDB.EXPECT().Begin().Return(nil)
 	mockDB.EXPECT().CreateAircraftHistoryTable().Return(nil)
-
+	mockDB.EXPECT().CreateAircraftHistoryTimestampIndex().Return(nil)
+	mockDB.EXPECT().Commit().Return(nil)
 	err := svc.CreateAdsbTables()
 
 	assert.Nil(t, err)
@@ -64,8 +63,10 @@ func TestSbsServiceImpl_CreateAdsbTables_WithRollback(t *testing.T) {
 
 	var errorMsg = "mocking errorMsg creating table, should rollback transaction"
 
-	mockDB.EXPECT().BeginTx().Return(nil)
-	mockDB.EXPECT().CreateAircraftCurrentTable().Return(errors.New(errorMsg))
+	mockDB.EXPECT().CreateAircraftCurrentTable().Return(nil)
+	mockDB.EXPECT().Begin().Return(nil)
+	mockDB.EXPECT().CreateAircraftHistoryTable().Return(nil)
+	mockDB.EXPECT().CreateAircraftHistoryTimestampIndex().Return(errors.New(errorMsg))
 	mockDB.EXPECT().Rollback().Return(nil)
 
 	err := svc.CreateAdsbTables()
@@ -84,7 +85,7 @@ func TestSbsServiceImpl_InsertNewSbsData(t *testing.T) {
 	mockData := testUtility.CreateMockAircraft(100)
 
 	mockDB.EXPECT().InsertHistoryFromCurrent().Return(nil)
-	mockDB.EXPECT().BeginTx().Return(nil)
+	mockDB.EXPECT().Begin().Return(nil)
 	mockDB.EXPECT().DropAircraftCurrentTable().Return(nil)
 	mockDB.EXPECT().CreateAircraftCurrentTable().Return(nil)
 	mockDB.EXPECT().BulkInsertAircraftCurrent(mockData).Return(nil)
@@ -108,7 +109,7 @@ func TestSbsServiceImpl_InsertNewSbsData_WithRollback(t *testing.T) {
 	var errorMsg = "mocking errorMsg creating table, should rollback transaction"
 
 	mockDB.EXPECT().InsertHistoryFromCurrent().Return(nil)
-	mockDB.EXPECT().BeginTx().Return(nil)
+	mockDB.EXPECT().Begin().Return(nil)
 	mockDB.EXPECT().DropAircraftCurrentTable().Return(errors.New(errorMsg))
 	mockDB.EXPECT().Rollback().Return(nil)
 

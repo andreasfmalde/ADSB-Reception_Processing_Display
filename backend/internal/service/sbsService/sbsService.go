@@ -14,7 +14,7 @@ type SbsService interface {
 }
 
 type SbsImpl struct {
-	DB db.PgDatabase
+	DB db.Database
 }
 
 // InitSbsService initializes SbsImpl struct and database connection
@@ -28,33 +28,32 @@ func InitSbsService() (*SbsImpl, error) {
 
 // CreateAdsbTables creates all tables for the database schema
 func (svc *SbsImpl) CreateAdsbTables() error {
-	err := svc.DB.Begin()
+	err := svc.DB.CreateAircraftCurrentTable()
 	if err != nil {
 		return err
 	}
 
+	err = svc.DB.Begin()
+	if err != nil {
+		return err
+	}
 	defer func() {
 		if err != nil {
 			svc.DB.Rollback()
 		}
 	}()
 
-	err = svc.DB.CreateAircraftCurrentTable()
+	err = svc.DB.CreateAircraftHistoryTable()
 	if err != nil {
 		return err
 	}
 
-	err = svc.DB.CreateAircraftCurrentTimestampIndex()
+	err = svc.DB.CreateAircraftHistoryTimestampIndex()
 	if err != nil {
 		return err
 	}
 
 	err = svc.DB.Commit()
-	if err != nil {
-		return err
-	}
-
-	err = svc.DB.CreateAircraftHistoryTable()
 	if err != nil {
 		return err
 	}

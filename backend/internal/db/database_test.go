@@ -57,7 +57,7 @@ func teardownTestDB(ctx *Context, t *testing.T) {
 func TestInitCloseDB(t *testing.T) {
 	ctx, err := InitDB()
 	if err != nil {
-		t.Fatalf("PgDatabase connection failed: %q", err)
+		t.Fatalf("Database connection failed: %q", err)
 	}
 	defer func(db *Context) {
 		err := db.Close()
@@ -68,7 +68,7 @@ func TestInitCloseDB(t *testing.T) {
 
 	err = ctx.Close()
 	if err != nil {
-		t.Errorf("PgDatabase connection failed: %q", err)
+		t.Errorf("Database connection failed: %q", err)
 	}
 }
 
@@ -102,14 +102,28 @@ func TestAdsbDB_CreateAdsbTables(t *testing.T) {
 		t.Fatalf("error creating current_time_aircraft table: %q", err)
 	}
 
-	err = ctx.CreateAircraftCurrentTimestampIndex()
+	err = ctx.CreateAircraftHistoryTable()
+	if err != nil {
+		t.Fatalf("error creating history_aircraft table: %q", err)
+	}
+
+	err = ctx.CreateAircraftHistoryTimestampIndex()
 	if err != nil {
 		t.Fatalf("error creating aircraft_current timestamp index: %q", err)
 	}
 
-	err = ctx.CreateAircraftHistoryTable()
+	var exists bool
+
+	query := `SELECT EXISTS (
+		SELECT 1
+		FROM   pg_indexes 
+		WHERE  tablename = $1
+		AND    indexname = $2
+	);`
+
+	err = ctx.db.QueryRow(query, "aircraft_history", "timestamp_index").Scan(&exists)
 	if err != nil {
-		t.Fatalf("error creating history_aircraft table: %q", err)
+		t.Fatalf("timestmap_index was not created")
 	}
 
 	expectedCurrentTimeAircraftColumns := map[string]string{

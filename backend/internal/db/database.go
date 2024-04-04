@@ -10,9 +10,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type PgDatabase interface {
+type Database interface {
 	CreateAircraftCurrentTable() error
-	CreateAircraftCurrentTimestampIndex() error
+	CreateAircraftHistoryTimestampIndex() error
 	DropAircraftCurrentTable() error
 	BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentModel) error
 	SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error)
@@ -113,8 +113,9 @@ func (ctx *Context) CreateAircraftCurrentTable() error {
 	return err
 }
 
-func (ctx *Context) CreateAircraftCurrentTimestampIndex() error {
-	var query = `CREATE INDEX IF NOT EXISTS timestamp_index ON aircraft_current(timestamp)`
+// CreateAircraftHistoryTimestampIndex creates an index called timestamp_index on aircraft_history timestamp column
+func (ctx *Context) CreateAircraftHistoryTimestampIndex() error {
+	query := `CREATE INDEX IF NOT EXISTS timestamp_index ON aircraft_history(timestamp)`
 
 	_, err := ctx.Exec(query)
 	return err
