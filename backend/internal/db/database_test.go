@@ -3,10 +3,10 @@ package db
 import (
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/models"
-	"adsb-api/internal/utility/logger"
 	"adsb-api/internal/utility/testUtility"
+	"database/sql"
 	"fmt"
-	reflect "reflect"
+	"reflect"
 	"testing"
 	"time"
 
@@ -18,39 +18,39 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func setupTestDB() *Context {
+func setupTestDB(t *testing.T) *Context {
 	ctx, err := InitDB()
 	if err != nil {
-		logger.Error.Fatalf("Failed to initialize service: %v", err)
+		t.Fatalf("Failed to initialize service: %v", err)
 	}
 
 	err = ctx.CreateAircraftCurrentTable()
 	if err != nil {
-		logger.Error.Fatalf("error creating current_time_aircraft table: %q", err)
+		t.Fatalf("error creating current_time_aircraft table: %q", err)
 	}
 
 	err = ctx.CreateAircraftHistoryTable()
 	if err != nil {
-		logger.Error.Fatalf("error creating history_aircraft table: %q", err)
+		t.Fatalf("error creating history_aircraft table: %q", err)
 	}
 
 	return ctx
 }
 
-func teardownTestDB(ctx *Context) {
+func teardownTestDB(ctx *Context, t *testing.T) {
 	err := ctx.DropAircraftCurrentTable()
 	if err != nil {
-		logger.Error.Fatalf("error dropping aircraft_current: %q", err)
+		t.Fatalf("error dropping aircraft_current: %q", err)
 	}
 
 	_, err = ctx.db.Exec("DROP TABLE IF EXISTS aircraft_history CASCADE")
 	if err != nil {
-		logger.Error.Fatalf("error droppint current_time_aircraft: %q", err.Error())
+		t.Fatalf("error droppint current_time_aircraft: %q", err.Error())
 	}
 
 	err = ctx.Close()
 	if err != nil {
-		logger.Error.Fatalf("error closing database: %q", err)
+		t.Fatalf("error closing database: %q", err)
 	}
 }
 
@@ -84,8 +84,8 @@ func Test_InitDB_InvalidUsername(t *testing.T) {
 }
 
 func TestAdsbDB_CreateAdsbTables(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	err := ctx.DropAircraftCurrentTable()
 	if err != nil {
@@ -94,7 +94,7 @@ func TestAdsbDB_CreateAdsbTables(t *testing.T) {
 
 	_, err = ctx.db.Exec("DROP TABLE IF EXISTS aircraft_history CASCADE")
 	if err != nil {
-		logger.Error.Fatalf("error droppint current_time_aircraft: %q", err.Error())
+		t.Fatalf("error droppint current_time_aircraft: %q", err.Error())
 	}
 
 	err = ctx.CreateAircraftCurrentTable()
@@ -140,7 +140,12 @@ func checkTableColumns(t *testing.T, ctx *Context, tableName string, expectedCol
 	if err != nil {
 		t.Fatalf("error executing column info query: %q", err.Error())
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			t.Fatalf("error closing rows")
+		}
+	}(rows)
 
 	actualColumns := make(map[string]string)
 	for rows.Next() {
@@ -161,8 +166,8 @@ func checkTableColumns(t *testing.T, ctx *Context, tableName string, expectedCol
 }
 
 func TestAdsbDB_BulkInsertAircraftCurrent(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	var nAircraft = 100
 
@@ -183,8 +188,8 @@ func TestAdsbDB_BulkInsertAircraftCurrent(t *testing.T) {
 }
 
 func TestAdsbDB_BulkInsertAircraftCurrent_MaxPostgresParameters(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	var maxAircraft = 65535/9 + 1
 
@@ -205,8 +210,8 @@ func TestAdsbDB_BulkInsertAircraftCurrent_MaxPostgresParameters(t *testing.T) {
 }
 
 func TestAdsbDB_BulkInsertAircraftCurrent_InvalidType(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	// Create an aircraft with a null icao value
 	aircraft := []models.AircraftCurrentModel{
@@ -231,8 +236,8 @@ func TestAdsbDB_BulkInsertAircraftCurrent_InvalidType(t *testing.T) {
 }
 
 func TestAdsbDB_InsertHistoryFromCurrent(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	var nAircraft = 100
 
@@ -258,8 +263,8 @@ func TestAdsbDB_InsertHistoryFromCurrent(t *testing.T) {
 }
 
 func TestAdsbDB_SelectAllColumnsAircraftCurrent(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	var nAircraft = 100
 	mockAircraft := testUtility.CreateMockAircraft(nAircraft)
@@ -279,8 +284,8 @@ func TestAdsbDB_SelectAllColumnsAircraftCurrent(t *testing.T) {
 }
 
 func TestAdsbDB_SelectAllColumnHistoryByIcao(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	var nAircraft = 100
 	var icao = "TEST"
@@ -310,8 +315,8 @@ func TestAdsbDB_SelectAllColumnHistoryByIcao(t *testing.T) {
 }
 
 func TestAdsbDB_SelectAllColumnHistoryByIcao_InvalidIcao(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	err := ctx.InsertHistoryFromCurrent()
 	if err != nil {
@@ -327,8 +332,8 @@ func TestAdsbDB_SelectAllColumnHistoryByIcao_InvalidIcao(t *testing.T) {
 }
 
 func TestAdsbDB_DeleteOldHistory(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	ac1 := testUtility.CreateMockAircraftWithTimestamp("TEST1",
 		time.Now().Add(-(global.MaxDaysHistory+1)*24*time.Hour).Format(time.DateTime))
@@ -389,8 +394,8 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 }
 
 func TestAdsbDB_TestBegin(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	assert.Nil(t, ctx.tx)
 
@@ -401,14 +406,14 @@ func TestAdsbDB_TestBegin(t *testing.T) {
 
 	assert.NotNil(t, ctx.tx)
 
-	// sets tx to nil so it does not affect any other test methods
+	// sets tx to nil, so it does not affect any other test methods
 	ctx.tx = nil
 	assert.Nil(t, ctx.tx)
 }
 
 func TestAdsbDB_TestCommit(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	ac := testUtility.CreateMockAircraftWithTimestamp("TEST",
 		time.Now().Format(time.DateTime))
@@ -454,8 +459,8 @@ func TestAdsbDB_TestCommit(t *testing.T) {
 }
 
 func TestAdsbDB_TestRollback(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	ac := testUtility.CreateMockAircraftWithTimestamp("TEST",
 		time.Now().Format(time.DateTime))
@@ -500,8 +505,8 @@ func TestAdsbDB_TestRollback(t *testing.T) {
 }
 
 func TestContext_SelectAllColumnHistoryByIcaoFilterByTimestamp(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	var nAircraft = 10
 	var icao = "TEST"
@@ -537,8 +542,8 @@ func TestContext_SelectAllColumnHistoryByIcaoFilterByTimestamp(t *testing.T) {
 }
 
 func TestContext_SelectAllColumnHistoryByIcaoFilterByTimestamp_NoHistory(t *testing.T) {
-	ctx := setupTestDB()
-	defer teardownTestDB(ctx)
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
 
 	var nAircraft = 10
 	var icao = "TEST"
