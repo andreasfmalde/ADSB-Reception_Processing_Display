@@ -3,23 +3,26 @@ services:
   postgres_database:
     image: postgres:latest
     container_name: postgres_container
+    env_file:
+      - ./backend/.env
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
-      - DATABASE_HOST=${DB_HOST_DOCKER}
+      - DATABASE_HOST=${DB_HOST}
     ports:
       - '1234:5432'
     volumes:
       - ./pg_data:/var/lib/postgresql/data
     networks:
-      - backend
+      - fullstack
 
   backend:
     container_name: backend_container
     build: ./backend/
     environment:
       - DB_HOST=postgres_database
+      - DB_PORT=5432
     restart: 'unless-stopped'
     ports:
       - "8080:8080"
@@ -28,8 +31,7 @@ services:
     volumes:
       - ./backend/.env:/app/.env
     networks:
-      - backend
-      - frontend
+      - fullstack
 
   frontend:
     container_name: frontend_container
@@ -40,11 +42,11 @@ services:
     depends_on:
       - backend
     networks:
-      - frontend
+      - fullstack
 
 volumes:
   pg_data:
 
 networks:
-  backend:
-  frontend:
+  fullstack:
+    driver: bridge
