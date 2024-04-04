@@ -10,10 +10,10 @@ services:
       - DATABASE_HOST=${DB_HOST_DOCKER}
     ports:
       - '1234:5432'
-    networks:
-      - fullstack
     volumes:
       - ./pg_data:/var/lib/postgresql/data
+    networks:
+      - backend
 
   backend:
     container_name: backend_container
@@ -25,27 +25,26 @@ services:
       - "8080:8080"
     depends_on:
       - postgres_database
-    networks:
-      - fullstack
     volumes:
       - ./backend/.env:/app/.env
+    networks:
+      - backend
+      - frontend
 
   frontend:
     container_name: frontend_container
     build: ./frontend/
-    volumes:
-      - ./frontend/.env:/app/.env:ro
     restart: 'unless-stopped'
     ports:
       - '80:3000'
     depends_on:
-      - postgres_database
+      - backend
     networks:
-      - fullstack
+      - frontend
 
 volumes:
   pg_data:
 
 networks:
-  fullstack:
-    driver: bridge
+  backend:
+  frontend:

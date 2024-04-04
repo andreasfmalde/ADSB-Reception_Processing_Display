@@ -17,7 +17,7 @@ func main() {
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
-	logger.Info.Println("successfully connected to database")
+	logger.Info.Println("Reception API successfully connected to database")
 
 	defer func() {
 		err := sbsSvc.DB.Close()
