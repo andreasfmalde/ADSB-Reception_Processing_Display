@@ -57,7 +57,7 @@ func teardownTestDB(ctx *Context, t *testing.T) {
 func TestInitCloseDB(t *testing.T) {
 	ctx, err := InitDB()
 	if err != nil {
-		t.Fatalf("Database connection failed: %q", err)
+		t.Fatalf("PgDatabase connection failed: %q", err)
 	}
 	defer func(db *Context) {
 		err := db.Close()
@@ -68,7 +68,7 @@ func TestInitCloseDB(t *testing.T) {
 
 	err = ctx.Close()
 	if err != nil {
-		t.Errorf("Database connection failed: %q", err)
+		t.Errorf("PgDatabase connection failed: %q", err)
 	}
 }
 

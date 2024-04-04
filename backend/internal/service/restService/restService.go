@@ -11,7 +11,7 @@ type RestService interface {
 }
 
 type RestImpl struct {
-	DB db.Database
+	DB db.PgDatabase
 }
 
 // InitRestService initializes RestImpl struct and database connection

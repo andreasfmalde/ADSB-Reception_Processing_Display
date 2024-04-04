@@ -14,7 +14,7 @@ type SbsService interface {
 }
 
 type SbsImpl struct {
-	DB db.Database
+	DB db.PgDatabase
 }
 
 // InitSbsService initializes SbsImpl struct and database connection

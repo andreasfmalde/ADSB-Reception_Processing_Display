@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type Database interface {
+type PgDatabase interface {
 	CreateAircraftCurrentTable() error
 	CreateAircraftCurrentTimestampIndex() error
 	DropAircraftCurrentTable() error
@@ -49,6 +49,7 @@ func (ctx *Context) Query(query string, args ...interface{}) (*sql.Rows, error) 
 	return ctx.db.Query(query, args...)
 }
 
+// Begin begins Context transaction
 func (ctx *Context) Begin() error {
 	tx, err := ctx.db.Begin()
 	if err != nil {
@@ -58,6 +59,7 @@ func (ctx *Context) Begin() error {
 	return nil
 }
 
+// Commit commits Context transaction
 func (ctx *Context) Commit() error {
 	err := ctx.tx.Commit()
 	if err != nil {
@@ -67,6 +69,7 @@ func (ctx *Context) Commit() error {
 	return nil
 }
 
+// Rollback rollbacks Context transaction
 func (ctx *Context) Rollback() error {
 	err := ctx.tx.Rollback()
 	if err != nil {
@@ -88,6 +91,7 @@ func InitDB() (*Context, error) {
 	return &Context{db: dbConn}, err
 }
 
+// Close closes Context db connection
 func (ctx *Context) Close() error {
 	return ctx.db.Close()
 }
@@ -129,6 +133,7 @@ func (ctx *Context) CreateAircraftHistoryTable() error {
 	return err
 }
 
+// DropAircraftCurrentTable drops aircraft_current table
 func (ctx *Context) DropAircraftCurrentTable() error {
 	query := `DROP TABLE IF EXISTS aircraft_current CASCADE`
 
@@ -245,6 +250,8 @@ func (ctx *Context) DeleteOldHistory(days int) error {
 	return err
 }
 
+// SelectAllColumnHistoryByIcaoFilterByTimestamp selects history by aircraft icao
+// and filters every row with a newer timestamp than given hour
 func (ctx *Context) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) ([]models.AircraftHistoryModel, error) {
 	query := `SELECT * FROM aircraft_history 
          		 WHERE icao = $1 AND timestamp > (NOW() - ($2 * INTERVAL '1 hour')) 
