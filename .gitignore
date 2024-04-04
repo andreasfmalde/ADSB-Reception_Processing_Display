@@ -1,4 +1,6 @@
 .idea
 *.out
-backend/.env
+.env
+frontend/.env
 node_modules
+pg_data

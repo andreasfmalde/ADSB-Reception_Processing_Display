@@ -14,26 +14,34 @@ services:
       - fullstack
     volumes:
       - ./pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 3s
-      timeout: 5s
-      retries: 5
 
-  app:
-    container_name: adsb_container
-    build: .
+  backend:
+    container_name: backend_container
+    build: ./backend/
     environment:
       - DB_HOST=postgres_database
+    restart: 'unless-stopped'
     ports:
       - "8080:8080"
     depends_on:
-      postgres_database:
-        condition: service_healthy
+      - postgres_database
     networks:
       - fullstack
     volumes:
-      - .env:/app/.env
+      - ./backend/.env:/app/.env
+
+  frontend:
+    container_name: frontend_container
+    build: ./frontend/
+    volumes:
+      - ./frontend/.env:/app/.env:ro
+    restart: 'unless-stopped'
+    ports:
+      - '80:3000'
+    depends_on:
+      - postgres_database
+    networks:
+      - fullstack
 
 volumes:
   pg_data:

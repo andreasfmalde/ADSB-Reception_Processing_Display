@@ -1,8 +1,0 @@
-services:
-  adsb-frontend:
-    build: .
-    volumes:
-      - ./.env:/app/.env:ro
-    restart: 'unless-stopped'
-    ports:
-      - '80:3000'
