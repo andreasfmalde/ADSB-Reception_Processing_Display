@@ -4,34 +4,46 @@ services:
     image: postgres:latest
     container_name: postgres_container
     env_file:
-      - ./backend/.env
+      - .env
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
-      - DATABASE_HOST=${DB_HOST}
     ports:
-      - '1234:5432'
+      - '1234:${DB_PORT}'
     volumes:
       - ./pg_data:/var/lib/postgresql/data
     networks:
       - fullstack
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${DB_USER} -d ${DB_NAME}'"]
+      timeout: 5s
+      interval: 5s
+      retries: 5
+      start_period: 10s
 
   backend:
     container_name: backend_container
     build: ./backend/
     environment:
       - DB_HOST=postgres_database
-      - DB_PORT=5432
+      - DB_PORT=${DB_PORT}
     restart: 'unless-stopped'
     ports:
-      - "8080:8080"
+      - '8080:8080'
     depends_on:
-      - postgres_database
-    volumes:
-      - ./backend/.env:/app/.env
+      postgres_database:
+        condition: service_healthy
     networks:
       - fullstack
+    volumes:
+      - ./backend/.env:/app/.env
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/" ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   frontend:
     container_name: frontend_container
@@ -40,7 +52,8 @@ services:
     ports:
       - '80:3000'
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - fullstack
 
