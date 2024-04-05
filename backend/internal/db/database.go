@@ -98,7 +98,7 @@ func (ctx *Context) Close() error {
 
 // CreateAircraftCurrentTable creates a table for storing current aircraft data if it does not already exist
 func (ctx *Context) CreateAircraftCurrentTable() error {
-	var query = `CREATE TABLE IF NOT EXISTS aircraft_current(
+	query := `CREATE TABLE IF NOT EXISTS aircraft_current(
 				 icao VARCHAR(6) NOT NULL,
 				 callsign VARCHAR(10) NOT NULL,
 				 altitude INT NOT NULL,
@@ -123,7 +123,7 @@ func (ctx *Context) CreateAircraftHistoryTimestampIndex() error {
 
 // CreateAircraftHistoryTable creates a table for storing aircraft history data if it does not already exist
 func (ctx *Context) CreateAircraftHistoryTable() error {
-	var query = `CREATE TABLE IF NOT EXISTS aircraft_history(
+	query := `CREATE TABLE IF NOT EXISTS aircraft_history(
 				 icao VARCHAR(6) NOT NULL,
 				 lat DECIMAL NOT NULL,
 				 long DECIMAL NOT NULL,
@@ -193,7 +193,7 @@ func (ctx *Context) InsertHistoryFromCurrent() error {
 
 // SelectAllColumnsAircraftCurrent retrieves a list of all aircraft from aircraft_current that are older than global.WaitingTime + 2
 func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error) {
-	var query = `SELECT * FROM aircraft_current`
+	query := `SELECT * FROM aircraft_current`
 
 	rows, err := ctx.Query(query)
 	if err != nil {
@@ -219,7 +219,7 @@ func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentM
 
 // SelectAllColumnHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
 func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
-	var query = `SELECT * FROM aircraft_history WHERE icao = $1`
+	query := `SELECT * FROM aircraft_history WHERE icao = $1`
 
 	rows, err := ctx.Query(query, search)
 	if err != nil {
@@ -244,7 +244,7 @@ func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.Aircra
 
 // DeleteOldHistory will delete rows in aircraft_history older than global.Deletion days from the latest entry.
 func (ctx *Context) DeleteOldHistory(days int) error {
-	var query = `DELETE FROM aircraft_history
+	query := `DELETE FROM aircraft_history
                  WHERE timestamp < (NOW() - ($1 * INTERVAL '1 day'))`
 
 	_, err := ctx.Exec(query, days)
