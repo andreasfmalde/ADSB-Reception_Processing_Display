@@ -29,7 +29,7 @@ func EncodeJsonData(w http.ResponseWriter, data interface{}) {
 // if endpoint does not use parameters leaves params nil.
 // If the URL length exceeds the maximum length or if any of the specified parameters are missing from the request,
 // it returns false.
-func ValidateURL(r *http.Request, maxLength int, params []string) error {
+func ValidateURL(r *http.Request, maxLength int, optionalParams []string) error {
 	url := path.Clean(r.URL.Path)
 	if len(strings.SplitAfter(url, "/")) > maxLength {
 		return errors.New(errorMsg.ErrorTongURL)
@@ -41,14 +41,14 @@ func ValidateURL(r *http.Request, maxLength int, params []string) error {
 
 	query := r.URL.Query()
 
-	if len(query) != len(params) {
-		return errors.New(errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "))
+	if len(query) != len(optionalParams) {
+		return errors.New(errorMsg.ErrorInvalidQueryParams + strings.Join(optionalParams, ", "))
 	}
 
-	for _, param := range params {
+	for _, param := range optionalParams {
 		values, ok := query[param]
 		if !ok || len(values) == 0 || values[0] == "" {
-			return errors.New(errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "))
+			return errors.New(errorMsg.ErrorInvalidQueryParams + strings.Join(optionalParams, ", "))
 		}
 	}
 
