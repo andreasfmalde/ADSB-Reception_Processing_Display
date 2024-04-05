@@ -1,8 +1,10 @@
 package convert
 
 import (
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/geoJSON"
 	"adsb-api/internal/global/models"
+	"errors"
 	"strconv"
 	"strings"
 )
@@ -40,6 +42,10 @@ func CurrentModelToGeoJson(aircraft []models.AircraftCurrentModel) (geoJSON.Feat
 }
 
 func HistoryModelToGeoJson(aircraft []models.AircraftHistoryModel) (geoJSON.FeatureCollectionLineString, error) {
+	if len(aircraft) < 2 {
+		return geoJSON.FeatureCollectionLineString{}, errors.New(errorMsg.ErrorGeoJsonTooFewCoordinates)
+	}
+
 	var coordinates [][]float32
 	for _, ac := range aircraft {
 		point := []float32{ac.Longitude, ac.Latitude}
