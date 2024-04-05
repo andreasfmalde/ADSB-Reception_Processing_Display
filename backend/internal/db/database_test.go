@@ -349,14 +349,17 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 	ctx := setupTestDB(t)
 	defer teardownTestDB(ctx, t)
 
+	// recent aircraft
 	ac1 := testUtility.CreateMockAircraftWithTimestamp("TEST1",
-		time.Now().Add(-(global.MaxDaysHistory+1)*24*time.Hour).Format(time.DateTime))
+		time.Now().Add(-(global.MaxDaysHistory-1)*24*time.Hour).Truncate(time.Hour).Format(time.DateTime))
 
+	// old aircraft
 	ac2 := testUtility.CreateMockAircraftWithTimestamp("TEST2",
-		time.Now().Add(-(global.MaxDaysHistory)*24*time.Hour).Format(time.DateTime))
+		time.Now().Add(-(global.MaxDaysHistory+1)*24*time.Hour).Truncate(time.Hour).Format(time.DateTime))
 
+	// old aircraft
 	ac3 := testUtility.CreateMockAircraftWithTimestamp("TEST3",
-		time.Now().Add(-(global.MaxDaysHistory-1)*24*time.Hour).Format(time.DateTime))
+		time.Now().Add(-(global.MaxDaysHistory+2)*24*time.Hour).Truncate(time.Hour).Format(time.DateTime))
 
 	_, err := ctx.db.Exec(`
 		INSERT INTO aircraft_history 
@@ -366,7 +369,7 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 		ac3.Icao, ac3.Latitude, ac3.Longitude, ac3.Timestamp)
 
 	var count int
-	// check if the old aircraft is deleted
+
 	err = ctx.db.QueryRow("SELECT COUNT(*) FROM aircraft_history").Scan(&count)
 	if err != nil {
 		t.Fatalf("Error querying the table: %q", err)
@@ -375,20 +378,21 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 		t.Fatalf("aircraft was not inserted correctly")
 	}
 
-	err = ctx.DeleteOldHistory(global.MaxDaysHistory)
+	err = ctx.DeleteOldHistory(1)
 	if err != nil {
 		t.Fatalf("Error deleting old aircraft: %q", err)
 	}
 
-	// check if the old aircraft is deleted
+	// check if the recent aircraft still exists
 	err = ctx.db.QueryRow("SELECT COUNT(*) FROM aircraft_history WHERE icao = $1", ac1.Icao).Scan(&count)
 	if err != nil {
 		t.Fatalf("Error querying the table: %q", err)
 	}
-	if count != 0 {
-		t.Fatalf("Old aircraft data was not deleted")
+	if count != 1 {
+		t.Fatalf("Recent aircraft was deleted")
 	}
 
+	// check if old aircraft was deleted
 	err = ctx.db.QueryRow("SELECT COUNT(*) FROM aircraft_history WHERE icao = $1", ac2.Icao).Scan(&count)
 	if err != nil {
 		t.Fatalf("Error querying the table: %q", err)
@@ -397,13 +401,13 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 		t.Fatalf("Old aircraft data was not deleted")
 	}
 
-	// check if the recent aircraft data is still there
+	// check if old aircraft was deleted
 	err = ctx.db.QueryRow("SELECT COUNT(*) FROM aircraft_history WHERE icao = $1", ac3.Icao).Scan(&count)
 	if err != nil {
 		t.Fatalf("Error querying the table: %q", err)
 	}
-	if count != 1 {
-		t.Fatalf("Recent aircraft data was deleted")
+	if count != 0 {
+		t.Fatalf("Old aircraft data was not deleted")
 	}
 }
 

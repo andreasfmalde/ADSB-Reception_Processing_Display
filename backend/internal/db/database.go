@@ -12,12 +12,12 @@ import (
 
 type Database interface {
 	CreateAircraftCurrentTable() error
-	CreateAircraftHistoryTimestampIndex() error
 	DropAircraftCurrentTable() error
 	BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentModel) error
 	SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error)
 
 	CreateAircraftHistoryTable() error
+	CreateAircraftHistoryTimestampIndex() error
 	InsertHistoryFromCurrent() error
 	SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
 
@@ -242,10 +242,12 @@ func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.Aircra
 	return aircraft, nil
 }
 
-// DeleteOldHistory will delete rows in aircraft_history older than global.Deletion days from the latest entry.
+// DeleteOldHistory will delete rows in aircraft_history older than MAX(timestamp) days
 func (ctx *Context) DeleteOldHistory(days int) error {
 	query := `DELETE FROM aircraft_history
-                 WHERE timestamp < (NOW() - ($1 * INTERVAL '1 day'))`
+			  WHERE timestamp <
+			        (SELECT MAX(timestamp) - ($1 * INTERVAL '1 day') 
+  			  		 FROM aircraft_history)`
 
 	_, err := ctx.Exec(query, days)
 	return err
