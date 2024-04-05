@@ -20,6 +20,7 @@ type Database interface {
 	CreateAircraftHistoryTimestampIndex() error
 	InsertHistoryFromCurrent() error
 	SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
+	SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) ([]models.AircraftHistoryModel, error)
 
 	DeleteOldHistory(time int) error
 

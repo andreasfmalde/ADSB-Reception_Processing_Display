@@ -203,6 +203,21 @@ func (mr *MockDatabaseMockRecorder) SelectAllColumnHistoryByIcao(search interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectAllColumnHistoryByIcao", reflect.TypeOf((*MockDatabase)(nil).SelectAllColumnHistoryByIcao), search)
 }
 
+// SelectAllColumnHistoryByIcaoFilterByTimestamp mocks base method.
+func (m *MockDatabase) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) ([]models.AircraftHistoryModel, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SelectAllColumnHistoryByIcaoFilterByTimestamp", search, hour)
+	ret0, _ := ret[0].([]models.AircraftHistoryModel)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SelectAllColumnHistoryByIcaoFilterByTimestamp indicates an expected call of SelectAllColumnHistoryByIcaoFilterByTimestamp.
+func (mr *MockDatabaseMockRecorder) SelectAllColumnHistoryByIcaoFilterByTimestamp(search, hour interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectAllColumnHistoryByIcaoFilterByTimestamp", reflect.TypeOf((*MockDatabase)(nil).SelectAllColumnHistoryByIcaoFilterByTimestamp), search, hour)
+}
+
 // SelectAllColumnsAircraftCurrent mocks base method.
 func (m *MockDatabase) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error) {
 	m.ctrl.T.Helper()
