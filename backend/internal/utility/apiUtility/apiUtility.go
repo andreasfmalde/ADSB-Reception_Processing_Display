@@ -24,7 +24,8 @@ func EncodeJsonData(w http.ResponseWriter, data interface{}) {
 }
 
 // ValidateURL checks the validity of an HTTP request URL.
-// It verifies the URL length, and the presence of specified parameters
+// Cleans the URL.
+// Verifies the URL length, and the presence of specified parameters
 // if endpoint does not use parameters leaves params nil.
 // If the URL length exceeds the maximum length or if any of the specified parameters are missing from the request,
 // it returns false.
