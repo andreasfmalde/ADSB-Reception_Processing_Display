@@ -13,5 +13,5 @@ const (
 
 var (
 	CurrentPathMaxLength = len(strings.Split(AircraftCurrentPath, "/")) - 1
-	HistoryPathMaxLength = len(strings.Split(AircraftHistoryPath, "/")) - 1
+	HistoryPathMaxLength = len(strings.Split(AircraftHistoryPath, "/"))
 )

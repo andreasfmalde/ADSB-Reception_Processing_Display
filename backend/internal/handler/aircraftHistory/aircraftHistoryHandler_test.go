@@ -44,20 +44,20 @@ func TestInvalidRequests(t *testing.T) {
 		{
 			name:       "Post request",
 			httpMethod: http.MethodPost,
-			url:        endpoint + "?icao=ABC123",
+			url:        endpoint + "ABC123",
 			statusCode: http.StatusMethodNotAllowed,
 			errorMsg:   fmt.Sprintf(errorMsg.MethodNotSupported, http.MethodPost),
 		},
 		{
 			name:       "Delete request",
-			url:        endpoint + "?icao=ABC123",
+			url:        endpoint + "ABC123",
 			httpMethod: http.MethodDelete,
 			statusCode: http.StatusMethodNotAllowed,
 			errorMsg:   fmt.Sprintf(errorMsg.MethodNotSupported, http.MethodDelete),
 		},
 		{
 			name:       "Database returns nil",
-			url:        endpoint + "?icao=ABC123",
+			url:        endpoint + "ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusInternalServerError,
 			setup: func(mockSvc *mock.MockRestService) {
@@ -67,38 +67,44 @@ func TestInvalidRequests(t *testing.T) {
 		},
 		{
 			name:       "Get request with too long URL",
-			url:        endpoint + "endpoint/",
+			url:        endpoint + "endpoint/endpoint/",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
 			errorMsg:   errorMsg.ErrorTongURL,
 		},
 		{
 			name:       "Get request with empty icao",
-			url:        endpoint + "?icao=",
+			url:        endpoint + "/",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "),
+			errorMsg:   errorMsg.EmptyIcao,
 		},
 		{
 			name:       "Get request with invalid parameter",
-			url:        endpoint + "?param=123",
+			url:        endpoint + "ABC123?param=123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
 			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "),
 		},
 		{
 			name:       "Get request with too many parameters",
-			url:        endpoint + "?icao=ABC123&param=ABC123",
+			url:        endpoint + "ABC123?url=abc?param=ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
 			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "),
 		},
 		{
-			name:       "Get request without parameters",
+			name:       "Get request without icao or parameter",
 			url:        endpoint,
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "),
+			errorMsg:   errorMsg.EmptyIcao,
+		},
+		{
+			name:       "Invalid query parameter 'hour'",
+			url:        endpoint + "ABC123?hour=ABC123",
+			statusCode: http.StatusBadRequest,
+			errorMsg:   errorMsg.InvalidQueryParameterHour,
 		},
 	}
 
@@ -148,7 +154,7 @@ func TestValidRequests(t *testing.T) {
 	}{
 		{
 			name:       "Get request with valid URl",
-			url:        endpoint + "?icao=ABC123",
+			url:        endpoint + "/ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
 			mockData:   testUtility.CreateMockHistAircraft(10),
@@ -158,7 +164,7 @@ func TestValidRequests(t *testing.T) {
 		},
 		{
 			name:       "Get request with valid URl but unnecessary slashes",
-			url:        currentEndpoint.URL + "/../" + global.AircraftHistoryPath + "//../././/?icao=ABC123",
+			url:        currentEndpoint.URL + "/../" + global.AircraftHistoryPath + "//../././/ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusOK,
 			mockData:   testUtility.CreateMockHistAircraft(10),
@@ -168,14 +174,41 @@ func TestValidRequests(t *testing.T) {
 		},
 		{
 			name:       "Get request with no history",
-			url:        endpoint + "?icao=ABC123",
+			url:        endpoint + "ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
 			setup: func(mockSvc *mock.MockRestService, mockData []models.AircraftHistoryModel) {
 				mockSvc.EXPECT().GetAircraftHistoryByIcao("ABC123").Return([]models.AircraftHistoryModel{}, nil)
 			},
 		},
+		{
+			name:       "history with too few coordinates",
+			url:        endpoint + "ABC123",
+			httpMethod: http.MethodGet,
+			statusCode: http.StatusNoContent,
+			setup: func(mockDB *mock.MockRestService, mockData []models.AircraftHistoryModel) {
+				mockSvc.EXPECT().GetAircraftHistoryByIcao("ABC123").Return([]models.AircraftHistoryModel{}, nil)
+			},
+		},
+		{
+			name:       "Get request with valid icao and valid query parameter 'hour'",
+			url:        endpoint + "ABC123?hour=2",
+			statusCode: http.StatusOK,
+			mockData:   testUtility.CreateMockHistAircraft(10),
+			setup: func(mockDB *mock.MockRestService, mockData []models.AircraftHistoryModel) {
+				mockSvc.EXPECT().GetAircraftHistoryByIcaoFilterByTimestamp("ABC123", 2).Return(mockData, nil)
+			},
+		},
+		{
+			name:       "Get request with valid query parameter 'hour' but no history",
+			url:        endpoint + "ABC123?hour=1000",
+			statusCode: http.StatusNoContent,
+			setup: func(mockDB *mock.MockRestService, mockData []models.AircraftHistoryModel) {
+				mockSvc.EXPECT().GetAircraftHistoryByIcaoFilterByTimestamp("ABC123", 1000).Return([]models.AircraftHistoryModel{}, nil)
+			},
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.setup != nil {
@@ -194,12 +227,17 @@ func TestValidRequests(t *testing.T) {
 
 			assert.Equal(t, tt.statusCode, res.StatusCode)
 
-			var actual geoJSON.FeatureCollectionLineString
-			_ = json.NewDecoder(res.Body).Decode(&actual)
+			if tt.mockData != nil {
+				var actual geoJSON.FeatureCollectionLineString
+				_ = json.NewDecoder(res.Body).Decode(&actual)
 
-			mockFeatureCollection, err := convert.HistoryModelToGeoJson(tt.mockData)
+				mockFeatureCollection, err := convert.HistoryModelToGeoJson(tt.mockData)
+				if err != nil {
+					t.Fatalf("error converting from history model to geo json")
+				}
 
-			assert.Equal(t, mockFeatureCollection, actual)
+				assert.Equal(t, mockFeatureCollection, actual)
+			}
 		})
 	}
 }
