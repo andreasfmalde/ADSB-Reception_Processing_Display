@@ -16,7 +16,7 @@ var params = []string{"icao"}
 // HistoryAircraftHandler handles HTTP requests for /aircraft/history endpoint.
 func HistoryAircraftHandler(svc restService.RestService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := apiUtility.ValidateURL(r.URL.Path, r.URL.Query(), len(global.AircraftHistoryPath), params)
+		err := apiUtility.ValidateURL(r.URL.Path, r.URL.Query(), global.HistoryPathMaxLength, params)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

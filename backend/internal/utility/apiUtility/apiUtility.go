@@ -30,7 +30,7 @@ func EncodeJsonData(w http.ResponseWriter, data interface{}) {
 // it returns false.
 func ValidateURL(url string, query map[string][]string, maxLength int, params []string) error {
 	url = path.Clean(url)
-	if len(url) > maxLength {
+	if len(strings.SplitAfter(url, "/")) > maxLength {
 		return errors.New(errorMsg.ErrorTongURL)
 	}
 
