@@ -21,7 +21,8 @@ func main() {
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
-	logger.Info.Println("successfully connected to database")
+	logger.Info.Printf("REST API successfully connected to database with name: %s port: %d user: %s host: %s",
+		global.DbName, global.DbPort, global.DbUser, global.DbHost)
 
 	defer func() {
 		err := restSvc.DB.Close()
