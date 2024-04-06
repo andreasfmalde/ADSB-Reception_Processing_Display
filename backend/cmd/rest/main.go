@@ -14,15 +14,17 @@ import (
 
 // main method for the RESTFUL API
 func main() {
+	// Initialize logger
+	logger.InitLogger()
 	// Initialize environment variables
-	global.InitProdEnvironment()
+	global.InitEnvironment()
 	// Initialize the database
 	restSvc, err := restService.InitRestService()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
-	logger.Info.Printf("REST API successfully connected to database with name: %s port: %d user: %s host: %s",
-		global.DbName, global.DbPort, global.DbUser, global.DbHost)
+	logger.Info.Printf("REST API successfully connected to database with database user: %s name: %s host: %s port: %d",
+		global.DbUser, global.DbName, global.DbHost, global.DbPort)
 
 	defer func() {
 		err := restSvc.DB.Close()
@@ -37,7 +39,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Println("$PORT has not been set. Default: " + global.DefaultPort)
+		log.Println("PORT has not been set. Using default port: " + global.DefaultPort)
 		port = global.DefaultPort
 	}
 

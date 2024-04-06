@@ -29,7 +29,7 @@ func ProcessSbsStream() ([]models.AircraftCurrentModel, error) {
 
 	timer := time.Now()
 	for scanner.Scan() {
-		if diff := time.Since(timer).Seconds(); diff > global.WaitingTime {
+		if diff := time.Since(timer).Seconds(); diff > float64(global.WaitingTime) {
 			break
 		}
 

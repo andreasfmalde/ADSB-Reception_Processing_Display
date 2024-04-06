@@ -331,13 +331,13 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 	defer teardownTestDB(ctx)
 
 	ac1 := testUtility.CreateMockAircraftWithTimestamp("TEST1",
-		time.Now().Add(-(global.MaxDaysHistory+1)*24*time.Hour).Format(time.DateTime))
+		time.Now().Add(-(time.Duration(global.MaxDaysHistory)+1)*24*time.Hour).Format(time.DateTime))
 
 	ac2 := testUtility.CreateMockAircraftWithTimestamp("TEST2",
-		time.Now().Add(-(global.MaxDaysHistory)*24*time.Hour).Format(time.DateTime))
+		time.Now().Add(-(time.Duration(global.MaxDaysHistory))*24*time.Hour).Format(time.DateTime))
 
 	ac3 := testUtility.CreateMockAircraftWithTimestamp("TEST3",
-		time.Now().Add(-(global.MaxDaysHistory-1)*24*time.Hour).Format(time.DateTime))
+		time.Now().Add(-(time.Duration(global.MaxDaysHistory)-1)*24*time.Hour).Format(time.DateTime))
 
 	_, err := ctx.db.Exec(`
 		INSERT INTO aircraft_history 
