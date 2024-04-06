@@ -109,7 +109,7 @@ func (ctx *Context) CreateAircraftCurrentTable() error {
 				 track INT NOT NULL,
 				 vspeed INT NOT NULL,
 				 timestamp TIMESTAMP NOT NULL,
-				 PRIMARY KEY (icao,timestamp))`
+				 PRIMARY KEY (icao))`
 	_, err := ctx.Exec(query)
 	return err
 }

@@ -87,16 +87,18 @@ func TestAdsbDB_CreateAdsbTables(t *testing.T) {
 	ctx := setupTestDB(t)
 	defer teardownTestDB(ctx, t)
 
+	// Drop tables that are to be tested
 	err := ctx.DropAircraftCurrentTable()
 	if err != nil {
 		t.Fatalf("error dropping aircraft_current: %q", err)
 	}
 
-	_, err = ctx.db.Exec("DROP TABLE IF EXISTS aircraft_history CASCADE")
+	_, err = ctx.db.Exec("DROP TABLE aircraft_history CASCADE")
 	if err != nil {
 		t.Fatalf("error droppint current_time_aircraft: %q", err.Error())
 	}
 
+	// Test create tables and indexes
 	err = ctx.CreateAircraftCurrentTable()
 	if err != nil {
 		t.Fatalf("error creating current_time_aircraft table: %q", err)
@@ -301,18 +303,16 @@ func TestAdsbDB_SelectAllColumnHistoryByIcao(t *testing.T) {
 	ctx := setupTestDB(t)
 	defer teardownTestDB(ctx, t)
 
+	icao := "TEST"
 	var nAircraft = 100
-	var icao = "TEST"
-	mockAircraft := testUtility.CreateMockAircraftWithIcao(nAircraft, icao)
+	mockAircraft := testUtility.CreateMockHistAircraftWithIcao(nAircraft, icao)
 
-	err := ctx.BulkInsertAircraftCurrent(mockAircraft)
-	if err != nil {
-		t.Fatalf("error inserting aircraft: %q", err.Error())
-	}
-
-	err = ctx.InsertHistoryFromCurrent()
-	if err != nil {
-		t.Fatalf("error inserting history data: %q", err.Error())
+	for _, ac := range mockAircraft {
+		_, err := ctx.db.Exec("INSERT INTO aircraft_history VALUES ($1, $2, $3, $4)",
+			ac.Icao, ac.Latitude, ac.Longitude, ac.Timestamp)
+		if err != nil {
+			t.Fatalf("Error inserting data: %q", err)
+		}
 	}
 
 	aircraft, err := ctx.SelectAllColumnHistoryByIcao(icao)
