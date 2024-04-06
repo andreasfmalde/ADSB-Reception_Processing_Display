@@ -4,34 +4,65 @@ services:
     image: postgres:latest
     container_name: postgres_container
     env_file:
-      - ./backend/.env
+      - .env
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
-      - DATABASE_HOST=${DB_HOST}
     ports:
       - '1234:5432'
     volumes:
       - ./pg_data:/var/lib/postgresql/data
     networks:
       - fullstack
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${DB_USER} -d ${DB_NAME}'"]
+      timeout: 5s
+      interval: 5s
+      retries: 5
+      start_period: 10s
 
-  backend:
-    container_name: backend_container
-    build: ./backend/
+  reception_api:
+    container_name: reception_api_container
+    build:
+      context: ./backend
+      dockerfile: DockerfileReception
+    environment:
+      - DB_HOST=postgres_database
+      - DB_PORT=5432
+    restart: 'unless-stopped'
+    depends_on:
+      postgres_database:
+        condition: service_healthy
+    networks:
+      - fullstack
+    volumes:
+      - ./.env:/app/.env
+
+  rest_api:
+    container_name: rest_api_container
+    build:
+      context: ./backend
+      dockerfile: DockerfileRest
     environment:
       - DB_HOST=postgres_database
       - DB_PORT=5432
     restart: 'unless-stopped'
     ports:
-      - "8080:8080"
+      - '8080:8080'
     depends_on:
-      - postgres_database
-    volumes:
-      - ./backend/.env:/app/.env
+      postgres_database:
+        condition: service_healthy
     networks:
       - fullstack
+    volumes:
+      - ./.env:/app/.env
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/" ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   frontend:
     container_name: frontend_container
@@ -40,7 +71,8 @@ services:
     ports:
       - '80:3000'
     depends_on:
-      - backend
+      rest_api:
+        condition: service_healthy
     networks:
       - fullstack
 
