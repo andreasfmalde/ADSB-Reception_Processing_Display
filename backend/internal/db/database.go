@@ -114,14 +114,6 @@ func (ctx *Context) CreateAircraftCurrentTable() error {
 	return err
 }
 
-// CreateAircraftHistoryTimestampIndex creates an index called timestamp_index on aircraft_history timestamp column
-func (ctx *Context) CreateAircraftHistoryTimestampIndex() error {
-	query := `CREATE INDEX IF NOT EXISTS timestamp_index ON aircraft_history(timestamp)`
-
-	_, err := ctx.Exec(query)
-	return err
-}
-
 // CreateAircraftHistoryTable creates a table for storing aircraft history data if it does not already exist
 func (ctx *Context) CreateAircraftHistoryTable() error {
 	query := `CREATE TABLE IF NOT EXISTS aircraft_history(
@@ -130,6 +122,14 @@ func (ctx *Context) CreateAircraftHistoryTable() error {
 				 long DECIMAL NOT NULL,
 				 timestamp TIMESTAMP NOT NULL,
 				 PRIMARY KEY (icao,timestamp))`
+
+	_, err := ctx.Exec(query)
+	return err
+}
+
+// CreateAircraftHistoryTimestampIndex creates an index called timestamp_index on aircraft_history timestamp column
+func (ctx *Context) CreateAircraftHistoryTimestampIndex() error {
+	query := `CREATE INDEX IF NOT EXISTS timestamp_index ON aircraft_history(timestamp)`
 
 	_, err := ctx.Exec(query)
 	return err
