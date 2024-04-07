@@ -1,9 +1,12 @@
 package global
 
-var (
-	SbsSource      string
+const (
 	WaitingTime    = 4
-	CleaningPeriod = 120
 	UpdatingPeriod = 10
 	MaxDaysHistory = 1
+)
+
+var (
+	SbsSource       string
+	CleanupSchedule = "0 0 * * *" // once a day
 )

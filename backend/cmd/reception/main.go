@@ -21,7 +21,6 @@ func main() {
 	}
 	logger.Info.Printf("Reception API successfully connected to database with: User: %s | Name: %s | Host: %s | port: %d",
 		global.DbUser, global.DbName, global.DbHost, global.DbPort)
-
 	defer func() {
 		err := sbsSvc.DB.Close()
 		if err != nil {
@@ -33,10 +32,21 @@ func main() {
 		logger.Error.Fatalf(errorMsg.ErrorCreatingDatabaseTables+": %q", err)
 	}
 
+	if err := sbsSvc.ScheduleCleanUpJob(global.CleanupSchedule); err != nil {
+		logger.Error.Fatalf("error initiazling cleanup job")
+	}
+	logger.Info.Printf("Scheduled clean up job with cron schedule: %s", global.CleanupSchedule)
+
+	err = sbsSvc.StartScheduler()
+	if err != nil {
+		logger.Error.Printf("eror starting cron scheduler: %q", err.Error())
+		return
+	}
+
 	logger.Info.Printf("Starting the process for recieving SBS data. \n"+
 		"SBS source : %q | WaitingTime: %d seconds | CleaningPeriod: %d seconds | UpdatingPeriod: %d seconds | MaxDaysHistory: %d",
 		global.SbsSource, global.WaitingTime, global.CleaningPeriod, global.UpdatingPeriod, global.MaxDaysHistory)
-	timer := time.Now()
+
 	for {
 		aircraft, err := sbsSvc.ProcessSbsData()
 		if err != nil {
@@ -54,13 +64,6 @@ func main() {
 			logger.Error.Fatalf(errorMsg.ErrorInsertingNewSbsData+": %q", err)
 		}
 		logger.Info.Println("new SBS data inserted")
-
-		if diff := time.Since(timer).Seconds(); diff > float64(global.CleaningPeriod) {
-			if err = sbsSvc.Cleanup(); err == nil {
-				timer = time.Now()
-				logger.Info.Println("old SBS data deleted")
-			}
-		}
 
 		time.Sleep(time.Duration(global.UpdatingPeriod) * time.Second)
 	}

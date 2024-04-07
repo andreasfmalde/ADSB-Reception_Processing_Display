@@ -3,18 +3,24 @@ package sbsService
 import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/models"
 	"adsb-api/internal/sbs"
+	"adsb-api/internal/service/cronScheduler"
+	"adsb-api/internal/utility/logger"
+	"errors"
 )
 
 type SbsService interface {
 	CreateAdsbTables() error
 	InsertNewSbsData(aircraft []models.AircraftCurrentModel) error
-	Cleanup() error
+	InitAndStartCleanUpJob() error
+	StartScheduler() error
 }
 
 type SbsImpl struct {
-	DB db.Database
+	DB            db.Database
+	CronScheduler cronScheduler.Scheduler
 }
 
 // InitSbsService initializes SbsImpl struct and database connection
@@ -23,7 +29,10 @@ func InitSbsService() (*SbsImpl, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &SbsImpl{DB: dbConn}, nil
+
+	scheduler := cronScheduler.NewCronScheduler()
+
+	return &SbsImpl{DB: dbConn, CronScheduler: scheduler}, nil
 }
 
 // CreateAdsbTables creates all tables for the database schema
@@ -102,11 +111,30 @@ func (svc *SbsImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) err
 	return nil
 }
 
-// Cleanup remove old rows to save space
-func (svc *SbsImpl) Cleanup() error {
-	return svc.DB.DeleteOldHistory(global.MaxDaysHistory)
-}
-
 func (svc *SbsImpl) ProcessSbsData() ([]models.AircraftCurrentModel, error) {
 	return sbs.ProcessSbsStream()
+}
+
+func (svc *SbsImpl) StartScheduler() error {
+	if svc.CronScheduler == nil {
+		return errors.New(errorMsg.CronSchedulerIsNotInitialized)
+	}
+	svc.CronScheduler.Start()
+	return nil
+}
+
+func (svc *SbsImpl) CleanupJob() {
+	err := svc.DB.DeleteOldHistory(global.MaxDaysHistory)
+	if err != nil {
+		logger.Error.Printf("error deleting old history: %q", err.Error())
+	}
+}
+
+// ScheduleCleanUpJob initializes a starts a cleanup job, that remove old rows from database to save space.
+// When the job is scheduled to be executed is decided by schedule parameter.
+func (svc *SbsImpl) ScheduleCleanUpJob(schedule string) error {
+	if svc.CronScheduler == nil {
+		return errors.New(errorMsg.CronSchedulerIsNotInitialized)
+	}
+	return svc.CronScheduler.ScheduleJob(schedule, svc.CleanupJob)
 }
