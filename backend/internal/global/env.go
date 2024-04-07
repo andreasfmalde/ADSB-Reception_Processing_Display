@@ -11,7 +11,7 @@ import (
 func InitEnvironment() {
 	err := godotenv.Load("./.env")
 	if err != nil {
-		logger.Error.Printf(err.Error())
+		logger.Error.Printf("error loading .env file: %q", err.Error())
 	}
 
 	InitDatabaseEnvVariables()
@@ -117,5 +117,12 @@ func InitTestEnvironment() {
 	DbName = "adsb_test_db"
 	DbHost = "localhost"
 	DbPort = 5432
+
 	SbsSource = "localhost:9999"
+	WaitingTime = 4
+	CleanupSchedule = "0 0 * * *"
+	UpdatingPeriod = 10
+	MaxDaysHistory = 1
+
+	CheckEnvVariables()
 }
