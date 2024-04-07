@@ -30,7 +30,17 @@ func main() {
 		logger.Error.Fatalf(errorMsg.ErrorCreatingDatabaseTables+": %q", err)
 	}
 
-	timer := time.Now()
+	if err := sbsSvc.ScheduleCleanUpJob(global.CleanupSchedule); err != nil {
+		logger.Error.Fatalf("error initiazling cleanup job")
+	}
+	logger.Info.Printf("Scheduled clean up job with cron schedule: %s", global.CleanupSchedule)
+
+	err = sbsSvc.StartScheduler()
+	if err != nil {
+		logger.Error.Printf("eror starting cron scheduler: %q", err.Error())
+		return
+	}
+
 	for {
 		aircraft, err := sbsSvc.ProcessSbsData()
 		if err != nil {
@@ -48,13 +58,6 @@ func main() {
 			logger.Error.Fatalf(errorMsg.ErrorInsertingNewSbsData+": %q", err)
 		}
 		logger.Info.Println("new SBS data inserted")
-
-		if diff := time.Since(timer).Seconds(); diff > global.CleaningPeriod {
-			if err = sbsSvc.Cleanup(); err == nil {
-				timer = time.Now()
-				logger.Info.Println("old SBS data deleted")
-			}
-		}
 
 		time.Sleep(global.UpdatingPeriod * time.Second)
 	}
