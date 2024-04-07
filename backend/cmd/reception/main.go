@@ -1,8 +1,11 @@
 package main
 
 import (
+	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
+	"adsb-api/internal/sbs"
+	"adsb-api/internal/service/cronScheduler"
 	"adsb-api/internal/service/sbsService"
 	"adsb-api/internal/utility/logger"
 	"time"
@@ -10,45 +13,48 @@ import (
 
 // main method and starting point of the reception and processing part of the ADS-B API
 func main() {
-	// Initialize logger
-	logger.InitLogger()
 	// Initialize environment variables
 	global.InitEnvironment()
+	// Initialize logger
+	logger.InitLogger()
 	// Initialize the database
-	sbsSvc, err := sbsService.InitSbsService()
+	database, err := db.InitDB()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
-	logger.Info.Printf("Reception API successfully connected to database with: User: %s | Name: %s | Host: %s | port: %d",
-		global.DbUser, global.DbName, global.DbHost, global.DbPort)
-	defer func() {
-		err := sbsSvc.DB.Close()
+
+	defer func(database db.Database) {
+		err := database.Close()
 		if err != nil {
 			logger.Error.Fatalf(errorMsg.ErrorClosingDatabase+": %q", err)
 		}
-	}()
+	}(database)
+
+	// Initialize cron scheduler
+	scheduler := cronScheduler.NewCronScheduler()
+
+	// Initialize SBS service
+	sbsSvc := sbsService.InitSbsService(database, scheduler)
 
 	if err := sbsSvc.CreateAdsbTables(); err != nil {
 		logger.Error.Fatalf(errorMsg.ErrorCreatingDatabaseTables+": %q", err)
 	}
 
-	if err := sbsSvc.ScheduleCleanUpJob(global.CleanupSchedule); err != nil {
-		logger.Error.Fatalf("error initiazling cleanup job")
+	if err := sbsSvc.ScheduleCleanUpJob(global.CleanupSchedule, global.MaxDaysHistory); err != nil {
+		logger.Error.Fatalf("error initiazling cleanupJob job")
 	}
+
+	logger.Info.Printf("Reception API successfully connected to database with: User: %s | Name: %s | Host: %s | port: %d",
+		global.DbUser, global.DbName, global.DbHost, global.DbPort)
+
 	logger.Info.Printf("Scheduled clean up job with cron schedule: %s", global.CleanupSchedule)
 
-	err = sbsSvc.StartScheduler()
-	if err != nil {
-		logger.Error.Printf("eror starting cron scheduler: %q", err.Error())
-		return
-	}
-
-	logger.Info.Printf("Starting the process for recieving SBS data. \n"+
+	logger.Info.Printf("Starting the process for receiving SBS data. \n"+
 		"SBS source : %q | WaitingTime: %d seconds | CleanupSchedule: %s seconds | UpdatingPeriod: %d seconds | MaxDaysHistory: %d",
 		global.SbsSource, global.WaitingTime, global.CleanupSchedule, global.UpdatingPeriod, global.MaxDaysHistory)
 
 	for {
-		aircraft, err := sbsSvc.ProcessSbsData()
+		aircraft, err := sbs.ProcessSbsStream(global.SbsSource)
 		if err != nil {
 			logger.Error.Printf(errorMsg.ErrorCouldNotConnectToTcpStream)
 			time.Sleep(time.Duration(global.WaitingTime) * time.Second)

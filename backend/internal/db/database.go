@@ -22,7 +22,7 @@ type Database interface {
 	SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
 	SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) ([]models.AircraftHistoryModel, error)
 
-	DeleteOldHistory(time int) error
+	DeleteOldHistory(days int) error
 
 	Begin() error
 	Commit() error

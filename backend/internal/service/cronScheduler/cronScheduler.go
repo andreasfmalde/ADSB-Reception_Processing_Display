@@ -1,6 +1,8 @@
 package cronScheduler
 
-import "github.com/robfig/cron"
+import (
+	"github.com/robfig/cron"
+)
 
 type Scheduler interface {
 	ScheduleJob(schedule string, job func()) error

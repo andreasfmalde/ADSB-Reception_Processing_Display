@@ -2,7 +2,6 @@ package sbsService
 
 import (
 	"adsb-api/internal/global"
-	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/utility/mock"
 	"adsb-api/internal/utility/testUtility"
 	"errors"
@@ -17,23 +16,15 @@ func TestMain(m *testing.M) {
 }
 
 func Test_InitSbsService(t *testing.T) {
-	sbsSvc, err := InitSbsService()
-	if err != nil {
-		t.Fatalf("error initiazling sbs eervice: %q", err)
-	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	assert.NotNil(t, sbsSvc)
-}
+	mockDB := mock.NewMockDatabase(ctrl)
+	mockCron := mock.NewMockScheduler(ctrl)
 
-func Test_InitSbsService_ErrorInitDB(t *testing.T) {
-	global.DbUser = "user"
-	sbsSvc, err := InitSbsService()
-	if err == nil {
-		t.Fatalf("error initiazling sbs eervice: %q", err)
-	}
+	sbsSvc := InitSbsService(mockDB, mockCron)
 
-	assert.Nil(t, sbsSvc)
-	global.DbUser = "test"
+	assert.NotNil(t, sbsSvc, sbsSvc.DB, sbsSvc.CronScheduler)
 }
 
 func TestSbsServiceImpl_CreateAdsbTables(t *testing.T) {
@@ -116,34 +107,8 @@ func TestSbsServiceImpl_InsertNewSbsData_WithRollback(t *testing.T) {
 
 	err := svc.InsertNewSbsData(mockData)
 
+	assert.NotNil(t, err)
 	assert.Equal(t, errorMsg, err.Error())
-}
-
-func TestSbsImpl_StartScheduler(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockDB := mock.NewMockDatabase(ctrl)
-	mockCron := mock.NewMockScheduler(ctrl)
-	svc := &SbsImpl{DB: mockDB, CronScheduler: mockCron}
-
-	mockCron.EXPECT().Start()
-
-	err := svc.StartScheduler()
-
-	assert.Nil(t, err)
-}
-
-func TestSbsImpl_StartScheduler_CronSchedulerIsNil(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockDB := mock.NewMockDatabase(ctrl)
-	svc := &SbsImpl{DB: mockDB, CronScheduler: nil}
-
-	err := svc.StartScheduler()
-
-	assert.Equal(t, errorMsg.CronSchedulerIsNotInitialized, err.Error())
 }
 
 func TestSbsImpl_ScheduleCleanUpJob(t *testing.T) {
@@ -155,26 +120,13 @@ func TestSbsImpl_ScheduleCleanUpJob(t *testing.T) {
 	svc := &SbsImpl{DB: mockDB, CronScheduler: mockCron}
 
 	schedule := "* * * * *"
+	MaxDaysHistory := 5
 
 	mockCron.EXPECT().ScheduleJob(schedule, gomock.Any()).Return(nil)
 
-	err := svc.ScheduleCleanUpJob(schedule)
+	err := svc.ScheduleCleanUpJob(schedule, MaxDaysHistory)
 
 	assert.Nil(t, err)
-}
-
-func TestSbsImpl_ScheduleCleanUpJob_CronSchedulerIsNil(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockDB := mock.NewMockDatabase(ctrl)
-	svc := &SbsImpl{DB: mockDB, CronScheduler: nil}
-
-	schedule := "* * * * *"
-
-	err := svc.ScheduleCleanUpJob(schedule)
-
-	assert.Equal(t, errorMsg.CronSchedulerIsNotInitialized, err.Error())
 }
 
 func TestSbsImpl_ScheduleCleanUpJob_ErrorScheduleJob(t *testing.T) {
@@ -186,57 +138,14 @@ func TestSbsImpl_ScheduleCleanUpJob_ErrorScheduleJob(t *testing.T) {
 	svc := &SbsImpl{DB: mockDB, CronScheduler: mockCron}
 
 	schedule := "* * * * *"
+	MaxDaysHistory := 5
 
 	errorMessage := "mock error simulating error scheduling job"
 
 	mockCron.EXPECT().ScheduleJob(schedule, gomock.Any()).Return(errors.New(errorMessage))
 
-	err := svc.ScheduleCleanUpJob(schedule)
+	err := svc.ScheduleCleanUpJob(schedule, MaxDaysHistory)
 
+	assert.NotNil(t, err)
 	assert.Equal(t, errorMessage, err.Error())
-}
-
-func TestSbsImpl_ScheduleCleanUpJob_WithRealSchedule(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockDB := mock.NewMockDatabase(ctrl)
-	mockCron := mock.NewMockScheduler(ctrl)
-	svc := &SbsImpl{DB: mockDB, CronScheduler: mockCron}
-
-	schedule := "* * * * *"
-
-	mockCron.EXPECT().ScheduleJob(schedule, gomock.Any()).Return(nil)
-
-	err := svc.ScheduleCleanUpJob(schedule)
-
-	assert.Nil(t, err)
-}
-
-func TestSbsServiceImpl_CleanupJob(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockDB := mock.NewMockDatabase(ctrl)
-
-	svc := &SbsImpl{DB: mockDB}
-
-	mockDB.EXPECT().DeleteOldHistory(global.MaxDaysHistory).Return(nil)
-
-	svc.CleanupJob()
-}
-
-func TestSbsServiceImpl_CleanupJob_ErrorDeletingOldHistory(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockDB := mock.NewMockDatabase(ctrl)
-
-	svc := &SbsImpl{DB: mockDB}
-
-	var errorMessage = "mock error deleting old history data"
-
-	mockDB.EXPECT().DeleteOldHistory(global.MaxDaysHistory).Return(errors.New(errorMessage))
-
-	svc.CleanupJob()
 }

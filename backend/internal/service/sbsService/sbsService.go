@@ -2,20 +2,15 @@ package sbsService
 
 import (
 	"adsb-api/internal/db"
-	"adsb-api/internal/global"
-	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/models"
-	"adsb-api/internal/sbs"
 	"adsb-api/internal/service/cronScheduler"
-	"adsb-api/internal/utility/logger"
-	"errors"
+	"adsb-api/internal/service/cronScheduler/jobs/cleanupJob"
 )
 
 type SbsService interface {
 	CreateAdsbTables() error
 	InsertNewSbsData(aircraft []models.AircraftCurrentModel) error
-	InitAndStartCleanUpJob() error
-	StartScheduler() error
+	ScheduleCleanUpJob(schedule string, days int) error
 }
 
 type SbsImpl struct {
@@ -24,15 +19,8 @@ type SbsImpl struct {
 }
 
 // InitSbsService initializes SbsImpl struct and database connection
-func InitSbsService() (*SbsImpl, error) {
-	dbConn, err := db.InitDB()
-	if err != nil {
-		return nil, err
-	}
-
-	scheduler := cronScheduler.NewCronScheduler()
-
-	return &SbsImpl{DB: dbConn, CronScheduler: scheduler}, nil
+func InitSbsService(db db.Database, scheduler cronScheduler.Scheduler) *SbsImpl {
+	return &SbsImpl{DB: db, CronScheduler: scheduler}
 }
 
 // CreateAdsbTables creates all tables for the database schema
@@ -72,8 +60,8 @@ func (svc *SbsImpl) CreateAdsbTables() error {
 
 // InsertNewSbsData adds new SBS data to the database.
 // First process the SBS stream and then add that data to the database.
-func (svc *SbsImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) error {
-	err := svc.DB.InsertHistoryFromCurrent()
+func (svc *SbsImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) (err error) {
+	err = svc.DB.InsertHistoryFromCurrent()
 	if err != nil {
 		return err
 	}
@@ -111,30 +99,9 @@ func (svc *SbsImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) err
 	return nil
 }
 
-func (svc *SbsImpl) ProcessSbsData() ([]models.AircraftCurrentModel, error) {
-	return sbs.ProcessSbsStream()
-}
-
-func (svc *SbsImpl) StartScheduler() error {
-	if svc.CronScheduler == nil {
-		return errors.New(errorMsg.CronSchedulerIsNotInitialized)
-	}
-	svc.CronScheduler.Start()
-	return nil
-}
-
-func (svc *SbsImpl) CleanupJob() {
-	err := svc.DB.DeleteOldHistory(global.MaxDaysHistory)
-	if err != nil {
-		logger.Error.Printf("error deleting old history: %q", err.Error())
-	}
-}
-
-// ScheduleCleanUpJob initializes a starts a cleanup job, that remove old rows from database to save space.
+// ScheduleCleanUpJob initializes a starts a cleanupJob job, that remove old rows from database to save space.
 // When the job is scheduled to be executed is decided by schedule parameter.
-func (svc *SbsImpl) ScheduleCleanUpJob(schedule string) error {
-	if svc.CronScheduler == nil {
-		return errors.New(errorMsg.CronSchedulerIsNotInitialized)
-	}
-	return svc.CronScheduler.ScheduleJob(schedule, svc.CleanupJob)
+func (svc *SbsImpl) ScheduleCleanUpJob(schedule string, days int) error {
+	job := cleanupJob.NewCleanupJob(svc.DB, days)
+	return svc.CronScheduler.ScheduleJob(schedule, job.Execute)
 }
