@@ -41,10 +41,7 @@ func InitSbsEnvVariables() {
 		logger.Warning.Printf("error setting environment variable 'WAITING_TIME': can only be an integer: Error %q", err.Error())
 	}
 
-	CleaningPeriod, err = strconv.Atoi(os.Getenv("CLEANING_PERIOD"))
-	if err != nil {
-		logger.Warning.Printf("error setting environment variable 'CLEANING_PERIOD': can only be an integer: Error %q", err.Error())
-	}
+	CleanupSchedule = os.Getenv("CLEANING_SCHEDULE")
 
 	UpdatingPeriod, err = strconv.Atoi(os.Getenv("UPDATING_PERIOD"))
 	if err != nil {
@@ -94,10 +91,10 @@ func CheckEnvVariables() {
 			"time period in seconds between each batch of SBS data, was not set, using default time: %q seconds", WaitingTime)
 	}
 
-	if CleaningPeriod == 0 {
-		CleaningPeriod = 120
-		logger.Warning.Printf("environment variable cleanning periode (CLEANING_PERIOD), "+
-			"how often cleaning how data should happen to save space, was not set, using default time: %q sconds", CleaningPeriod)
+	if CleanupSchedule == "" {
+		CleanupSchedule = "0 0 * * *"
+		logger.Warning.Printf("environment variable cleanning schedule (CLEANING_SCHEDULE), "+
+			"how often cleaning how data should happen to save space, was not set, using default cron schedule: %q", CleanupSchedule)
 	}
 
 	if UpdatingPeriod == 0 {

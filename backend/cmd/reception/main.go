@@ -44,8 +44,8 @@ func main() {
 	}
 
 	logger.Info.Printf("Starting the process for recieving SBS data. \n"+
-		"SBS source : %q | WaitingTime: %d seconds | CleaningPeriod: %d seconds | UpdatingPeriod: %d seconds | MaxDaysHistory: %d",
-		global.SbsSource, global.WaitingTime, global.CleaningPeriod, global.UpdatingPeriod, global.MaxDaysHistory)
+		"SBS source : %q | WaitingTime: %d seconds | CleanupSchedule: %s seconds | UpdatingPeriod: %d seconds | MaxDaysHistory: %d",
+		global.SbsSource, global.WaitingTime, global.CleanupSchedule, global.UpdatingPeriod, global.MaxDaysHistory)
 
 	for {
 		aircraft, err := sbsSvc.ProcessSbsData()
