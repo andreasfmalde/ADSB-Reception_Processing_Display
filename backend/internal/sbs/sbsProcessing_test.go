@@ -100,7 +100,7 @@ func TestProcessSbsStream_WithMockResponse(t *testing.T) {
 				return
 			}
 
-			data, err := ProcessSbsStream()
+			data, err := ProcessSbsStream(global.SbsSource, global.WaitingTime)
 			if err != nil {
 				t.Errorf("Test: %s Error = %s", tt.name, err)
 			}
@@ -127,7 +127,7 @@ func TestProcessSbsStream_WithMockResponse(t *testing.T) {
 func TestProcessSbsStream_ConnectionFailure(t *testing.T) {
 	global.SbsSource = "unknown:5432"
 
-	data, err := ProcessSbsStream()
+	data, err := ProcessSbsStream(global.SbsSource, global.WaitingTime)
 	if err == nil {
 		t.Error("expected error due to unknown host")
 	}

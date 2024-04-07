@@ -1,7 +1,6 @@
 package sbs
 
 import (
-	"adsb-api/internal/global"
 	"adsb-api/internal/global/models"
 	"adsb-api/internal/utility/convert"
 	"bufio"
@@ -10,8 +9,8 @@ import (
 	"time"
 )
 
-func ProcessSbsStream() ([]models.AircraftCurrentModel, error) {
-	conn, err := net.Dial("tcp", global.SbsSource)
+func ProcessSbsStream(addr string, waitingTime int) ([]models.AircraftCurrentModel, error) {
+	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
@@ -28,13 +27,16 @@ func ProcessSbsStream() ([]models.AircraftCurrentModel, error) {
 	var aircraft []models.AircraftCurrentModel
 
 	timer := time.Now()
-	for scanner.Scan() {
-		if diff := time.Since(timer).Seconds(); diff > float64(global.WaitingTime) {
+	for {
+		if diff := time.Since(timer).Seconds(); diff > float64(waitingTime) {
 			break
 		}
 
 		var ac models.AircraftCurrentModel
 
+		if !scanner.Scan() {
+			break
+		}
 		msg1 := strings.Split(scanner.Text(), ",")
 		if len(msg1) < 11 {
 			continue

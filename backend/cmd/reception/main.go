@@ -54,7 +54,7 @@ func main() {
 		global.SbsSource, global.WaitingTime, global.CleanupSchedule, global.UpdatingPeriod, global.MaxDaysHistory)
 
 	for {
-		aircraft, err := sbs.ProcessSbsStream(global.SbsSource)
+		aircraft, err := sbs.ProcessSbsStream(global.SbsSource, global.WaitingTime)
 		if err != nil {
 			logger.Error.Printf(errorMsg.ErrorCouldNotConnectToTcpStream)
 			time.Sleep(time.Duration(global.WaitingTime) * time.Second)
