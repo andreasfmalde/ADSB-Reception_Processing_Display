@@ -2,6 +2,7 @@ package db
 
 import (
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/models"
 	"database/sql"
 	"fmt"
@@ -53,7 +54,7 @@ func (ctx *Context) Query(query string, args ...interface{}) (*sql.Rows, error) 
 // Begin begins Context transaction
 func (ctx *Context) Begin() error {
 	if ctx.tx != nil {
-		return fmt.Errorf("transaction already in progress")
+		return fmt.Errorf(errorMsg.TransactionInProgress)
 	}
 	tx, err := ctx.db.Begin()
 	if err != nil {
@@ -66,7 +67,7 @@ func (ctx *Context) Begin() error {
 // Commit commits Context transaction
 func (ctx *Context) Commit() error {
 	if ctx.tx == nil {
-		return fmt.Errorf("no transaction in progress")
+		return fmt.Errorf(errorMsg.NoTransactionInProgress)
 	}
 	err := ctx.tx.Commit()
 	if err != nil {
@@ -79,7 +80,7 @@ func (ctx *Context) Commit() error {
 // Rollback rollbacks Context transaction
 func (ctx *Context) Rollback() error {
 	if ctx.tx == nil {
-		return fmt.Errorf("no transaction in progress")
+		return fmt.Errorf(errorMsg.NoTransactionInProgress)
 	}
 	err := ctx.tx.Rollback()
 	if err != nil {

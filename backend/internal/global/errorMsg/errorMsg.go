@@ -16,4 +16,6 @@ const (
 	CronSchedulerIsNotInitialized   = "cron scheduler is not initialized"
 	EmptyIcao                       = "empty icao"
 	InvalidQueryParameterHour       = "query parameter 'hour', can only be an integer"
+	TransactionInProgress           = "transaction already in progress"
+	NoTransactionInProgress         = "no transaction in progress"
 )
