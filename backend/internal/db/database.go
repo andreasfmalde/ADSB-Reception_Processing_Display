@@ -203,7 +203,7 @@ func (ctx *Context) InsertHistoryFromCurrent() error {
 
 // SelectAllColumnsAircraftCurrent retrieves a list of all aircraft from aircraft_current that are older than global.WaitingTime + 2
 func (ctx *Context) SelectAllColumnsAircraftCurrent() (aircraft []models.AircraftCurrentModel, err error) {
-	query := `SELECT * FROM aircraft_current`
+	query := `SELECT icao, callsign, altitude, lat, long, speed, track, vspeed, timestamp FROM aircraft_current`
 
 	rows, err := ctx.Query(query)
 	if err != nil {
@@ -219,7 +219,7 @@ func (ctx *Context) SelectAllColumnsAircraftCurrent() (aircraft []models.Aircraf
 
 	for rows.Next() {
 		var ac models.AircraftCurrentModel
-		err := rows.Scan(&ac.Icao, &ac.Callsign, &ac.Altitude, &ac.Latitude, &ac.Longitude, &ac.Speed, &ac.Track,
+		err = rows.Scan(&ac.Icao, &ac.Callsign, &ac.Altitude, &ac.Latitude, &ac.Longitude, &ac.Speed, &ac.Track,
 			&ac.VerticalRate, &ac.Timestamp)
 		if err != nil {
 			return nil, err
@@ -233,7 +233,7 @@ func (ctx *Context) SelectAllColumnsAircraftCurrent() (aircraft []models.Aircraf
 
 // SelectAllColumnHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
 func (ctx *Context) SelectAllColumnHistoryByIcao(search string) (aircraft []models.AircraftHistoryModel, err error) {
-	query := `SELECT * FROM aircraft_history WHERE icao = $1`
+	query := `SELECT icao, lat, long, timestamp FROM aircraft_history WHERE icao = $1`
 
 	rows, err := ctx.Query(query, search)
 	if err != nil {
@@ -249,7 +249,7 @@ func (ctx *Context) SelectAllColumnHistoryByIcao(search string) (aircraft []mode
 
 	for rows.Next() {
 		var ac models.AircraftHistoryModel
-		err := rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude, &ac.Timestamp)
+		err = rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude, &ac.Timestamp)
 		if err != nil {
 			return nil, err
 		}
@@ -274,7 +274,7 @@ func (ctx *Context) DeleteOldHistory(days int) error {
 // SelectAllColumnHistoryByIcaoFilterByTimestamp selects history by aircraft icao
 // and filters every row with a newer timestamp than given hour
 func (ctx *Context) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) (aircraft []models.AircraftHistoryModel, err error) {
-	query := `SELECT * FROM aircraft_history 
+	query := `SELECT icao, lat, long, timestamp FROM aircraft_history 
          		 WHERE icao = $1 AND timestamp > (NOW() - ($2 * INTERVAL '1 hour')) 
          		 ORDER BY timestamp DESC;`
 
@@ -292,7 +292,7 @@ func (ctx *Context) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string,
 
 	for rows.Next() {
 		var ac models.AircraftHistoryModel
-		err := rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude, &ac.Timestamp)
+		err = rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude, &ac.Timestamp)
 		if err != nil {
 			return nil, err
 		}

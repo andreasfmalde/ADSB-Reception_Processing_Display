@@ -33,13 +33,10 @@ func main() {
 		}
 	}(database)
 
-	restSvc, err := restService.InitRestService(database)
-	if err != nil {
-		logger.Error.Fatalf("error opening database: %q", err)
-	}
-
 	logger.Info.Printf("REST API successfully connected to database with database user: %s name: %s host: %s port: %d",
 		global.DbUser, global.DbName, global.DbHost, global.DbPort)
+
+	restSvc := restService.InitRestService(database)
 
 	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
 	http.HandleFunc(global.AircraftCurrentPath, aircraftCurrentHandler.CurrentAircraftHandler(restSvc))
