@@ -52,6 +52,9 @@ func (ctx *Context) Query(query string, args ...interface{}) (*sql.Rows, error) 
 
 // Begin begins Context transaction
 func (ctx *Context) Begin() error {
+	if ctx.tx != nil {
+		return fmt.Errorf("transaction already in progress")
+	}
 	tx, err := ctx.db.Begin()
 	if err != nil {
 		return err
@@ -62,6 +65,9 @@ func (ctx *Context) Begin() error {
 
 // Commit commits Context transaction
 func (ctx *Context) Commit() error {
+	if ctx.tx == nil {
+		return fmt.Errorf("no transaction in progress")
+	}
 	err := ctx.tx.Commit()
 	if err != nil {
 		return err
@@ -72,6 +78,9 @@ func (ctx *Context) Commit() error {
 
 // Rollback rollbacks Context transaction
 func (ctx *Context) Rollback() error {
+	if ctx.tx == nil {
+		return fmt.Errorf("no transaction in progress")
+	}
 	err := ctx.tx.Rollback()
 	if err != nil {
 		return err
@@ -193,16 +202,20 @@ func (ctx *Context) InsertHistoryFromCurrent() error {
 }
 
 // SelectAllColumnsAircraftCurrent retrieves a list of all aircraft from aircraft_current that are older than global.WaitingTime + 2
-func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error) {
+func (ctx *Context) SelectAllColumnsAircraftCurrent() (aircraft []models.AircraftCurrentModel, err error) {
 	query := `SELECT * FROM aircraft_current`
 
 	rows, err := ctx.Query(query)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var aircraft []models.AircraftCurrentModel
+	defer func(rows *sql.Rows) {
+		closeErr := rows.Close()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}(rows)
 
 	for rows.Next() {
 		var ac models.AircraftCurrentModel
@@ -219,16 +232,20 @@ func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentM
 }
 
 // SelectAllColumnHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
-func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
+func (ctx *Context) SelectAllColumnHistoryByIcao(search string) (aircraft []models.AircraftHistoryModel, err error) {
 	query := `SELECT * FROM aircraft_history WHERE icao = $1`
 
 	rows, err := ctx.Query(query, search)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var aircraft []models.AircraftHistoryModel
+	defer func(rows *sql.Rows) {
+		closeErr := rows.Close()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}(rows)
 
 	for rows.Next() {
 		var ac models.AircraftHistoryModel
@@ -256,7 +273,7 @@ func (ctx *Context) DeleteOldHistory(days int) error {
 
 // SelectAllColumnHistoryByIcaoFilterByTimestamp selects history by aircraft icao
 // and filters every row with a newer timestamp than given hour
-func (ctx *Context) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) ([]models.AircraftHistoryModel, error) {
+func (ctx *Context) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) (aircraft []models.AircraftHistoryModel, err error) {
 	query := `SELECT * FROM aircraft_history 
          		 WHERE icao = $1 AND timestamp > (NOW() - ($2 * INTERVAL '1 hour')) 
          		 ORDER BY timestamp DESC;`
@@ -265,9 +282,13 @@ func (ctx *Context) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string,
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var aircraft []models.AircraftHistoryModel
+	defer func(rows *sql.Rows) {
+		closeErr := rows.Close()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}(rows)
 
 	for rows.Next() {
 		var ac models.AircraftHistoryModel
