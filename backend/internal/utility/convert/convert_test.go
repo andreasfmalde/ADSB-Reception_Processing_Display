@@ -1,9 +1,10 @@
 package convert
 
 import (
+	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/utility/logger"
 	"adsb-api/internal/utility/testUtility"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -15,15 +16,15 @@ import (
 var geoJsonOverallSchema string
 
 func TestMain(m *testing.M) {
-	logger.InitLogger()
+	global.InitTestEnvironment()
 	err := os.Chdir("../../../")
 	if err != nil {
-		logger.Error.Fatalf("could not change working directory: %q", err)
+		log.Fatalf("could not change working directory: %q", err)
 	}
 
 	absPath, err := filepath.Abs("./resources/schemas/geoJson.json")
 	if err != nil {
-		logger.Error.Fatalf("could not get absolute path: %q", err)
+		log.Fatalf("could not get absolute path: %q", err)
 	}
 
 	absPath = filepath.ToSlash(absPath)
