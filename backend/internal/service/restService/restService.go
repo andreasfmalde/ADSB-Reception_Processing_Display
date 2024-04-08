@@ -16,12 +16,8 @@ type RestImpl struct {
 }
 
 // InitRestService initializes RestImpl struct and database connection
-func InitRestService() (*RestImpl, error) {
-	dbConn, err := db.InitDB()
-	if err != nil {
-		return nil, err
-	}
-	return &RestImpl{DB: dbConn}, nil
+func InitRestService(db db.Database) (*RestImpl, error) {
+	return &RestImpl{DB: db}, nil
 }
 
 // GetCurrentAircraft retrieves a list of all aircraft that are considered 'current'

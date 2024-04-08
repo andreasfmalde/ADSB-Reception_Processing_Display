@@ -1,7 +1,9 @@
 package main
 
 import (
+	"adsb-api/internal/db"
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/handler/aircraftCurrentHandler"
 	"adsb-api/internal/handler/aircraftHistory"
 	"adsb-api/internal/handler/defaultHandler"
@@ -14,24 +16,30 @@ import (
 
 // main method for the RESTFUL API
 func main() {
-	// Initialize logger
-	logger.InitLogger()
 	// Initialize environment variables
 	global.InitEnvironment()
+	// Initialize logger
+	logger.InitLogger()
 	// Initialize the database
-	restSvc, err := restService.InitRestService()
+	database, err := db.InitDB()
 	if err != nil {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
+
+	defer func(database db.Database) {
+		err := database.Close()
+		if err != nil {
+			logger.Error.Fatalf(errorMsg.ErrorClosingDatabase+": %q", err)
+		}
+	}(database)
+
+	restSvc, err := restService.InitRestService(database)
+	if err != nil {
+		logger.Error.Fatalf("error opening database: %q", err)
+	}
+
 	logger.Info.Printf("REST API successfully connected to database with database user: %s name: %s host: %s port: %d",
 		global.DbUser, global.DbName, global.DbHost, global.DbPort)
-
-	defer func() {
-		err := restSvc.DB.Close()
-		if err != nil {
-			logger.Error.Fatalf("error closing database: %q", err)
-		}
-	}()
 
 	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
 	http.HandleFunc(global.AircraftCurrentPath, aircraftCurrentHandler.CurrentAircraftHandler(restSvc))
