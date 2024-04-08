@@ -57,6 +57,7 @@ func TestRestServiceImpl_GetCurrentAircraft_ErrorRetrievingDbData(t *testing.T) 
 
 	res, err := svc.GetCurrentAircraft()
 
+	assert.NotNil(t, err)
 	assert.Equal(t, errorMsg, err.Error())
 	assert.Nil(t, res)
 }
@@ -93,6 +94,7 @@ func TestRestServiceImpl_GetAircraftHistoryByIcao_ErrorRetrievingDbData(t *testi
 
 	res, err := svc.GetAircraftHistoryByIcao("search")
 
+	assert.NotNil(t, err)
 	assert.Equal(t, errorMsg, err.Error())
 	assert.Nil(t, res)
 }
@@ -131,6 +133,7 @@ func TestRestImpl_GetAircraftHistoryByIcaoFilterByTimestamp_ErrorRetrievingDbDat
 
 	res, err := svc.GetAircraftHistoryByIcaoFilterByTimestamp("search", 1)
 
+	assert.NotNil(t, err)
 	assert.Equal(t, errorMsg, err.Error())
 	assert.Nil(t, res)
 }
