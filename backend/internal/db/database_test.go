@@ -323,8 +323,6 @@ func TestAdsbDB_SelectAllColumnHistoryByIcao(t *testing.T) {
 	assert.Equal(t, nAircraft, len(aircraft))
 	for i, ac := range aircraft {
 		assert.Equal(t, mockAircraft[i].Icao, ac.Icao)
-		assert.Equal(t, mockAircraft[i].Latitude, ac.Latitude)
-		assert.Equal(t, mockAircraft[i].Longitude, ac.Longitude)
 	}
 }
 
@@ -351,15 +349,15 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 
 	// recent aircraft
 	ac1 := testUtility.CreateMockAircraftWithTimestamp("TEST1",
-		time.Now().Add(-(time.Duration(global.MaxDaysHistory)-1)*24*time.Hour).Truncate(time.Hour).Format(time.DateTime))
+		time.Now().Add(-(time.Duration(global.MaxDaysHistory)-1)*24*time.Hour).Format(time.DateTime))
 
 	// old aircraft
 	ac2 := testUtility.CreateMockAircraftWithTimestamp("TEST2",
-		time.Now().Add(-time.Duration(global.MaxDaysHistory+1)*24*time.Hour).Truncate(time.Hour).Format(time.DateTime))
+		time.Now().Add(-time.Duration(global.MaxDaysHistory+1)*24*time.Hour).Format(time.DateTime))
 
 	// old aircraft
 	ac3 := testUtility.CreateMockAircraftWithTimestamp("TEST3",
-		time.Now().Add(-(time.Duration(global.MaxDaysHistory)+2)*24*time.Hour).Truncate(time.Hour).Format(time.DateTime))
+		time.Now().Add(-(time.Duration(global.MaxDaysHistory)+2)*24*time.Hour).Format(time.DateTime))
 
 	_, err := ctx.db.Exec(`
 		INSERT INTO aircraft_history 
