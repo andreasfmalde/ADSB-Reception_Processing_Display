@@ -79,7 +79,7 @@ func (ctx *Context) Rollback() error {
 // InitDB initializes the PostgresSQL database and returns the connection pointer.
 func InitDB() (*Context, error) {
 	dbLogin := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
-		global.Host, global.Port, global.DbUser, global.DbPassword, global.Dbname)
+		global.DbHost, global.DbPort, global.DbUser, global.DbPassword, global.DbName)
 
 	dbConn, err := sql.Open("postgres", dbLogin)
 	if err = dbConn.Ping(); err != nil {
@@ -213,7 +213,7 @@ func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentM
 
 // SelectAllColumnHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
 func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
-	var query = `SELECT * FROM aircraft_history WHERE icao = $1`
+	var query = `SELECT * FROM aircraft_history WHERE icao = $1 ORDER BY timestamp DESC`
 
 	rows, err := ctx.Query(query, search)
 	if err != nil {
