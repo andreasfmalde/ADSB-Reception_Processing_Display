@@ -213,7 +213,7 @@ func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentM
 
 // SelectAllColumnHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
 func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
-	var query = `SELECT * FROM aircraft_history WHERE icao = $1`
+	var query = `SELECT * FROM aircraft_history WHERE icao = $1 ORDER BY timestamp DESC`
 
 	rows, err := ctx.Query(query, search)
 	if err != nil {
