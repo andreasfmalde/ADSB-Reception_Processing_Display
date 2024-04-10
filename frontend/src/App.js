@@ -18,6 +18,7 @@ function App() {
   const [selectedImg, setSelectedImg] = useState(null);
   const [historyTrail, setHistoryTrail] = useState(null);
   const [currentBounds, setCurrentBounds] = useState(null);
+  const [historyURL, setHistoryURL] = useState()
   const map = useRef(null);
 
   // Retrieve aircrafts from API and update the current aircraft list
@@ -44,8 +45,25 @@ function App() {
   // Retrieve historical location coordinates for an aircraft
   // with the specified icao
   const retrieveHistory = async (icao) =>{
+    let url;
+    switch(historyURL){
+      case 'all':
+        url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}`;
+        break;
+      case '1':
+        url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}?hour=1`;
+        break;
+      case '5':
+        url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}?hour=5`;
+        break;
+      case '24':
+        url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}?hour=24`;
+        break;
+      default:
+        url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}`;
+    }
     try{
-      const data = await callAPI(`${process.env.REACT_APP_SERVER}/aircraft/history/${icao}`);
+      const data = await callAPI(url);
       setHistoryTrail(data.features[0]);
     }catch(error){
       console.log("History not found")
@@ -81,7 +99,7 @@ function App() {
   
   return (
     <div className="App">
-      <Navbar callback={searchForAircraft}/>
+      <Navbar callback={searchForAircraft} trail={setHistoryURL}/>
       <div className="main-content">
         <Map
           className='main-map'

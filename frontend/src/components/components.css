@@ -3,6 +3,7 @@
     height: 78px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     /*background-color: rgb(250, 235, 215);*/
     background-color: #222831;
     position: relative;
@@ -10,7 +11,7 @@
 
 .logo{
     height: 43px;
-    margin-left: 30px;
+    margin-left: 40px;
 }
 
 .search-field{
@@ -55,6 +56,58 @@
     border-bottom-right-radius: 17px;
     padding-right: 10px;
     cursor: pointer;
+}
+
+.drop-down{
+    margin-right: 40px;
+    position: relative;
+}
+
+.drop-down > button {
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-size: 30px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+}
+
+.drop-down > button:hover{
+    background-color: rgba(200,200,200,0.1);
+}
+
+
+.drop-down-window{
+    position: absolute;
+    padding: 10px 20px;
+    min-width: 200px;
+    background-color: rgba(34, 40, 49,1);
+    top: 62px;
+    right: 0px;
+    z-index: 100;
+    border-radius: 10px;
+    box-shadow: rgba(200, 200, 200, 0.24) 0px 3px 8px;
+    color: #EEEEEE;
+
+}
+
+.active{
+    display: block;
+}
+
+.inactive{
+    display: none;
+}
+
+
+.drop-down-window > h3{
+    font-size: 1em;
+    font-weight: 400;
 }
 
 
