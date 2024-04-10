@@ -14,7 +14,7 @@ import (
 // CurrentAircraftHandler handles HTTP requests for /aircraft/current/ endpoint.
 func CurrentAircraftHandler(svc restService.RestService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := apiUtility.ValidateURL(r.URL.Path, r.URL.Query(), len(global.AircraftHistoryPath), []string{})
+		err := apiUtility.ValidateURL(r, global.CurrentPathMaxLength, []string{})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

@@ -24,28 +24,31 @@ func EncodeJsonData(w http.ResponseWriter, data interface{}) {
 }
 
 // ValidateURL checks the validity of an HTTP request URL.
-// It verifies the URL length, and the presence of specified parameters
+// Cleans the URL.
+// Verifies the URL length, and the presence of specified parameters
 // if endpoint does not use parameters leaves params nil.
 // If the URL length exceeds the maximum length or if any of the specified parameters are missing from the request,
 // it returns false.
-func ValidateURL(url string, query map[string][]string, maxLength int, params []string) error {
-	url = path.Clean(url)
-	if len(url) > maxLength {
+func ValidateURL(r *http.Request, maxLength int, optionalParams []string) error {
+	url := path.Clean(r.URL.Path)
+	if len(strings.SplitAfter(url, "/")) > maxLength {
 		return errors.New(errorMsg.ErrorTongURL)
 	}
 
-	if params == nil {
+	if r.URL.Query().Encode() == "" {
 		return nil
 	}
 
-	if len(query) != len(params) {
-		return errors.New(errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "))
+	query := r.URL.Query()
+
+	if len(query) != len(optionalParams) {
+		return errors.New(errorMsg.ErrorInvalidQueryParams + strings.Join(optionalParams, ", "))
 	}
 
-	for _, param := range params {
+	for _, param := range optionalParams {
 		values, ok := query[param]
 		if !ok || len(values) == 0 || values[0] == "" {
-			return errors.New(errorMsg.ErrorInvalidQueryParams + strings.Join(params, ", "))
+			return errors.New(errorMsg.ErrorInvalidQueryParams + strings.Join(optionalParams, ", "))
 		}
 	}
 
