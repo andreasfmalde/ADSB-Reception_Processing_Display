@@ -7,7 +7,6 @@ import (
 	"adsb-api/internal/handler/defaultHandler"
 	"adsb-api/internal/service/restService"
 	"adsb-api/internal/utility/logger"
-	"log"
 	"net/http"
 	"os"
 )
@@ -39,7 +38,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Println("PORT has not been set. Using default port: " + global.DefaultPort)
+		logger.Info.Println("PORT has not been set. Using default port: " + global.DefaultPort)
 		port = global.DefaultPort
 	}
 
