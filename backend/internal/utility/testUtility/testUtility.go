@@ -27,6 +27,20 @@ func CreateMockAircraft(n int) []models.AircraftCurrentModel {
 	return aircraft
 }
 
+func CreateMockAircraftWithTimestamp(icao string, timestamp string) models.AircraftCurrentModel {
+	return models.AircraftCurrentModel{
+		Icao:         icao,
+		Callsign:     "TEST",
+		Altitude:     10000,
+		Latitude:     51.5074,
+		Longitude:    0.1278,
+		Speed:        450,
+		Track:        180,
+		VerticalRate: 0,
+		Timestamp:    timestamp,
+	}
+}
+
 func CreateMockHistAircraft(n int) []models.AircraftHistoryModel {
 	var aircraft []models.AircraftHistoryModel
 
@@ -43,34 +57,15 @@ func CreateMockHistAircraft(n int) []models.AircraftHistoryModel {
 	return aircraft
 }
 
-func CreateMockAircraftWithTimestamp(icao string, timestamp string) models.AircraftCurrentModel {
-	return models.AircraftCurrentModel{
-		Icao:         icao,
-		Callsign:     "TEST",
-		Altitude:     10000,
-		Latitude:     51.5074,
-		Longitude:    0.1278,
-		Speed:        450,
-		Track:        180,
-		VerticalRate: 0,
-		Timestamp:    timestamp,
-	}
-}
-
-func CreateMockAircraftWithIcao(n int, icao string) []models.AircraftCurrentModel {
-	var aircraft []models.AircraftCurrentModel
+func CreateMockHistAircraftWithIcao(n int, icao string) []models.AircraftHistoryModel {
+	var aircraft []models.AircraftHistoryModel
 
 	for i := 0; i < n; i++ {
-		ac := models.AircraftCurrentModel{
-			Icao:         icao,
-			Callsign:     strconv.Itoa(i),
-			Altitude:     i,
-			Latitude:     float32(i),
-			Longitude:    float32(i),
-			Speed:        i,
-			Track:        i,
-			VerticalRate: i,
-			Timestamp:    time.Now().Add(time.Duration(i) * time.Second).Format(time.DateTime),
+		ac := models.AircraftHistoryModel{
+			Icao:      icao,
+			Latitude:  float32(i),
+			Longitude: float32(i),
+			Timestamp: time.Now().Add(time.Duration(i) * time.Second).Format(time.DateTime),
 		}
 		aircraft = append(aircraft, ac)
 	}
