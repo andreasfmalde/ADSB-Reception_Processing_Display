@@ -14,7 +14,6 @@ import (
 
 // main method for the RESTFUL API
 func main() {
-	// Initialize logger
 	logger.InitLogger()
 	// Initialize environment variables
 	global.InitEnvironment()
