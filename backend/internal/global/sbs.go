@@ -1,9 +1,9 @@
 package global
 
 var (
-	WaitingTime     int
-	UpdatingPeriod  int
-	MaxDaysHistory  int
 	SbsSource       string
-	CleanupSchedule string // once a day
+	WaitingTime     = 4
+	UpdatingPeriod  = 10
+	MaxDaysHistory  = 1
+	CleanupSchedule = "0 0 * * *" // once a day
 )

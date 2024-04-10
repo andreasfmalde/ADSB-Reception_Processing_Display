@@ -4,7 +4,7 @@ package global
 var (
 	DbUser     string
 	DbPassword string
-	DbName     string
-	DbHost     string
-	DbPort     int
+	DbName     = "adsb_db"
+	DbHost     = "localhost"
+	DbPort     = 5432
 )

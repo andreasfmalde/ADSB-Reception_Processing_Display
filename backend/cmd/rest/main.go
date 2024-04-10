@@ -9,17 +9,16 @@ import (
 	"adsb-api/internal/handler/defaultHandler"
 	"adsb-api/internal/service/restService"
 	"adsb-api/internal/utility/logger"
-	"log"
 	"net/http"
 	"os"
 )
 
 // main method for the RESTFUL API
 func main() {
-	// Initialize environment variables
-	global.InitEnvironment()
 	// Initialize logger
 	logger.InitLogger()
+	// Initialize environment variables
+	global.InitEnvironment()
 	// Initialize the database
 	database, err := db.InitDB()
 	if err != nil {
@@ -44,8 +43,8 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Println("PORT has not been set. Using default port: " + global.DefaultPort)
 		port = global.DefaultPort
+		logger.Info.Printf("PORT has not been set. Using default port: %s", port)
 	}
 
 	logger.Info.Println("Listening on port: " + port)
