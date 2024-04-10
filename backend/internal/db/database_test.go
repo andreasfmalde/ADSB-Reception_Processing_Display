@@ -359,7 +359,7 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 	ac3 := testUtility.CreateMockAircraftWithTimestamp("TEST3",
 		time.Now().Add(-(time.Duration(global.MaxDaysHistory)+2)*24*time.Hour).Format(time.DateTime))
 
-	_, err := ctx.db.Exec(`
+	ctx.db.Exec(`
 		INSERT INTO aircraft_history 
 		VALUES ($1, $2, $3, $4), ($5, $6, $7, $8), ($9, $10, $11, $12)`,
 		ac1.Icao, ac1.Latitude, ac1.Longitude, ac1.Timestamp,
@@ -368,7 +368,7 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 
 	var count int
 
-	err = ctx.db.QueryRow("SELECT COUNT(*) FROM aircraft_history").Scan(&count)
+	err := ctx.db.QueryRow("SELECT COUNT(*) FROM aircraft_history").Scan(&count)
 	if err != nil {
 		t.Fatalf("Error querying the table: %q", err)
 	}

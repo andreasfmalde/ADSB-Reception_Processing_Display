@@ -86,10 +86,13 @@ func InitDB() (*Context, error) {
 		global.DbHost, global.DbPort, global.DbUser, global.DbPassword, global.DbName)
 
 	dbConn, err := sql.Open("postgres", dbLogin)
+	if err != nil {
+		return nil, err
+	}
 	if err = dbConn.Ping(); err != nil {
 		return nil, err
 	}
-	return &Context{db: dbConn}, err
+	return &Context{db: dbConn}, nil
 }
 
 // Close closes Context db connection
