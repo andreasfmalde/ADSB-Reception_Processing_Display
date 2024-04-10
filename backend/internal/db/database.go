@@ -96,10 +96,13 @@ func InitDB() (*Context, error) {
 		global.DbHost, global.DbPort, global.DbUser, global.DbPassword, global.DbName)
 
 	dbConn, err := sql.Open("postgres", dbLogin)
+	if err != nil {
+		return nil, err
+	}
 	if err = dbConn.Ping(); err != nil {
 		return nil, err
 	}
-	return &Context{db: dbConn}, err
+	return &Context{db: dbConn}, nil
 }
 
 // Close closes Context db connection
@@ -276,8 +279,9 @@ func (ctx *Context) DeleteOldHistory(days int) error {
 // and filters every row with a newer timestamp than given hour
 func (ctx *Context) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) (aircraft []models.AircraftHistoryModel, err error) {
 	query := `SELECT icao, lat, long, timestamp FROM aircraft_history 
-         		 WHERE icao = $1 AND timestamp > (NOW() - ($2 * INTERVAL '1 hour')) 
-         		 ORDER BY timestamp DESC;`
+         		 WHERE icao = $1 AND timestamp > (SELECT (MAX(timestamp) - ($2 * INTERVAL '1 hour'))
+				 FROM aircraft_history WHERE icao = $1) 
+         		 ORDER BY timestamp DESC`
 
 	rows, err := ctx.Query(query, search, hour)
 	if err != nil {

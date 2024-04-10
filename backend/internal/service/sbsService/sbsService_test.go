@@ -5,9 +5,10 @@ import (
 	"adsb-api/internal/utility/mock"
 	"adsb-api/internal/utility/testUtility"
 	"errors"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestMain(m *testing.M) {

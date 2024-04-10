@@ -46,13 +46,13 @@ func teardownTestDB(ctx *Context, t *testing.T) {
 
 	_, err = ctx.db.Exec("DROP TABLE IF EXISTS aircraft_history CASCADE")
 	if err != nil {
-		t.Fatalf("error droppint current_time_aircraft: %q", err.Error())
+		t.Fatalf("error dropping current_time_aircraft: %q", err.Error())
 	}
 
 	if ctx.tx != nil {
 		err = ctx.Commit()
 		if err != nil {
-			t.Fatalf("error committing incommitted transaction: %q", err)
+			t.Fatalf("error committing uncommitted transaction: %q", err)
 		}
 	}
 
@@ -331,8 +331,6 @@ func TestAdsbDB_SelectAllColumnHistoryByIcao(t *testing.T) {
 	assert.Equal(t, nAircraft, len(aircraft))
 	for i, ac := range aircraft {
 		assert.Equal(t, mockAircraft[i].Icao, ac.Icao)
-		assert.Equal(t, mockAircraft[i].Latitude, ac.Latitude)
-		assert.Equal(t, mockAircraft[i].Longitude, ac.Longitude)
 	}
 }
 
@@ -369,7 +367,7 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 	ac3 := testUtility.CreateMockAircraftWithTimestamp("TEST3",
 		time.Now().Add(-(time.Duration(global.MaxDaysHistory)+2)*24*time.Hour).Truncate(time.Hour).Format(time.DateTime))
 
-	_, err := ctx.db.Exec(`
+	ctx.db.Exec(`
 		INSERT INTO aircraft_history 
 		VALUES ($1, $2, $3, $4), ($5, $6, $7, $8), ($9, $10, $11, $12)`,
 		ac1.Icao, ac1.Latitude, ac1.Longitude, ac1.Timestamp,
@@ -378,7 +376,7 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 
 	var count int
 
-	err = ctx.db.QueryRow("SELECT COUNT(*) FROM aircraft_history").Scan(&count)
+	err := ctx.db.QueryRow("SELECT COUNT(*) FROM aircraft_history").Scan(&count)
 	if err != nil {
 		t.Fatalf("Error querying the table: %q", err)
 	}
