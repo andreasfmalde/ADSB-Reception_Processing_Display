@@ -45,7 +45,7 @@ function App() {
   // with the specified icao
   const retrieveHistory = async (icao) =>{
     try{
-      const data = await callAPI(`${process.env.REACT_APP_SERVER}/aircraft/history?icao=${icao}`);
+      const data = await callAPI(`${process.env.REACT_APP_SERVER}/aircraft/history/${icao}`);
       setHistoryTrail(data.features[0]);
     }catch(error){
       console.log("History not found")
