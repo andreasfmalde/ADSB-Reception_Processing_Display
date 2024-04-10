@@ -258,7 +258,8 @@ func (ctx *Context) DeleteOldHistory(days int) error {
 // and filters every row with a newer timestamp than given hour
 func (ctx *Context) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) ([]models.AircraftHistoryModel, error) {
 	query := `SELECT * FROM aircraft_history 
-         		 WHERE icao = $1 AND timestamp > (NOW() - ($2 * INTERVAL '1 hour')) 
+         		 WHERE icao = $1 AND timestamp > (SELECT (MAX(timestamp) - ($2 * INTERVAL '1 hour'))
+				 FROM aircraft_history WHERE icao = $1) 
          		 ORDER BY timestamp DESC;`
 
 	rows, err := ctx.Query(query, search, hour)
