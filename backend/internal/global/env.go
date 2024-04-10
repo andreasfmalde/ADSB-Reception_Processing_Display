@@ -16,7 +16,6 @@ func InitEnvironment() {
 
 	InitDatabaseEnvVariables()
 	InitSbsEnvVariables()
-	CheckRequiredEnvVariables()
 }
 
 func InitDatabaseEnvVariables() {
@@ -77,20 +76,6 @@ func InitSbsEnvVariables() {
 	}
 }
 
-func CheckRequiredEnvVariables() {
-	if DbUser == "" {
-		logger.Error.Fatal("required environment variable for database username (DB_USER) was not set")
-	}
-
-	if DbPassword == "" {
-		logger.Error.Fatal("required environment variable for database password (DB_PASSWORD) was not set")
-	}
-
-	if SbsSource == "" {
-		logger.Error.Fatal("required environment variable for SBS data source (SBS_SOURCE) was not set")
-	}
-}
-
 func InitTestEnvironment() {
 	logger.InitLogger()
 	DbUser = "test"
@@ -104,6 +89,4 @@ func InitTestEnvironment() {
 	CleanupSchedule = "0 0 * * *"
 	UpdatingPeriod = 10
 	MaxDaysHistory = 1
-
-	CheckRequiredEnvVariables()
 }
