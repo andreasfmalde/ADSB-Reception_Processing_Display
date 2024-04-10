@@ -36,7 +36,7 @@ func (svc *SbsImpl) CreateAdsbTables() error {
 	}
 	defer func() {
 		if err != nil {
-			svc.DB.Rollback()
+			_ = svc.DB.Rollback()
 		}
 	}()
 
@@ -60,8 +60,8 @@ func (svc *SbsImpl) CreateAdsbTables() error {
 
 // InsertNewSbsData adds new SBS data to the database.
 // First process the SBS stream and then add that data to the database.
-func (svc *SbsImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) (err error) {
-	err = svc.DB.InsertHistoryFromCurrent()
+func (svc *SbsImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) error {
+	err := svc.DB.InsertHistoryFromCurrent()
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (svc *SbsImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) (er
 	}
 	defer func() {
 		if err != nil {
-			svc.DB.Rollback()
+			_ = svc.DB.Rollback()
 		}
 	}()
 
