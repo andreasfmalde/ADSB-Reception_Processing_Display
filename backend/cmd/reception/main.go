@@ -23,12 +23,12 @@ func main() {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
 
-	defer func(database db.Database) {
-		err := database.Close()
+	defer func() {
+		err = database.Close()
 		if err != nil {
 			logger.Error.Fatalf(errorMsg.ErrorClosingDatabase+": %q", err)
 		}
-	}(database)
+	}()
 
 	// Initialize cron scheduler
 	scheduler := cronScheduler.NewCronScheduler()

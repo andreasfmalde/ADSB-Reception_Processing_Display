@@ -26,12 +26,12 @@ func main() {
 		logger.Error.Fatalf("error opening database: %q", err)
 	}
 
-	defer func(database db.Database) {
-		err := database.Close()
+	defer func() {
+		err = database.Close()
 		if err != nil {
 			logger.Error.Fatalf(errorMsg.ErrorClosingDatabase+": %q", err)
 		}
-	}(database)
+	}()
 
 	logger.Info.Printf("REST API successfully connected to database with database user: %s name: %s host: %s port: %d",
 		global.DbUser, global.DbName, global.DbHost, global.DbPort)
