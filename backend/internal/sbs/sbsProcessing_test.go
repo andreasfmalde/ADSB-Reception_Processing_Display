@@ -2,8 +2,8 @@ package sbs
 
 import (
 	"adsb-api/internal/global"
-	"adsb-api/internal/utility/logger"
 	"adsb-api/internal/utility/mock"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 func TestProcessSbsStream_WithMockResponse(t *testing.T) {
 	err := os.Chdir("../../")
 	if err != nil {
-		logger.Error.Fatalf("could not change working directory: %q", err)
+		log.Fatalf("could not change working directory: %q", err)
 	}
 
 	// 1 valid aircraft

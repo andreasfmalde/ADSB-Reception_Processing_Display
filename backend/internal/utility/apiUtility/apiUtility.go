@@ -2,9 +2,9 @@ package apiUtility
 
 import (
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/utility/logger"
 	"encoding/json"
 	"errors"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"path"
 	"strings"
@@ -19,7 +19,7 @@ func EncodeJsonData(w http.ResponseWriter, data interface{}) {
 	err := encoder.Encode(data)
 	if err != nil {
 		http.Error(w, errorMsg.ErrorEncodingJsonData, http.StatusInternalServerError)
-		logger.Error.Printf(errorMsg.ErrorEncodingJsonData+": %q", err)
+		log.Error().Msgf(errorMsg.ErrorEncodingJsonData+": %q", err)
 	}
 }
 

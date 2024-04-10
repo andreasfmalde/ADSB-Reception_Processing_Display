@@ -7,27 +7,29 @@ import (
 	"adsb-api/internal/handler/defaultHandler"
 	"adsb-api/internal/service/restService"
 	"adsb-api/internal/utility/logger"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
 )
 
 // main method for the RESTFUL API
 func main() {
-	logger.InitLogger()
 	// Initialize environment variables
 	global.InitEnvironment()
+	// Initialize logger
+	logger.InitLogger()
 	// Initialize the database
 	restSvc, err := restService.InitRestService()
 	if err != nil {
-		logger.Error.Fatalf("error opening database: %q", err)
+		log.Fatal().Msgf("error opening database: %q", err)
 	}
-	logger.Info.Printf("REST API successfully connected to database with database user: %s name: %s host: %s port: %d",
+	log.Info().Msgf("REST API successfully connected to database with database user: %s name: %s host: %s port: %d",
 		global.DbUser, global.DbName, global.DbHost, global.DbPort)
 
 	defer func() {
 		err := restSvc.DB.Close()
 		if err != nil {
-			logger.Error.Fatalf("error closing database: %q", err)
+			log.Fatal().Msgf("error closing database: %q", err)
 		}
 	}()
 
@@ -38,10 +40,10 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = global.DefaultPort
-		logger.Info.Println("PORT has not been set. Using default port: " + port)
+		log.Info().Msg("PORT has not been set. Using default port: " + port)
 	}
 
-	logger.Info.Println("Listening on port: " + port)
-	logger.Info.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Info().Msgf("Listening on port: " + port)
+	log.Fatal().Msg(http.ListenAndServe(":"+port, nil).Error())
 
 }

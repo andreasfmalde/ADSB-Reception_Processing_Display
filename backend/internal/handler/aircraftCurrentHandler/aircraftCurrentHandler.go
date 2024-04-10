@@ -6,8 +6,8 @@ import (
 	"adsb-api/internal/service/restService"
 	"adsb-api/internal/utility/apiUtility"
 	"adsb-api/internal/utility/convert"
-	"adsb-api/internal/utility/logger"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
@@ -34,7 +34,7 @@ func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 	res, err := svc.GetCurrentAircraft()
 	if err != nil {
 		http.Error(w, errorMsg.ErrorRetrievingCurrentAircraft, http.StatusInternalServerError)
-		logger.Error.Printf(errorMsg.ErrorRetrievingCurrentAircraft+": %q Path: %q", err, r.URL)
+		log.Error().Msgf(errorMsg.ErrorRetrievingCurrentAircraft+": %q Path: %q", err, r.URL)
 		return
 	}
 	if len(res) == 0 {
@@ -45,7 +45,7 @@ func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 	aircraft, err := convert.CurrentModelToGeoJson(res)
 	if err != nil {
 		http.Error(w, errorMsg.ErrorConvertingDataToGeoJson, http.StatusInternalServerError)
-		logger.Error.Printf(errorMsg.ErrorConvertingDataToGeoJson+": %q", err)
+		log.Error().Msgf(errorMsg.ErrorConvertingDataToGeoJson+": %q", err)
 		return
 	}
 

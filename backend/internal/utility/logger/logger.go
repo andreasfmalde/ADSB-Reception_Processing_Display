@@ -1,18 +1,27 @@
 package logger
 
 import (
-	"log"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"os"
-)
-
-var (
-	Info    *log.Logger
-	Warning *log.Logger
-	Error   *log.Logger
+	"time"
 )
 
 func InitLogger() {
-	Info = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	Warning = log.New(os.Stdout, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
-	Error = log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
+		With().
+		Timestamp().
+		Caller().
+		Logger()
+
+	log.Logger = logger
+
+	env := os.Getenv("ENV")
+
+	if env == "prod" || env == "production" {
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	} else {
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+		log.Info().Msgf("environment variable ENV was not set. Using logging level: %s", zerolog.GlobalLevel().String())
+	}
 }
