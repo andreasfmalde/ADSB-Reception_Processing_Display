@@ -46,6 +46,8 @@ func TestProcessSbsStream_WithMockResponse(t *testing.T) {
 		t.Errorf("error reading file: %q", err)
 	}
 
+	mockFirstLineEmpty, err := os.ReadFile("./resources/mock/mockSbsDataFirstLineEmpty.txt")
+
 	tests := []struct {
 		name           string
 		mockResponse   []byte
@@ -81,6 +83,11 @@ func TestProcessSbsStream_WithMockResponse(t *testing.T) {
 			name:           "Malformed Data Lines",
 			expectedLength: 0,
 			mockResponse:   mockMalformedLines,
+		},
+		{
+			name:           "First line is empty",
+			expectedLength: 0,
+			mockResponse:   mockFirstLineEmpty,
 		},
 	}
 

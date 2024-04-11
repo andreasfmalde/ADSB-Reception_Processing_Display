@@ -8,6 +8,7 @@ import (
 type RestService interface {
 	GetCurrentAircraft() ([]models.AircraftCurrentModel, error)
 	GetAircraftHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
+	GetAircraftHistoryByIcaoFilterByTimestamp(search string, hour int) ([]models.AircraftHistoryModel, error)
 }
 
 type RestImpl struct {
@@ -32,4 +33,8 @@ func (svc *RestImpl) GetCurrentAircraft() ([]models.AircraftCurrentModel, error)
 // GetAircraftHistoryByIcao retrieves aircraft history from given icao.
 func (svc *RestImpl) GetAircraftHistoryByIcao(icao string) ([]models.AircraftHistoryModel, error) {
 	return svc.DB.SelectAllColumnHistoryByIcao(icao)
+}
+
+func (svc *RestImpl) GetAircraftHistoryByIcaoFilterByTimestamp(search string, hour int) ([]models.AircraftHistoryModel, error) {
+	return svc.DB.SelectAllColumnHistoryByIcaoFilterByTimestamp(search, hour)
 }
