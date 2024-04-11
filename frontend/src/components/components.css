@@ -86,7 +86,7 @@
     position: absolute;
     padding: 10px 20px;
     min-width: 200px;
-    background-color: rgba(34, 40, 49,1);
+    background-color: rgba(34, 40, 49,0.98);
     top: 62px;
     right: 0px;
     z-index: 100;
@@ -108,6 +108,11 @@
 .drop-down-window > h3{
     font-size: 1em;
     font-weight: 400;
+    margin-bottom: -5px;
+}
+
+.drop-down-window > .label {
+    font-size: 0.7em;
 }
 
 .custom-history{
