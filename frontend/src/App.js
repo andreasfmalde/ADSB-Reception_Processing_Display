@@ -18,7 +18,7 @@ function App() {
   const [selectedImg, setSelectedImg] = useState(null);
   const [historyTrail, setHistoryTrail] = useState(null);
   const [currentBounds, setCurrentBounds] = useState(null);
-  const [historyURL, setHistoryURL] = useState()
+  const [historyURL, setHistoryURL] = useState('1')
   const map = useRef(null);
 
   // Retrieve aircrafts from API and update the current aircraft list
@@ -45,22 +45,12 @@ function App() {
   // Retrieve historical location coordinates for an aircraft
   // with the specified icao
   const retrieveHistory = async (icao) =>{
+    
     let url;
-    switch(historyURL){
-      case 'all':
-        url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}`;
-        break;
-      case '1':
-        url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}?hour=1`;
-        break;
-      case '5':
-        url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}?hour=5`;
-        break;
-      case '24':
-        url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}?hour=24`;
-        break;
-      default:
-        url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}`;
+    if (historyURL === 'all'){
+      url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}`
+    }else{
+      url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}?hour=${historyURL}`
     }
     try{
       const data = await callAPI(url);

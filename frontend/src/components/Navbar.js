@@ -6,6 +6,9 @@ import { useState } from 'react';
 export const Navbar = (props) =>{
 
     const [open, setOpen] = useState(false);
+    const [historyHour, setHistoryHour] = useState(1);
+    const [currentCustom, setCurrentCustom] = useState(true);
+
 
     return (
         <nav className="navigation">
@@ -29,16 +32,43 @@ export const Navbar = (props) =>{
                 <div className={`drop-down-window ${open ? 'active':'inactive'}`}>
                     <h3>Set history trail length:</h3>
                     <hr />
-                    <input type='radio' id='option-1' name="trail" value='1' onClick={e=>props.trail(e.target.value)} />
-                    <label htmlFor="option-1">1 Hour</label>
-                    <br />
-                    <input type='radio' id='option-2' name="trail" value='5' onClick={e=>props.trail(e.target.value)} />
-                    <label htmlFor="option-2">5 Hours</label>
-                    <br />
-                    <input type='radio' id='option-3' name="trail" value='24' onClick={e=>props.trail(e.target.value)} />
-                    <label htmlFor="option-3">1 Day</label>
-                    <br />
-                    <input type='radio' id='option-4' name="trail" value='all' onClick={e=>props.trail(e.target.value)} />
+                    <input type='radio' id='custom-radio' checked={currentCustom}
+                    onClick={()=>setCurrentCustom(true)}/>
+                    <label htmlFor="custom-radio">Custom hours</label>
+
+                    <div className='custom-history' >
+                        <input type='button' value='-'
+                            onClick={()=>{
+                                if(historyHour > 1){
+                                    setHistoryHour(historyHour-1)
+                                    props.trail(`${historyHour-1}`)
+                                    console.log(`${historyHour-1}`)
+                                }
+                            }}
+                            disabled={!currentCustom}
+                        />
+                        <input type="text" name="custom-nr"
+                         readOnly value={historyHour}
+                         disabled={!currentCustom}/>
+                        <input type='button' value='+'
+                            onClick={()=>{
+                                if(historyHour < 24){
+                                    setHistoryHour(historyHour+1)
+                                    props.trail(`${historyHour+1}`)
+                                    console.log(`${historyHour+1}`)
+                                }
+                            }}
+                            disabled={!currentCustom}
+                        />
+                    </div>
+                    
+                    <input type='radio' id='option-4' value='all'
+                    checked={!currentCustom}
+                    onClick={e=>{
+                        setCurrentCustom(false)
+                        props.trail(e.target.value)
+                        }} 
+                        />
                     <label htmlFor="option-4">All</label>
                 </div>
             </div>

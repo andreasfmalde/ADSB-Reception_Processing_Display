@@ -110,6 +110,56 @@
     font-weight: 400;
 }
 
+.custom-history{
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.custom-history > input[type='button']{
+    background-color: #404650;
+    border: none;
+    color: inherit;
+    font-size: 25px;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+}
+.custom-history > input[type='button']:hover{
+    background-color: rgba(200, 200, 200,0.1);
+}
+
+.custom-history > input[type='button']:first-child{
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    padding-bottom: 10px;
+}
+
+.custom-history > input[type='button']:last-child{
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.custom-history > input[type='text']{
+    text-align: center;
+    font-size: 16px;
+    width: 50px;
+    height: 28px;
+    margin: 0 -1px;
+    color: #EEEEEE;
+    background-color: #404650;
+    border: none;
+}
+.custom-history > input[type='text']:focus{
+    outline: none;
+}
+
+.custom-history > input[type='button']:disabled,.custom-history > input[type='text']:disabled{
+    background-color: rgb(80, 79, 79);
+    color: darkgrey;
+}
+
 
 
 .Sidebar{
