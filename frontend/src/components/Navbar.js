@@ -1,5 +1,5 @@
 import './components.css';
-import { IoMdSearch, IoMdSettings } from "react-icons/io";
+import { IoMdSearch, IoMdSettings, IoIosCloseCircleOutline  } from "react-icons/io";
 import logoWhite from '../assets/logo_white.png';
 import { useState, useRef, useEffect } from 'react';
 
@@ -8,6 +8,7 @@ export const Navbar = (props) =>{
     const [open, setOpen] = useState(false);
     const [historyHour, setHistoryHour] = useState(1);
     const [currentCustom, setCurrentCustom] = useState(true);
+    const [searchOpen, setSearchOpen] = useState(false);
     const dropDownRef = useRef();
     const dropDownButton = useRef();
 
@@ -23,7 +24,7 @@ export const Navbar = (props) =>{
     return (
         <nav className="navigation">
             <img src={logoWhite} alt="AirTrackr logo" className='logo' />
-            <form className='search-field'
+            <form className={`search-field ${searchOpen ? 'search-active':''}`}
                 data-testid='form'
                 onSubmit={e =>{
                     e.preventDefault();
@@ -35,17 +36,31 @@ export const Navbar = (props) =>{
                     <IoMdSearch />
                 </button>
             </form>
+            <button className='search-btn-medium-small'
+                onClick={()=>{
+                    setSearchOpen(!searchOpen)
+                    setOpen(false)
+                }}
+            >
+                {searchOpen ? <IoIosCloseCircleOutline /> :<IoMdSearch />}
+            </button>
             <div className='drop-down'>
-                <button onClick={()=>setOpen(!open)} ref={dropDownButton}>
-                    <IoMdSettings className='settings-icon' />
+                <button 
+                    onClick={()=>{
+                        setOpen(!open)
+                        setSearchOpen(false)
+                    }} 
+                    ref={dropDownButton}
+                >
+                    <IoMdSettings />
                 </button>
                 <div className={`drop-down-window ${open ? 'active':'inactive'}`} ref={dropDownRef}>
                     <h3>HISTORY TRAILS:</h3>
                     <p className='label'>Select how many hours in the past the history trails will show. <br /> Choose to set a custom amount, or show all history data.</p>
                     <hr />
                     <input type='radio' id='custom-radio' checked={currentCustom}
+                    onChange={() => setCurrentCustom(true)} 
                     onClick={()=>{
-                        setCurrentCustom(true)
                         props.trail(`${historyHour}`)
                     }}/>
                     <label htmlFor="custom-radio">Custom hours</label>
@@ -78,8 +93,8 @@ export const Navbar = (props) =>{
                     
                     <input type='radio' id='option-4' value='all'
                     checked={!currentCustom}
+                    onChange={() => setCurrentCustom(false)} 
                     onClick={e=>{
-                        setCurrentCustom(false)
                         props.trail(e.target.value)
                         }} 
                         />
