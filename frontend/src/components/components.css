@@ -121,20 +121,20 @@
 }
 
 .custom-history{
-    padding: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(3, 40px);
+    width: 120px;
+    margin: 15px auto;
+    height: 35px;
 }
 
 .custom-history > input[type='button']{
     background-color: #404650;
     border: none;
     color: inherit;
-    font-size: 25px;
+    font-size: 1.5em;
     cursor: pointer;
-    width: 30px;
-    height: 30px;
+    text-align: center;
 }
 .custom-history > input[type='button']:hover{
     background-color: rgba(200, 200, 200,0.1);
@@ -143,23 +143,23 @@
 .custom-history > input[type='button']:first-child{
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
-    padding-bottom: 10px;
+    grid-column: 1/2;
 }
 
 .custom-history > input[type='button']:last-child{
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
+    grid-column: 3/4;
 }
 
 .custom-history > input[type='text']{
     text-align: center;
     font-size: 16px;
-    width: 50px;
-    height: 28px;
-    margin: 0 -1px;
     color: #EEEEEE;
     background-color: #404650;
     border: none;
+    outline: none;
+    grid-column: 2/3;
 }
 .custom-history > input[type='text']:focus{
     outline: none;
