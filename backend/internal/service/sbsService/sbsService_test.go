@@ -17,23 +17,15 @@ func TestMain(m *testing.M) {
 }
 
 func Test_InitSbsService(t *testing.T) {
-	sbsSvc, err := InitSbsService()
-	if err != nil {
-		t.Fatalf("error initiazling sbs eervice: %q", err)
-	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	assert.NotNil(t, sbsSvc)
-}
+	mockDB := mock.NewMockDatabase(ctrl)
+	mockCron := mock.NewMockScheduler(ctrl)
 
-func Test_InitSbsService_ErrorInitDB(t *testing.T) {
-	global.DbUser = "user"
-	sbsSvc, err := InitSbsService()
-	if err == nil {
-		t.Fatalf("error initiazling sbs eervice: %q", err)
-	}
+	sbsSvc := InitSbsService(mockDB, mockCron)
 
-	assert.Nil(t, sbsSvc)
-	global.DbUser = "test"
+	assert.NotNil(t, sbsSvc, sbsSvc.DB, sbsSvc.CronScheduler)
 }
 
 func TestSbsServiceImpl_CreateAdsbTables(t *testing.T) {
@@ -116,37 +108,45 @@ func TestSbsServiceImpl_InsertNewSbsData_WithRollback(t *testing.T) {
 
 	err := svc.InsertNewSbsData(mockData)
 
+	assert.NotNil(t, err)
 	assert.Equal(t, errorMsg, err.Error())
 }
 
-func TestSbsServiceImpl_Cleanup(t *testing.T) {
+func TestSbsImpl_ScheduleCleanUpJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockDB := mock.NewMockDatabase(ctrl)
+	mockCron := mock.NewMockScheduler(ctrl)
+	svc := &SbsImpl{DB: mockDB, CronScheduler: mockCron}
 
-	svc := &SbsImpl{DB: mockDB}
+	schedule := "* * * * *"
+	MaxDaysHistory := 5
 
-	mockDB.EXPECT().DeleteOldHistory(global.MaxDaysHistory).Return(nil)
+	mockCron.EXPECT().ScheduleJob(schedule, gomock.Any()).Return(nil)
 
-	err := svc.Cleanup()
+	err := svc.ScheduleCleanUpJob(schedule, MaxDaysHistory)
 
 	assert.Nil(t, err)
 }
 
-func TestSbsServiceImpl_Cleanup_ErrorDeletingOldHistory(t *testing.T) {
+func TestSbsImpl_ScheduleCleanUpJob_ErrorScheduleJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockDB := mock.NewMockDatabase(ctrl)
+	mockCron := mock.NewMockScheduler(ctrl)
+	svc := &SbsImpl{DB: mockDB, CronScheduler: mockCron}
 
-	svc := &SbsImpl{DB: mockDB}
+	schedule := "* * * * *"
+	MaxDaysHistory := 5
 
-	var errorMsg = "mock error deleting old history data"
+	errorMessage := "mock error simulating error scheduling job"
 
-	mockDB.EXPECT().DeleteOldHistory(global.MaxDaysHistory).Return(errors.New(errorMsg))
+	mockCron.EXPECT().ScheduleJob(schedule, gomock.Any()).Return(errors.New(errorMessage))
 
-	err := svc.Cleanup()
+	err := svc.ScheduleCleanUpJob(schedule, MaxDaysHistory)
 
 	assert.NotNil(t, err)
+	assert.Equal(t, errorMessage, err.Error())
 }

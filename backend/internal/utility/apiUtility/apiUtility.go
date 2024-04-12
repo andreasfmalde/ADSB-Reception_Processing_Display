@@ -2,7 +2,6 @@ package apiUtility
 
 import (
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/utility/logger"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -11,16 +10,12 @@ import (
 )
 
 // EncodeJsonData encodes a struct to json and writes it to the response writer. Returns an error if the encoding fails.
-func EncodeJsonData(w http.ResponseWriter, data interface{}) {
+func EncodeJsonData(w http.ResponseWriter, data interface{}) error {
 	w.Header().Add("content-type", "application/json")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "\t")
-	err := encoder.Encode(data)
-	if err != nil {
-		http.Error(w, errorMsg.ErrorEncodingJsonData, http.StatusInternalServerError)
-		logger.Error.Printf(errorMsg.ErrorEncodingJsonData+": %q", err)
-	}
+	return encoder.Encode(data)
 }
 
 // ValidateURL checks the validity of an HTTP request URL.
