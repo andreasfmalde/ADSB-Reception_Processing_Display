@@ -81,6 +81,8 @@ function App() {
     
   }
 
+  // A notification pop-up to notify the user
+  // of any warnings
   const warning = (text) =>{
     toast.warn(text, {
       position: "top-right",
