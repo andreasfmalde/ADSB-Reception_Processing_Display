@@ -15,6 +15,11 @@ describe('findAircraftByIcaoOrCallsign tests',()=>{
         expect(result).toStrictEqual(geojson.features[3]);
     });
 
+    test('returns aircraft when search term matches callsign with lowercase characters',()=>{
+        const result = findAircraftByIcaoOrCallsign("sas1812", geojson.features);
+        expect(result).toStrictEqual(geojson.features[3]);
+    });
+
     test('returns aircraft when search term matches icao',()=>{
         const result = findAircraftByIcaoOrCallsign("45AC32", geojson.features);
         expect(result).toStrictEqual(geojson.features[2]);
