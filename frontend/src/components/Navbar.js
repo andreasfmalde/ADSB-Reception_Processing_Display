@@ -23,7 +23,9 @@ export const Navbar = (props) =>{
     })
     return (
         <nav className="navigation">
+            {/* LOGO */}
             <img src={logoWhite} alt="AirTrackr logo" className='logo' />
+            {/* SEARCH BAR */}
             <form className={`search-field ${searchOpen ? 'search-active':''}`}
                 data-testid='form'
                 onSubmit={e =>{
@@ -36,6 +38,7 @@ export const Navbar = (props) =>{
                     <IoMdSearch />
                 </button>
             </form>
+            {/* SEARCH BAR BUTTON FOR SMALL/MEDIUM SCREENS */}
             <button className='search-btn-medium-small'
                 onClick={()=>{
                     setSearchOpen(!searchOpen)
@@ -44,6 +47,7 @@ export const Navbar = (props) =>{
             >
                 {searchOpen ? <IoIosCloseCircleOutline /> :<IoMdSearch />}
             </button>
+            {/* HISTORY TRAIL DROP DOWN MENU */}
             <div className='drop-down'>
                 <button 
                     onClick={()=>{
@@ -54,10 +58,13 @@ export const Navbar = (props) =>{
                 >
                     <IoMdSettings />
                 </button>
+                {/* DROP DOWN WINDOW */}
                 <div className={`drop-down-window ${open ? 'active':'inactive'}`} ref={dropDownRef}>
                     <h3>HISTORY TRAILS:</h3>
-                    <p className='label'>Select how many hours in the past the history trails will show. <br /> Choose to set a custom amount, or show all history data.</p>
+                    <p className='label'>Select how many hours in the past the history trails will show. <br />
+                    Choose to set a custom amount, or show all history data.</p>
                     <hr />
+                    {/* CUSTOM SECTION */}
                     <input type='radio' id='custom-radio' checked={currentCustom}
                     onChange={() => setCurrentCustom(true)} 
                     onClick={()=>{
@@ -90,7 +97,7 @@ export const Navbar = (props) =>{
                             disabled={!currentCustom}
                         />
                     </div>
-                    
+                    {/* ALL DATA SECTION */}
                     <input type='radio' id='option-4' value='all'
                     checked={!currentCustom}
                     onChange={() => setCurrentCustom(false)} 

@@ -103,10 +103,15 @@ function App() {
   useEffect(()=>{
     if(currentBounds !== null && aircraftJSON !== null){
       let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,currentBounds));
-      setCurrentRender(trimAircraftList(aircraftInBounds));
+      aircraftInBounds = trimAircraftList(aircraftInBounds);
+      // Make sure to alway show a selected aircraft
+      if(selected !== null && !aircraftInBounds.includes(selected)){
+        aircraftInBounds.push(selected)
+      }
+      setCurrentRender(aircraftInBounds);
     }
     
-  },[aircraftJSON, currentBounds])
+  },[aircraftJSON, currentBounds, selected])
   
   return (
     <div className="App">
