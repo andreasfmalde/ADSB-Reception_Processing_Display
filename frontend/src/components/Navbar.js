@@ -9,14 +9,16 @@ export const Navbar = (props) =>{
     const [historyHour, setHistoryHour] = useState(1);
     const [currentCustom, setCurrentCustom] = useState(true);
     const [searchOpen, setSearchOpen] = useState(false);
-    const dropDownRef = useRef();
-    const dropDownButton = useRef();
+    const dropDownRef = useRef(null);
+    const dropDownButton = useRef(null);
 
     useEffect(()=>{
 
         document.addEventListener('mousedown',e =>{
-            if(open && !dropDownRef.current.contains(e.target) 
-            && !dropDownButton.current.contains(e.target)){
+            if(open && dropDownRef.current !== null 
+            && dropDownButton.current !== null
+            && !dropDownRef?.current.contains(e.target) 
+            && !dropDownButton?.current.contains(e.target)){
                 setOpen(false)
             }
         });

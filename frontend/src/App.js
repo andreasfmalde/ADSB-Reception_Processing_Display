@@ -22,7 +22,10 @@ function App() {
   const [currentBounds, setCurrentBounds] = useState(null);
   const [historyURL, setHistoryURL] = useState('1')
   const map = useRef(null);
-  const [time, setTime] = useState(null); 
+  //const [time, setTime] = useState(null);
+  //let time = null; 
+  const timeStart = useRef(null);
+  //const timeEnd = useRef(null);
 
   // Retrieve aircrafts from API and update the current aircraft list
   const retrievePlanes = async () =>{
@@ -53,13 +56,13 @@ function App() {
 
   // Retrieve historical location coordinates for an aircraft
   // with the specified icao
-  const retrieveHistory = async (icao) =>{
+  const retrieveHistory = async (icao, hours) =>{
     
     let url;
-    if (historyURL === 'all'){
+    if (hours === 'all'){
       url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}`
     }else{
-      url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}?hour=${historyURL}`
+      url = `${process.env.REACT_APP_SERVER}/aircraft/history/${icao}?hour=${hours}`
     }
     try{
       const data = await callAPI(url);
@@ -80,7 +83,7 @@ function App() {
     if (aircraft !== null){
       setSelected(aircraft);
       retrieveImage(aircraft.properties.icao);
-      retrieveHistory(aircraft.properties.icao);
+      retrieveHistory(aircraft.properties.icao, historyURL);
       map.current.flyTo({center:[aircraft.geometry.coordinates[1],aircraft.geometry.coordinates[0]],zoom:9})
     }else{
       warning('No aircraft found...');
@@ -104,25 +107,21 @@ function App() {
     });
   }
 
+  // Update the length of the history trails and make
+  // a call to the backend API to automatically fetch the new
+  // trail of a selected aircraft
   const setTrail = (trailLength) =>{
     setHistoryURL(trailLength);
-    console.log("SetTrail: ",trailLength);
+    timeStart.current = Date.now();
     setTimeout(()=>{
       let currentTime = Date.now();
-      if (selected !==null && (time === null || (currentTime - time) >= 1500)){
+      if (selected !==null &&  (currentTime - timeStart.current) >= 1000){
         // Do a history call
-        setTime(currentTime);
-        console.log("Will do history", selected,(currentTime-time))
-        retrieveHistory(selected.properties.icao);
-
-      }else{
-        setTime(currentTime)
+        retrieveHistory(selected.properties.icao, trailLength);
       }
-      
-
-    },1500)
+    },1000); // Timeout set to 1 secound
   }
-  
+
   // Update/render the aircrafts on the map every time updated
   // aircraft information is retrieved from external API or when
   // the map is moved to a new location
@@ -180,7 +179,7 @@ function App() {
                 if(selected?.properties.icao !== p.properties.icao){
                   setSelected(p);
                   retrieveImage(p.properties.icao);
-                  retrieveHistory(p.properties.icao);
+                  retrieveHistory(p.properties.icao,historyURL);
                 }
               }}
             >
