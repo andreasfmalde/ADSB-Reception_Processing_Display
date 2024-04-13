@@ -5,9 +5,11 @@ import { Navbar } from './components/Navbar';
 import {style, trailLayer, initialView} from './data/MapData';
 import { isInBounds, findAircraftByIcaoOrCallsign, trimAircraftList, callAPI } from './utils';
 import { IoMdAirplane } from "react-icons/io";
+import { ToastContainer, Zoom, toast } from 'react-toastify';
 
 import './App.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Main point of the application 
 function App() {
@@ -64,6 +66,7 @@ function App() {
   // make the map fly to the aircrafts' location
   const searchForAircraft = (search) =>{
     if (search === null || search === undefined || search.length < 3 || search.length > 15){
+      warning('Search must contain 3 to 15 characters...');
       return
     }
     let aircraft = findAircraftByIcaoOrCallsign(search,aircraftJSON);
@@ -72,8 +75,26 @@ function App() {
       retrieveImage(aircraft.properties.icao);
       retrieveHistory(aircraft.properties.icao);
       map.current.flyTo({center:[aircraft.geometry.coordinates[1],aircraft.geometry.coordinates[0]],zoom:9})
+    }else{
+      warning('No aircraft found...');
     }
     
+  }
+
+  // A notification pop-up to notify the user
+  // of any warnings
+  const warning = (text) =>{
+    toast.warn(text, {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "dark",
+      transition: Zoom,
+    });
   }
   
   // Update/render the aircrafts on the map every time updated
@@ -144,6 +165,7 @@ function App() {
         </Map>
         <Sidebar aircraft={selected} image={selectedImg}/>
       </div>
+      <ToastContainer />
     </div>
   );
 }
