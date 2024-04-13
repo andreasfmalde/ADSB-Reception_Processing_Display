@@ -22,11 +22,18 @@ function App() {
   const [currentBounds, setCurrentBounds] = useState(null);
   const [historyURL, setHistoryURL] = useState('1')
   const map = useRef(null);
+  const [time, setTime] = useState(null); 
 
   // Retrieve aircrafts from API and update the current aircraft list
   const retrievePlanes = async () =>{
     try{
       const data = await callAPI(`${process.env.REACT_APP_SERVER}/aircraft/current/`);
+      if (selected !== null){
+        let newSelected = findAircraftByIcaoOrCallsign(selected.properties.icao, data.features);
+        if(newSelected !== null){
+          setSelected(newSelected);
+        }
+      }
       setAircraftJSON(data.features);
     }catch(error){
       console.log("No aircrafts are fetched")
@@ -96,6 +103,25 @@ function App() {
       transition: Zoom,
     });
   }
+
+  const setTrail = (trailLength) =>{
+    setHistoryURL(trailLength);
+    console.log("SetTrail: ",trailLength);
+    setTimeout(()=>{
+      let currentTime = Date.now();
+      if (selected !==null && (time === null || (currentTime - time) >= 1500)){
+        // Do a history call
+        setTime(currentTime);
+        console.log("Will do history", selected,(currentTime-time))
+        retrieveHistory(selected.properties.icao);
+
+      }else{
+        setTime(currentTime)
+      }
+      
+
+    },1500)
+  }
   
   // Update/render the aircrafts on the map every time updated
   // aircraft information is retrieved from external API or when
@@ -103,10 +129,16 @@ function App() {
   useEffect(()=>{
     if(currentBounds !== null && aircraftJSON !== null){
       let aircraftInBounds = aircraftJSON?.filter(p => isInBounds(p,currentBounds));
+      // See if the selected aircraft is in bounds
+      let currentSelected = null;
+      if (selected !== null ){
+        currentSelected = findAircraftByIcaoOrCallsign(selected.properties.icao,aircraftInBounds);
+      }
+
       aircraftInBounds = trimAircraftList(aircraftInBounds);
       // Make sure to alway show a selected aircraft
-      if(selected !== null && !aircraftInBounds.includes(selected)){
-        aircraftInBounds.push(selected)
+      if(currentSelected !== null  && !aircraftInBounds.includes(currentSelected)){
+        aircraftInBounds.push(currentSelected);
       }
       setCurrentRender(aircraftInBounds);
     }
@@ -115,7 +147,7 @@ function App() {
   
   return (
     <div className="App">
-      <Navbar callback={searchForAircraft} trail={setHistoryURL}/>
+      <Navbar callback={searchForAircraft} trail={setTrail}/>
       <div className="main-content">
         <Map
           className='main-map'

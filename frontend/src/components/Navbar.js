@@ -79,7 +79,6 @@ export const Navbar = (props) =>{
                                 if(historyHour > 1){
                                     setHistoryHour(historyHour-1)
                                     props.trail(`${historyHour-1}`)
-                                    console.log(`${historyHour-1}`)
                                 }
                             }}
                             disabled={!currentCustom}
@@ -92,7 +91,6 @@ export const Navbar = (props) =>{
                                 if(historyHour < 24){
                                     setHistoryHour(historyHour+1)
                                     props.trail(`${historyHour+1}`)
-                                    console.log(`${historyHour+1}`)
                                 }
                             }}
                             disabled={!currentCustom}
