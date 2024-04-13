@@ -31,6 +31,7 @@ export const Navbar = (props) =>{
                 onSubmit={e =>{
                     e.preventDefault();
                     props.callback(e.target.querySelector('[name="searchbar"]').value);
+                    e.target.querySelector('[name="searchbar"]').value = "";
                 }}
                 >
                 <input type="text" placeholder='Search for callsign/icao...' name="searchbar"/>
