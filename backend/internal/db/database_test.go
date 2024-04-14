@@ -2,6 +2,7 @@ package db
 
 import (
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/models"
 	"adsb-api/internal/utility/testUtility"
 	"database/sql"
@@ -45,7 +46,14 @@ func teardownTestDB(ctx *Context, t *testing.T) {
 
 	_, err = ctx.db.Exec("DROP TABLE IF EXISTS aircraft_history CASCADE")
 	if err != nil {
-		t.Fatalf("error droppint current_time_aircraft: %q", err.Error())
+		t.Fatalf("error dropping current_time_aircraft: %q", err.Error())
+	}
+
+	if ctx.tx != nil {
+		err = ctx.Commit()
+		if err != nil {
+			t.Fatalf("error committing uncommitted transaction: %q", err)
+		}
 	}
 
 	err = ctx.Close()
@@ -349,26 +357,29 @@ func TestAdsbDB_DeleteOldHistory(t *testing.T) {
 
 	// recent aircraft
 	ac1 := testUtility.CreateMockAircraftWithTimestamp("TEST1",
-		time.Now().Add(-(time.Duration(global.MaxDaysHistory)-1)*24*time.Hour).Format(time.DateTime))
+		time.Now().Add(-(time.Duration(global.MaxDaysHistory)-1)*24*time.Hour).Truncate(time.Hour).Format(time.DateTime))
 
 	// old aircraft
 	ac2 := testUtility.CreateMockAircraftWithTimestamp("TEST2",
-		time.Now().Add(-time.Duration(global.MaxDaysHistory+1)*24*time.Hour).Format(time.DateTime))
+		time.Now().Add(-time.Duration(global.MaxDaysHistory+1)*24*time.Hour).Truncate(time.Hour).Format(time.DateTime))
 
 	// old aircraft
 	ac3 := testUtility.CreateMockAircraftWithTimestamp("TEST3",
-		time.Now().Add(-(time.Duration(global.MaxDaysHistory)+2)*24*time.Hour).Format(time.DateTime))
+		time.Now().Add(-(time.Duration(global.MaxDaysHistory)+2)*24*time.Hour).Truncate(time.Hour).Format(time.DateTime))
 
-	ctx.db.Exec(`
+	_, err := ctx.db.Exec(`
 		INSERT INTO aircraft_history 
 		VALUES ($1, $2, $3, $4), ($5, $6, $7, $8), ($9, $10, $11, $12)`,
 		ac1.Icao, ac1.Latitude, ac1.Longitude, ac1.Timestamp,
 		ac2.Icao, ac2.Latitude, ac2.Longitude, ac2.Timestamp,
 		ac3.Icao, ac3.Latitude, ac3.Longitude, ac3.Timestamp)
+	if err != nil {
+		t.Fatalf("error inserting test data: %v", err)
+	}
 
 	var count int
 
-	err := ctx.db.QueryRow("SELECT COUNT(*) FROM aircraft_history").Scan(&count)
+	err = ctx.db.QueryRow("SELECT COUNT(*) FROM aircraft_history").Scan(&count)
 	if err != nil {
 		t.Fatalf("Error querying the table: %q", err)
 	}
@@ -421,10 +432,6 @@ func TestAdsbDB_TestBegin(t *testing.T) {
 	}
 
 	assert.NotNil(t, ctx.tx)
-
-	// sets tx to nil, so it does not affect any other test methods
-	ctx.tx = nil
-	assert.Nil(t, ctx.tx)
 }
 
 func TestAdsbDB_TestCommit(t *testing.T) {
@@ -587,4 +594,36 @@ func TestContext_SelectAllColumnHistoryByIcaoFilterByTimestamp_NoHistory(t *test
 	}
 
 	assert.Equal(t, 0, len(aircraft))
+}
+
+func TestContext_Begin_TxAlreadyInitialized(t *testing.T) {
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
+
+	err := ctx.Begin()
+	if err != nil {
+		t.Fatalf("error beginning transaction: %q", err)
+	}
+
+	err = ctx.Begin()
+	assert.Error(t, err, "expected error when beginning transaction and not committed or rolled back")
+	assert.Equal(t, errorMsg.TransactionInProgress, err.Error())
+}
+
+func TestContext_Commit_TxNotInitialized(t *testing.T) {
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
+
+	err := ctx.Commit()
+	assert.Error(t, err, "expected error when committing without initialized transaction")
+	assert.Equal(t, errorMsg.NoTransactionInProgress, err.Error())
+}
+
+func TestContext_Rollback_TxAlreadyCommitted(t *testing.T) {
+	ctx := setupTestDB(t)
+	defer teardownTestDB(ctx, t)
+
+	err := ctx.Rollback()
+	assert.Error(t, err, "expected error when using rollback without initialized transaction")
+	assert.Equal(t, errorMsg.NoTransactionInProgress, err.Error())
 }

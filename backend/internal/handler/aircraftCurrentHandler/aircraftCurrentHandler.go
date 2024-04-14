@@ -49,5 +49,9 @@ func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 		return
 	}
 
-	apiUtility.EncodeJsonData(w, aircraft)
+	err = apiUtility.EncodeJsonData(w, aircraft)
+	if err != nil {
+		http.Error(w, errorMsg.ErrorEncodingJsonData, http.StatusInternalServerError)
+		log.Error().Msgf(errorMsg.ErrorEncodingJsonData+": %q", err)
+	}
 }

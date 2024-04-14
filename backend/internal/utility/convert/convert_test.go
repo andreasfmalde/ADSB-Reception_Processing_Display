@@ -1,8 +1,8 @@
 package convert
 
 import (
+	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/utility/logger"
 	"adsb-api/internal/utility/testUtility"
 	"log"
 	"net/url"
@@ -16,7 +16,7 @@ import (
 var geoJsonOverallSchema string
 
 func TestMain(m *testing.M) {
-	logger.InitLogger()
+	global.InitTestEnvironment()
 	err := os.Chdir("../../../")
 	if err != nil {
 		log.Fatalf("could not change working directory: %q", err)

@@ -17,23 +17,14 @@ func TestMain(m *testing.M) {
 }
 
 func Test_InitRestService(t *testing.T) {
-	sbsSvc, err := InitRestService()
-	if err != nil {
-		t.Fatalf("error initiazling sbs eervice: %q", err)
-	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
+	mockDB := mock.NewMockDatabase(ctrl)
+
+	sbsSvc := InitRestService(mockDB)
 	assert.NotNil(t, sbsSvc)
-}
-
-func Test_InitRestService_ErrorInitDB(t *testing.T) {
-	global.DbUser = "user"
-	sbsSvc, err := InitRestService()
-	if err == nil {
-		t.Fatalf("error initiazling sbs eervice: %q", err)
-	}
-
-	assert.Nil(t, sbsSvc)
-	global.DbUser = "test"
+	assert.IsType(t, &RestImpl{}, sbsSvc)
 }
 
 func TestRestServiceImpl_GetCurrentAircraft(t *testing.T) {
@@ -67,6 +58,7 @@ func TestRestServiceImpl_GetCurrentAircraft_ErrorRetrievingDbData(t *testing.T) 
 
 	res, err := svc.GetCurrentAircraft()
 
+	assert.NotNil(t, err)
 	assert.Equal(t, errorMsg, err.Error())
 	assert.Nil(t, res)
 }
@@ -103,6 +95,7 @@ func TestRestServiceImpl_GetAircraftHistoryByIcao_ErrorRetrievingDbData(t *testi
 
 	res, err := svc.GetAircraftHistoryByIcao("search")
 
+	assert.NotNil(t, err)
 	assert.Equal(t, errorMsg, err.Error())
 	assert.Nil(t, res)
 }
@@ -141,6 +134,7 @@ func TestRestImpl_GetAircraftHistoryByIcaoFilterByTimestamp_ErrorRetrievingDbDat
 
 	res, err := svc.GetAircraftHistoryByIcaoFilterByTimestamp("search", 1)
 
+	assert.NotNil(t, err)
 	assert.Equal(t, errorMsg, err.Error())
 	assert.Nil(t, res)
 }
