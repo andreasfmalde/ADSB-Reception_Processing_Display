@@ -45,13 +45,13 @@ func main() {
 		log.Fatal().Msgf("error initiazling cleanupJob job")
 	}
 
-	log.Info().Msgf("Reception API successfully connected to database with: User: %s | Name: %s | Host: %s | port: %d",
+	log.Info().Msgf("Reception API successfully connected to database with: User: %s | Database: %s | Host: %s | port: %d",
 		global.DbUser, global.DbName, global.DbHost, global.DbPort)
 
 	log.Info().Msgf("Scheduled clean up job with cron schedule: %s", global.CleanupSchedule)
 
 	log.Info().Msgf("Starting the process for receiving SBS data. \n"+
-		"SBS source : %q | WaitingTime: %d seconds | CleanupSchedule: %s seconds | UpdatingPeriod: %d seconds | MaxDaysHistory: %d",
+		"SBS source : %q | WaitingTime: %d seconds | CleanupSchedule: %s | UpdatingPeriod: %d seconds | MaxDaysHistory: %d",
 		global.SbsSource, global.WaitingTime, global.CleanupSchedule, global.UpdatingPeriod, global.MaxDaysHistory)
 
 	for {

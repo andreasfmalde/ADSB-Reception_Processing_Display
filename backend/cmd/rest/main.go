@@ -33,7 +33,7 @@ func main() {
 		}
 	}()
 
-	log.Info().Msgf("REST API successfully connected to database with database user: %s name: %s host: %s port: %d",
+	log.Info().Msgf("Reception API successfully connected to database with: User: %s | Database: %s | Host: %s | port: %d",
 		global.DbUser, global.DbName, global.DbHost, global.DbPort)
 
 	restSvc := restService.InitRestService(database)

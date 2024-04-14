@@ -22,6 +22,6 @@ func InitLogger() {
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
 	} else {
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
-		log.Info().Msgf("environment variable ENV was not set. Using logging level: %s", zerolog.GlobalLevel().String())
+		log.Info().Msgf("environment variable ENV was not set to production. Using logging level: %s", zerolog.GlobalLevel().String())
 	}
 }
