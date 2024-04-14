@@ -3,7 +3,6 @@ package sbs
 import (
 	"adsb-api/internal/global/models"
 	"adsb-api/internal/utility/convert"
-	"adsb-api/internal/utility/logger"
 	"bufio"
 	"net"
 	"strings"
@@ -29,7 +28,6 @@ func ProcessSbsStream(addr string, waitingTime int) ([]models.AircraftCurrentMod
 
 	timer := time.Now()
 	for {
-		logger.LogToFile(scanner.Text())
 		if diff := time.Since(timer).Seconds(); diff > float64(waitingTime) {
 			break
 		}

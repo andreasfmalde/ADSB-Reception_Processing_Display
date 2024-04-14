@@ -54,8 +54,6 @@ func main() {
 		"SBS source : %q | WaitingTime: %d seconds | CleanupSchedule: %s | UpdatingPeriod: %d seconds | MaxDaysHistory: %d",
 		global.SbsSource, global.WaitingTime, global.CleanupSchedule, global.UpdatingPeriod, global.MaxDaysHistory)
 
-	logger.InitLogFile("logs.log")
-
 	for {
 		aircraft, err := sbs.ProcessSbsStream(global.SbsSource, global.WaitingTime)
 		if err != nil {
