@@ -13,7 +13,6 @@ const (
 	ErrorCreatingDatabaseTables     = "error creating database tables"
 	ErrorInsertingNewSbsData        = "could not insert new SBS data"
 	ErrorCouldNotConnectToTcpStream = "could not connect to TCP stream"
-	CronSchedulerIsNotInitialized   = "cron scheduler is not initialized"
 	EmptyIcao                       = "empty icao"
 	InvalidQueryParameterHour       = "query parameter 'hour', can only be an integer"
 	TransactionInProgress           = "transaction already in progress"
