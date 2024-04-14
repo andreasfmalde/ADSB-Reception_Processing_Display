@@ -3,14 +3,25 @@
     height: 78px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     /*background-color: rgb(250, 235, 215);*/
     background-color: #222831;
     position: relative;
 }
 
+.search-btn-medium-small{
+    font-size: 1.6em;
+    border-radius: 20px;
+    background: transparent;
+    border: none;
+    color: #EEEEEE;
+    cursor: pointer;
+    display: none;
+}
+
 .logo{
     height: 43px;
-    margin-left: 30px;
+    margin-left: 40px;
 }
 
 .search-field{
@@ -25,7 +36,7 @@
 }
 
 .search-field > input{
-    background-color: rgba(170, 170, 170,0.2);
+    background-color: #404650;
     border: none;
     height: 40px;
     color: inherit;
@@ -36,6 +47,7 @@
     padding-left: 10px;
     text-align: center;
     font-size: 1em;
+    margin-right: -1px;
 }
 .search-field > input:focus {
     outline: none;
@@ -44,7 +56,7 @@
     color: inherit;
 }
 .search-field > button{
-    background-color: rgba(170, 170, 170,0.2);
+    background-color: #404650;
     border: none;
     font-size: 1.3em;
     color: inherit;
@@ -55,6 +67,107 @@
     border-bottom-right-radius: 17px;
     padding-right: 10px;
     cursor: pointer;
+}
+
+.drop-down{
+    margin-right: 40px;
+    position: relative;
+}
+
+.drop-down > button {
+    background-color: transparent;
+    border: none;
+    color: #EEEEEE;
+    font-size: 28px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+}
+
+
+
+.drop-down-window{
+    position: absolute;
+    padding: 10px 20px;
+    min-width: 200px;
+    background-color: rgba(34, 40, 49,0.98);
+    top: 62px;
+    right: 0px;
+    z-index: 100;
+    border-radius: 10px;
+    box-shadow: rgba(200, 200, 200, 0.24) 0px 3px 8px;
+    color: #EEEEEE;
+
+}
+
+.active{
+    display: block;
+}
+
+.inactive{
+    display: none;
+}
+
+
+.drop-down-window > h3{
+    font-size: 1em;
+    font-weight: 400;
+    margin-bottom: -5px;
+}
+
+.drop-down-window > .label {
+    font-size: 0.7em;
+}
+
+.custom-history{
+    display: grid;
+    grid-template-columns: repeat(3, 40px);
+    width: 120px;
+    margin: 15px auto;
+    height: 35px;
+}
+
+.custom-history > input[type='button']{
+    background-color: #404650;
+    border: none;
+    color: inherit;
+    font-size: 1.5em;
+    cursor: pointer;
+    text-align: center;
+}
+.custom-history > input[type='button']:hover{
+    background-color: rgba(200, 200, 200,0.1);
+}
+
+.custom-history > input[type='button']:first-child{
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    grid-column: 1/2;
+}
+
+.custom-history > input[type='button']:last-child{
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    grid-column: 3/4;
+}
+
+.custom-history > input[type='text']{
+    text-align: center;
+    font-size: 16px;
+    color: #EEEEEE;
+    background-color: #404650;
+    border: none;
+    outline: none;
+    grid-column: 2/3;
+}
+.custom-history > input[type='text']:focus{
+    outline: none;
+}
+
+.custom-history > input[type='button']:disabled,.custom-history > input[type='text']:disabled{
+    background-color: rgb(80, 79, 79);
+    color: darkgrey;
 }
 
 
@@ -125,21 +238,45 @@
     font-weight: 500;
 }
 
+/* TABLET SCREENS */
+
 @media screen and (max-width: 850px) {
+    /* NAVBAR */
     .navigation{
-        height: 170px;
-        flex-direction: column;
         align-items: center;
-        justify-content: space-evenly;
-        position: static;
+        justify-content: space-between;
     }
     .search-field{
-        position: static;
-        transform: translate(0,0);
+        top: 78px;
+        z-index: 100;
+        transform: translate(-50%,0);
+        opacity: 0;
+        pointer-events: none;
+        
     }
     .logo{
         position: static;
+        order: 2;
+        margin: 0;
     }
+    .drop-down{
+        order: 3;
+        margin-right: 15px;
+    }
+    .search-btn-medium-small{
+        display: block;
+        margin-left: 15px;
+        order: 1;
+    }
+
+    .search-active{
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    
+
+    /* SIDEBAR */
     .Sidebar{
         grid-row: 2/3;
         grid-column: 1/2;
@@ -175,9 +312,19 @@
         justify-content: space-evenly;
     }
 
-  }
+}
 
-  @media screen and (max-width: 580px){
+/* MOBILE SCREENS  */
+
+@media screen and (max-width: 580px){
+
+    /* NAVBAR */
+
+    .search-field > input{
+        width: 60vw;
+    }
+    
+    /* SIDEBAR */
     .aircraft-info{
         display: flex;
         flex-direction: column;
@@ -187,11 +334,13 @@
         width: 300px;
         margin: 0;
     }
-    .search-field > input{
-        width: 70%;
-    }
+    
     .flex-properties{
         margin: 0;
         justify-content: space-around;
     }
-  }
+
+}
+
+
+
