@@ -35,6 +35,11 @@ func setupTestDB(t *testing.T) *Context {
 		t.Fatalf("error creating history_aircraft table: %q", err)
 	}
 
+	err = ctx.CreateAircraftHistoryTimestampIndex()
+	if err != nil {
+		t.Fatalf("error creating timestamp_index: %q", err)
+	}
+
 	return ctx
 }
 
