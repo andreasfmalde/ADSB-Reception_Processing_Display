@@ -65,13 +65,8 @@ func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 		return
 	}
 
-	if len(res) == 0 {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	if len(res) < 2 {
-		http.Error(w, errorMsg.ErrorGeoJsonTooFewCoordinates, http.StatusNoContent)
+	if len(res) == 0 || len(res) < 2 {
+		apiUtility.NoContent(w)
 		return
 	}
 

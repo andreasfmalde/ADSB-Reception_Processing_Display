@@ -52,3 +52,8 @@ func ValidateURL(w http.ResponseWriter, r *http.Request, maxLength int, optional
 
 	return nil
 }
+
+func NoContent(w http.ResponseWriter) {
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusNoContent)
+}

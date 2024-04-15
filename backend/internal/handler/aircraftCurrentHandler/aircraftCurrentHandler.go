@@ -37,7 +37,7 @@ func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 		return
 	}
 	if len(res) == 0 {
-		w.WriteHeader(http.StatusNoContent)
+		apiUtility.NoContent(w)
 		return
 	}
 

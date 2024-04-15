@@ -192,8 +192,9 @@ func TestValidRequests(t *testing.T) {
 			url:        endpoint + "ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
+			mockData:   testUtility.CreateMockHistAircraft(1),
 			setup: func(mockDB *mock.MockRestService, mockData []models.AircraftHistoryModel) {
-				mockSvc.EXPECT().GetAircraftHistoryByIcao("ABC123").Return([]models.AircraftHistoryModel{}, nil)
+				mockSvc.EXPECT().GetAircraftHistoryByIcao("ABC123").Return(mockData, nil)
 			},
 		},
 		{
@@ -233,7 +234,7 @@ func TestValidRequests(t *testing.T) {
 
 			assert.Equal(t, tt.statusCode, res.StatusCode)
 
-			if tt.mockData != nil {
+			if tt.mockData != nil && len(tt.mockData) > 1 {
 				var actual geoJSON.FeatureCollectionLineString
 				_ = json.NewDecoder(res.Body).Decode(&actual)
 
