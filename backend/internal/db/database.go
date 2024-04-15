@@ -58,7 +58,7 @@ func (ctx *Context) Begin() error {
 	}
 	tx, err := ctx.db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	ctx.tx = tx
 	return nil
@@ -71,7 +71,7 @@ func (ctx *Context) Commit() error {
 	}
 	err := ctx.tx.Commit()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	ctx.tx = nil
 	return nil
@@ -84,7 +84,7 @@ func (ctx *Context) Rollback() error {
 	}
 	err := ctx.tx.Rollback()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to rollback transaction: %w", err)
 	}
 	ctx.tx = nil
 	return nil
