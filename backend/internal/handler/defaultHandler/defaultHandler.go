@@ -2,24 +2,26 @@ package defaultHandler
 
 import (
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/utility/apiUtility"
+	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
 type DefaultStruct struct {
-	Name      string            `json:"name"`
-	Version   string            `json:"version"`
-	MadeBy    []string          `json:"madeby"`
-	Endpoints map[string]string `json:"endpoints"`
+	Name      string   `json:"name"`
+	Version   string   `json:"version"`
+	MadeBy    []string `json:"madeby"`
+	Endpoints []string `json:"endpoints"`
 }
 
 // DefaultHandler function, which prints info about the service
 func DefaultHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		endpoints := make(map[string]string)
-		endpoints["aircraft_current"] = global.AircraftCurrentPath
-		endpoints["aircraft_history"] = global.AircraftHistoryPath
+		var endpoints []string
+		endpoints = append(endpoints, global.AircraftCurrentPath)
+		endpoints = append(endpoints, global.AircraftHistoryPath)
 
 		madeBy := []string{"Andreas Follevaag Malde", "Fredrik Sundt-Hansen"}
 
@@ -30,7 +32,11 @@ func DefaultHandler(w http.ResponseWriter, r *http.Request) {
 			Endpoints: endpoints,
 		}
 
-		apiUtility.EncodeJsonData(w, out)
+		err := apiUtility.EncodeJsonData(w, out)
+		if err != nil {
+			http.Error(w, errorMsg.ErrorEncodingJsonData, http.StatusInternalServerError)
+			log.Error().Msgf(errorMsg.ErrorEncodingJsonData+": %q", err)
+		}
 	default:
 		http.Error(w, "Method is not supported", http.StatusMethodNotAllowed)
 	}

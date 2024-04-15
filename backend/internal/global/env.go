@@ -5,114 +5,90 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/joho/godotenv"
 )
 
+// InitEnvironment initializes the environment variables by loading the .env file.
+// It then calls the InitDatabaseEnvVariables and InitSbsEnvVariables functions to initialize the database and SBS
+// environment variables respectively.
 func InitEnvironment() {
 	err := godotenv.Load("./.env")
 	if err != nil {
-		logger.Error.Printf(err.Error())
+		log.Error().Msgf("error loading .env file: %q", err)
 	}
 
 	InitDatabaseEnvVariables()
 	InitSbsEnvVariables()
-	CheckEnvVariables()
 }
 
+// InitDatabaseEnvVariables initializes the environment variables related to the database.
+// It retrieves the values of the DB_USER, DB_PASSWORD, DB_HOST and DB_PORT environment variables and assigns
+// them to the respective variables.
 func InitDatabaseEnvVariables() {
 	DbUser = os.Getenv("DB_USER")
 	DbPassword = os.Getenv("DB_PASSWORD")
-	DbName = os.Getenv("DB_NAME")
-	DbHost = os.Getenv("DB_HOST")
+
+	dbName, exist := os.LookupEnv("DB_NAME")
+	if exist {
+		DbName = dbName
+	}
+
+	dbHost, exist := os.LookupEnv("DB_HOST")
+	if exist {
+		DbHost = dbHost
+	}
 
 	var err error
-	DbPort, err = strconv.Atoi(os.Getenv("DB_PORT"))
-	if err != nil {
-		logger.Warning.Printf("error setting environment variable 'DB_PORT': can only be an integer: Error %q", err.Error())
+	dbPort, exist := os.LookupEnv("DB_PORT")
+	if exist {
+		DbPort, err = strconv.Atoi(dbPort)
+		if err != nil {
+			log.Warn().Msgf("error setting environment variable 'DB_PORT': can only be an integer: Error %q", err)
+		}
 	}
 }
 
+// InitSbsEnvVariables initializes the environment variables related to the SBS.
+// It retrieves the values of the SBS_SOURCE, WAITING_TIME, CLEANUP_SCHEDULE, UPDATING_PERIOD,
+// and MAX_DAYS_HISTORY environment variables and assigns them to the respective variables.
 func InitSbsEnvVariables() {
 	SbsSource = os.Getenv("SBS_SOURCE")
 
 	var err error
-	WaitingTime, err = strconv.Atoi(os.Getenv("WAITING_TIME"))
-	if err != nil {
-		logger.Warning.Printf("error setting environment variable 'WAITING_TIME': can only be an integer: Error %q", err.Error())
+	waitingTime, exist := os.LookupEnv("WAITING_TIME")
+	if exist {
+		WaitingTime, err = strconv.Atoi(waitingTime)
+		if err != nil {
+			log.Warn().Msgf("error setting environment variable 'WAITING_TIME': can only be an integer: Error %q", err)
+		}
 	}
 
-	CleaningPeriod, err = strconv.Atoi(os.Getenv("CLEANING_PERIOD"))
-	if err != nil {
-		logger.Warning.Printf("error setting environment variable 'CLEANING_PERIOD': can only be an integer: Error %q", err.Error())
+	cleanupSchedule, exist := os.LookupEnv("CLEANUP_SCHEDULE")
+	if exist {
+		CleanupSchedule = cleanupSchedule
 	}
 
-	UpdatingPeriod, err = strconv.Atoi(os.Getenv("UPDATING_PERIOD"))
-	if err != nil {
-		logger.Warning.Printf("error setting environment variable 'UPDATING_PERIOD': can only be an integer: Error %q", err.Error())
+	updatingPeriod, exist := os.LookupEnv("UPDATING_PERIOD")
+	if exist {
+		UpdatingPeriod, err = strconv.Atoi(updatingPeriod)
+		if err != nil {
+			log.Warn().Msgf("error setting environment variable 'UPDATING_PERIOD': can only be an integer: Error %q", err)
+		}
 	}
 
-	MaxDaysHistory, err = strconv.Atoi(os.Getenv("MAX_DAYS_HISTORY"))
-	if err != nil {
-		logger.Warning.Printf("error setting environment variable 'MAX_DAYS_HISTORY': can only be an integer: Error %q", err.Error())
-	}
-}
-
-func CheckEnvVariables() {
-	if DbUser == "" {
-		logger.Error.Fatal("required environment variable for database username (DB_USER) was not set")
-	}
-
-	if DbPassword == "" {
-		logger.Error.Fatal("required environment variable for database password (DB_PASSWORD) was not set")
-	}
-
-	if DbName == "" {
-		DbName = "adsb"
-		logger.Warning.Printf("environment variable database name (DB_NAME) was not set, u"+
-			"sing default name: %q", DbName)
-	}
-
-	if DbHost == "" {
-		DbHost = "localhost"
-		logger.Warning.Printf("environment variable database host (DB_HOST) was not set, "+
-			"using default host: %q", DbHost)
-	}
-
-	if DbPort == 0 {
-		DbPort = 5432
-		logger.Warning.Printf("environment variable database port (DB_PORT) was not set, "+
-			"using default port: %q", DbPort)
-	}
-
-	if SbsSource == "" {
-		logger.Error.Fatal("required environment variable for SBS data source (SBS_SOURCE) was not set")
-	}
-
-	if WaitingTime == 0 {
-		WaitingTime = 4
-		logger.Warning.Printf("environment variable waiting time (WAITING_TIME), "+
-			"time period in seconds between each batch of SBS data, was not set, using default time: %q seconds", WaitingTime)
-	}
-
-	if CleaningPeriod == 0 {
-		CleaningPeriod = 120
-		logger.Warning.Printf("environment variable cleanning periode (CLEANING_PERIOD), "+
-			"how often cleaning how data should happen to save space, was not set, using default time: %q sconds", CleaningPeriod)
-	}
-
-	if UpdatingPeriod == 0 {
-		UpdatingPeriod = 10
-		logger.Warning.Printf("environment variable updating periode (UPDATING_PERIOD), "+
-			"how often the the programs request for new data, was not set, using defaul time: %q seconds", UpdatingPeriod)
-	}
-
-	if MaxDaysHistory == 0 {
-		MaxDaysHistory = 1
-		logger.Warning.Printf("environment variable max days of history (MAX_DAYS_HISTORY), "+
-			"how many days of history to keep when cleaning data, was not set, using defaul value: %q", MaxDaysHistory)
+	maxDaysHistory, exist := os.LookupEnv("MAX_DAYS_HISTORY")
+	if exist {
+		MaxDaysHistory, err = strconv.Atoi(maxDaysHistory)
+		if err != nil {
+			log.Warn().Msgf("error setting environment variable 'MAX_DAYS_HISTORY': can only be an integer: Error %q", err)
+		}
 	}
 }
 
+// InitTestEnvironment initializes the test environment by initializing the logger and setting up the test database
+// and SBS environment variables.
 func InitTestEnvironment() {
 	logger.InitLogger()
 	DbUser = "test"
@@ -120,5 +96,10 @@ func InitTestEnvironment() {
 	DbName = "adsb_test_db"
 	DbHost = "localhost"
 	DbPort = 5432
+
 	SbsSource = "localhost:9999"
+	WaitingTime = 4
+	CleanupSchedule = "0 0 * * *"
+	UpdatingPeriod = 10
+	MaxDaysHistory = 1
 }

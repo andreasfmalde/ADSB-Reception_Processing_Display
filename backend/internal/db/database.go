@@ -2,6 +2,7 @@ package db
 
 import (
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/global/models"
 	"database/sql"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Database represents the interface for interacting with a database.
 type Database interface {
 	CreateAircraftCurrentTable() error
 	DropAircraftCurrentTable() error
@@ -22,7 +24,7 @@ type Database interface {
 	SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error)
 	SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) ([]models.AircraftHistoryModel, error)
 
-	DeleteOldHistory(time int) error
+	DeleteOldHistory(days int) error
 
 	Begin() error
 	Commit() error
@@ -31,6 +33,7 @@ type Database interface {
 	Close() error
 }
 
+// Context represents a context object that holds a database connection and transaction.
 type Context struct {
 	db *sql.DB
 	tx *sql.Tx
@@ -52,9 +55,12 @@ func (ctx *Context) Query(query string, args ...interface{}) (*sql.Rows, error) 
 
 // Begin begins Context transaction
 func (ctx *Context) Begin() error {
+	if ctx.tx != nil {
+		return fmt.Errorf(errorMsg.TransactionInProgress)
+	}
 	tx, err := ctx.db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	ctx.tx = tx
 	return nil
@@ -62,9 +68,12 @@ func (ctx *Context) Begin() error {
 
 // Commit commits Context transaction
 func (ctx *Context) Commit() error {
+	if ctx.tx == nil {
+		return fmt.Errorf(errorMsg.NoTransactionInProgress)
+	}
 	err := ctx.tx.Commit()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	ctx.tx = nil
 	return nil
@@ -72,9 +81,12 @@ func (ctx *Context) Commit() error {
 
 // Rollback rollbacks Context transaction
 func (ctx *Context) Rollback() error {
+	if ctx.tx == nil {
+		return fmt.Errorf(errorMsg.NoTransactionInProgress)
+	}
 	err := ctx.tx.Rollback()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to rollback transaction: %w", err)
 	}
 	ctx.tx = nil
 	return nil
@@ -140,7 +152,7 @@ func (ctx *Context) CreateAircraftHistoryTimestampIndex() error {
 
 // DropAircraftCurrentTable drops aircraft_current table
 func (ctx *Context) DropAircraftCurrentTable() error {
-	query := `DROP TABLE IF EXISTS aircraft_current CASCADE`
+	query := `DROP TABLE IF EXISTS aircraft_current`
 
 	_, err := ctx.Exec(query)
 	return err
@@ -188,28 +200,30 @@ func (ctx *Context) BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentM
 func (ctx *Context) InsertHistoryFromCurrent() error {
 	query := `INSERT INTO aircraft_history (icao, lat, long, timestamp) 
 			  SELECT icao, lat, long, timestamp
-			  FROM aircraft_current
-			  ON CONFLICT (icao, timestamp) 
-			      DO UPDATE SET timestamp = excluded.timestamp`
+			  FROM aircraft_current`
 	_, err := ctx.Exec(query)
 	return err
 }
 
 // SelectAllColumnsAircraftCurrent retrieves a list of all aircraft from aircraft_current that are older than global.WaitingTime + 2
-func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentModel, error) {
-	query := `SELECT * FROM aircraft_current`
+func (ctx *Context) SelectAllColumnsAircraftCurrent() (aircraft []models.AircraftCurrentModel, err error) {
+	query := `SELECT icao, callsign, altitude, lat, long, speed, track, vspeed, timestamp FROM aircraft_current`
 
 	rows, err := ctx.Query(query)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var aircraft []models.AircraftCurrentModel
+	defer func(rows *sql.Rows) {
+		closeErr := rows.Close()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}(rows)
 
 	for rows.Next() {
 		var ac models.AircraftCurrentModel
-		err := rows.Scan(&ac.Icao, &ac.Callsign, &ac.Altitude, &ac.Latitude, &ac.Longitude, &ac.Speed, &ac.Track,
+		err = rows.Scan(&ac.Icao, &ac.Callsign, &ac.Altitude, &ac.Latitude, &ac.Longitude, &ac.Speed, &ac.Track,
 			&ac.VerticalRate, &ac.Timestamp)
 		if err != nil {
 			return nil, err
@@ -222,20 +236,24 @@ func (ctx *Context) SelectAllColumnsAircraftCurrent() ([]models.AircraftCurrentM
 }
 
 // SelectAllColumnHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
-func (ctx *Context) SelectAllColumnHistoryByIcao(search string) ([]models.AircraftHistoryModel, error) {
-	query := `SELECT * FROM aircraft_history WHERE icao = $1 ORDER BY timestamp DESC`
+func (ctx *Context) SelectAllColumnHistoryByIcao(search string) (aircraft []models.AircraftHistoryModel, err error) {
+	query := `SELECT icao, lat, long, timestamp FROM aircraft_history WHERE icao = $1 ORDER BY timestamp DESC`
 
 	rows, err := ctx.Query(query, search)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var aircraft []models.AircraftHistoryModel
+	defer func(rows *sql.Rows) {
+		closeErr := rows.Close()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}(rows)
 
 	for rows.Next() {
 		var ac models.AircraftHistoryModel
-		err := rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude, &ac.Timestamp)
+		err = rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude, &ac.Timestamp)
 		if err != nil {
 			return nil, err
 		}
@@ -259,23 +277,27 @@ func (ctx *Context) DeleteOldHistory(days int) error {
 
 // SelectAllColumnHistoryByIcaoFilterByTimestamp selects history by aircraft icao
 // and filters every row with a newer timestamp than given hour
-func (ctx *Context) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) ([]models.AircraftHistoryModel, error) {
-	query := `SELECT * FROM aircraft_history 
+func (ctx *Context) SelectAllColumnHistoryByIcaoFilterByTimestamp(search string, hour int) (aircraft []models.AircraftHistoryModel, err error) {
+	query := `SELECT icao, lat, long, timestamp FROM aircraft_history 
          		 WHERE icao = $1 AND timestamp > (SELECT (MAX(timestamp) - ($2 * INTERVAL '1 hour'))
 				 FROM aircraft_history WHERE icao = $1) 
-         		 ORDER BY timestamp DESC;`
+         		 ORDER BY timestamp DESC`
 
 	rows, err := ctx.Query(query, search, hour)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var aircraft []models.AircraftHistoryModel
+	defer func(rows *sql.Rows) {
+		closeErr := rows.Close()
+		if closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}(rows)
 
 	for rows.Next() {
 		var ac models.AircraftHistoryModel
-		err := rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude, &ac.Timestamp)
+		err = rows.Scan(&ac.Icao, &ac.Latitude, &ac.Longitude, &ac.Timestamp)
 		if err != nil {
 			return nil, err
 		}

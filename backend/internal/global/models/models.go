@@ -1,6 +1,6 @@
 package models
 
-// AircraftHistoryModel represent a row in history_aircraft
+// AircraftHistoryModel represent a row in aircraft_history
 type AircraftHistoryModel struct {
 	Icao      string  `json:"icao"`
 	Latitude  float32 `json:"latitude"`
@@ -8,7 +8,7 @@ type AircraftHistoryModel struct {
 	Timestamp string  `json:"timestamp"`
 }
 
-// AircraftCurrentModel represents a row in current_time_aircraft
+// AircraftCurrentModel represents a row in aircraft_current
 type AircraftCurrentModel struct {
 	Icao         string  `json:"icao"`
 	Callsign     string  `json:"callsign"`

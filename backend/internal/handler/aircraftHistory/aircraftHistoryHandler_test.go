@@ -69,7 +69,7 @@ func TestInvalidRequests(t *testing.T) {
 			name:       "Get request with too long URL",
 			url:        endpoint + "endpoint/endpoint/",
 			httpMethod: http.MethodGet,
-			statusCode: http.StatusBadRequest,
+			statusCode: http.StatusRequestURITooLong,
 			errorMsg:   errorMsg.ErrorTongURL,
 		},
 		{
@@ -84,14 +84,14 @@ func TestInvalidRequests(t *testing.T) {
 			url:        endpoint + "ABC123?param=123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(optionalParams, ", "),
+			errorMsg:   fmt.Errorf(errorMsg.ErrorInvalidQueryParams+": %s", strings.Join(optionalParams, ", ")).Error(),
 		},
 		{
 			name:       "Get request with too many parameters",
 			url:        endpoint + "ABC123?url=abc?param=ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(optionalParams, ", "),
+			errorMsg:   fmt.Errorf(errorMsg.ErrorInvalidQueryParams+": %s", strings.Join(optionalParams, ", ")).Error(),
 		},
 		{
 			name:       "Get request without icao or parameter",
@@ -105,6 +105,12 @@ func TestInvalidRequests(t *testing.T) {
 			url:        endpoint + "ABC123?hour=ABC123",
 			statusCode: http.StatusBadRequest,
 			errorMsg:   errorMsg.InvalidQueryParameterHour,
+		},
+		{
+			name:       "Too long ICAO",
+			url:        endpoint + "ABC1234",
+			statusCode: http.StatusBadRequest,
+			errorMsg:   errorMsg.TooLongIcao,
 		},
 	}
 
@@ -186,8 +192,9 @@ func TestValidRequests(t *testing.T) {
 			url:        endpoint + "ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusNoContent,
+			mockData:   testUtility.CreateMockHistAircraft(1),
 			setup: func(mockDB *mock.MockRestService, mockData []models.AircraftHistoryModel) {
-				mockSvc.EXPECT().GetAircraftHistoryByIcao("ABC123").Return([]models.AircraftHistoryModel{}, nil)
+				mockSvc.EXPECT().GetAircraftHistoryByIcao("ABC123").Return(mockData, nil)
 			},
 		},
 		{
@@ -227,7 +234,7 @@ func TestValidRequests(t *testing.T) {
 
 			assert.Equal(t, tt.statusCode, res.StatusCode)
 
-			if tt.mockData != nil {
+			if tt.mockData != nil && len(tt.mockData) > 1 {
 				var actual geoJSON.FeatureCollectionLineString
 				_ = json.NewDecoder(res.Body).Decode(&actual)
 

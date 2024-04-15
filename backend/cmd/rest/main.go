@@ -1,7 +1,9 @@
 package main
 
 import (
+	"adsb-api/internal/db"
 	"adsb-api/internal/global"
+	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/handler/aircraftCurrentHandler"
 	"adsb-api/internal/handler/aircraftHistory"
 	"adsb-api/internal/handler/defaultHandler"
@@ -9,27 +11,33 @@ import (
 	"adsb-api/internal/utility/logger"
 	"net/http"
 	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 // main method for the RESTFUL API
 func main() {
-	logger.InitLogger()
 	// Initialize environment variables
 	global.InitEnvironment()
+	// Initialize logger
+	logger.InitLogger()
 	// Initialize the database
-	restSvc, err := restService.InitRestService()
+	database, err := db.InitDB()
 	if err != nil {
-		logger.Error.Fatalf("error opening database: %q", err)
+		log.Fatal().Msgf("error opening database: %q", err)
 	}
-	logger.Info.Printf("REST API successfully connected to database with database user: %s name: %s host: %s port: %d",
-		global.DbUser, global.DbName, global.DbHost, global.DbPort)
 
 	defer func() {
-		err := restSvc.DB.Close()
+		err = database.Close()
 		if err != nil {
-			logger.Error.Fatalf("error closing database: %q", err)
+			log.Fatal().Msgf(errorMsg.ErrorClosingDatabase+": %q", err)
 		}
 	}()
+
+	log.Info().Msgf("Reception API successfully connected to database with: User: %s | Database: %s | Host: %s | port: %d",
+		global.DbUser, global.DbName, global.DbHost, global.DbPort)
+
+	restSvc := restService.InitRestService(database)
 
 	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
 	http.HandleFunc(global.AircraftCurrentPath, aircraftCurrentHandler.CurrentAircraftHandler(restSvc))
@@ -38,10 +46,10 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = global.DefaultPort
-		logger.Info.Println("PORT has not been set. Using default port: " + port)
+		log.Info().Msgf("PORT has not been set. Using default port: %s", port)
 	}
 
-	logger.Info.Println("Listening on port: " + port)
-	logger.Info.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Info().Msgf("Listening on port: " + port)
+	log.Fatal().Msgf(http.ListenAndServe(":"+port, nil).Error())
 
 }

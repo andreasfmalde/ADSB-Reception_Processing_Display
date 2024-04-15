@@ -1,65 +1,77 @@
 package main
 
 import (
+	"adsb-api/internal/db"
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
+	"adsb-api/internal/sbs"
+	"adsb-api/internal/service/cronScheduler"
 	"adsb-api/internal/service/sbsService"
 	"adsb-api/internal/utility/logger"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
-// main method and starting point of the reception and processing part of the ADS-B API
+// main method and starting point of the receiving and processing part of the ADS-B API
 func main() {
-	logger.InitLogger()
 	// Initialize environment variables
 	global.InitEnvironment()
+	// Initialize logger
+	logger.InitLogger()
 	// Initialize the database
-	sbsSvc, err := sbsService.InitSbsService()
+	database, err := db.InitDB()
 	if err != nil {
-		logger.Error.Fatalf("error opening database: %q", err)
+		log.Fatal().Msgf("error opening database: %q", err)
 	}
-	logger.Info.Printf("Reception API successfully connected to database with: User: %s | Name: %s | Host: %s | port: %d",
-		global.DbUser, global.DbName, global.DbHost, global.DbPort)
 
 	defer func() {
-		err := sbsSvc.DB.Close()
+		err = database.Close()
 		if err != nil {
-			logger.Error.Fatalf(errorMsg.ErrorClosingDatabase+": %q", err)
+			log.Fatal().Msgf(errorMsg.ErrorClosingDatabase+": %q", err)
 		}
 	}()
 
+	// Initialize cron scheduler
+	scheduler := cronScheduler.NewCronScheduler()
+
+	// Initialize SBS service
+	sbsSvc := sbsService.InitSbsService(database, scheduler)
+
 	if err := sbsSvc.CreateAdsbTables(); err != nil {
-		logger.Error.Fatalf(errorMsg.ErrorCreatingDatabaseTables+": %q", err)
+		log.Fatal().Msgf(errorMsg.ErrorCreatingDatabaseTables+": %q", err)
 	}
 
-	logger.Info.Printf("Starting the process for recieving SBS data. \n"+
-		"SBS source : %q | WaitingTime: %d seconds | CleaningPeriod: %d seconds | UpdatingPeriod: %d seconds | MaxDaysHistory: %d",
-		global.SbsSource, global.WaitingTime, global.CleaningPeriod, global.UpdatingPeriod, global.MaxDaysHistory)
-	timer := time.Now()
+	if err := sbsSvc.ScheduleCleanUpJob(global.CleanupSchedule, global.MaxDaysHistory); err != nil {
+		log.Fatal().Msgf("error initiazling cleanupJob job")
+	}
+
+	log.Info().Msgf("Reception API successfully connected to database with: User: %s | Database: %s | Host: %s | port: %d",
+		global.DbUser, global.DbName, global.DbHost, global.DbPort)
+
+	log.Info().Msgf("Scheduled clean up job with cron schedule: %s", global.CleanupSchedule)
+
+	log.Info().Msgf("Starting the process for receiving SBS data. \n"+
+		"SBS source : %q | WaitingTime: %d seconds | CleanupSchedule: %s | UpdatingPeriod: %d seconds | MaxDaysHistory: %d",
+		global.SbsSource, global.WaitingTime, global.CleanupSchedule, global.UpdatingPeriod, global.MaxDaysHistory)
+
 	for {
-		aircraft, err := sbsSvc.ProcessSbsData()
+		aircraft, err := sbs.ProcessSbsStream(global.SbsSource, global.WaitingTime)
 		if err != nil {
-			logger.Error.Printf(errorMsg.ErrorCouldNotConnectToTcpStream)
+			log.Error().Msgf(errorMsg.ErrorCouldNotConnectToTcpStream)
 			time.Sleep(time.Duration(global.WaitingTime) * time.Second)
 			continue
 		} else if len(aircraft) == 0 {
-			logger.Warning.Printf("recieved no data from SBS data source, will try again in: %d seconds", global.WaitingTime)
+			log.Warn().Msgf("received no data from SBS data source, will try again in: %d seconds", global.WaitingTime)
 			time.Sleep(time.Duration(global.WaitingTime) * time.Second)
 			continue
 		}
 
 		err = sbsSvc.InsertNewSbsData(aircraft)
 		if err != nil {
-			logger.Error.Fatalf(errorMsg.ErrorInsertingNewSbsData+": %q", err)
+			log.Error().Msgf(errorMsg.ErrorInsertingNewSbsData+": %q", err)
 		}
-		logger.Info.Println("new SBS data inserted")
-
-		if diff := time.Since(timer).Seconds(); diff > float64(global.CleaningPeriod) {
-			if err = sbsSvc.Cleanup(); err == nil {
-				timer = time.Now()
-				logger.Info.Println("old SBS data deleted")
-			}
-		}
+		log.Info().Msgf("%d new aircraft inserted", len(aircraft))
 
 		time.Sleep(time.Duration(global.UpdatingPeriod) * time.Second)
 	}

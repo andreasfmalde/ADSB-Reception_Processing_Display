@@ -1,9 +1,10 @@
 package convert
 
 import (
+	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
-	"adsb-api/internal/utility/logger"
 	"adsb-api/internal/utility/testUtility"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -12,18 +13,18 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-var geoJsonOverallSchema string
+var schemaLoader gojsonschema.JSONLoader
 
 func TestMain(m *testing.M) {
-	logger.InitLogger()
+	global.InitTestEnvironment()
 	err := os.Chdir("../../../")
 	if err != nil {
-		logger.Error.Fatalf("could not change working directory: %q", err)
+		log.Fatalf("could not change working directory: %q", err)
 	}
 
 	absPath, err := filepath.Abs("./resources/schemas/geoJson.json")
 	if err != nil {
-		logger.Error.Fatalf("could not get absolute path: %q", err)
+		log.Fatalf("could not get absolute path: %q", err)
 	}
 
 	absPath = filepath.ToSlash(absPath)
@@ -32,15 +33,12 @@ func TestMain(m *testing.M) {
 	u.Scheme = "file"
 	u.Path = absPath
 	absURL := u.String()
-	geoJsonOverallSchema = absURL
+	schemaLoader = gojsonschema.NewReferenceLoader(absURL)
 
 	m.Run()
-
 }
 
 func TestConvertCurrentModelToGeoJson(t *testing.T) {
-	schemaLoader := gojsonschema.NewReferenceLoader(geoJsonOverallSchema)
-
 	var mockData = testUtility.CreateMockAircraft(1)
 	geoJson, err := CurrentModelToGeoJson(mockData)
 	if err != nil {
@@ -63,8 +61,6 @@ func TestConvertCurrentModelToGeoJson(t *testing.T) {
 }
 
 func TestConvertHistoryModelToGeoJson(t *testing.T) {
-	schemaLoader := gojsonschema.NewReferenceLoader(geoJsonOverallSchema)
-
 	var mockData = testUtility.CreateMockHistAircraft(2)
 	geoJson, err := HistoryModelToGeoJson(mockData)
 	if err != nil {

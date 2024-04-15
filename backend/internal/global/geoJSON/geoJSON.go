@@ -46,6 +46,6 @@ type aircraftHistProperties struct {
 }
 
 type geometryLineString struct {
-	Coordinates [][]float32 `json:"coordinates"`
 	Type        string      `json:"type"`
+	Coordinates [][]float32 `json:"coordinates"`
 }

@@ -2,28 +2,27 @@ package sbsService
 
 import (
 	"adsb-api/internal/db"
-	"adsb-api/internal/global"
 	"adsb-api/internal/global/models"
-	"adsb-api/internal/sbs"
+	"adsb-api/internal/service/cronScheduler"
+	"adsb-api/internal/service/cronScheduler/jobs/cleanupJob"
 )
 
+// SbsService represents a service with an interface for retrieving database data through the repository in
+// internal/db/database.go.
 type SbsService interface {
 	CreateAdsbTables() error
 	InsertNewSbsData(aircraft []models.AircraftCurrentModel) error
-	Cleanup() error
+	ScheduleCleanUpJob(schedule string, days int) error
 }
 
 type SbsImpl struct {
-	DB db.Database
+	DB            db.Database
+	CronScheduler cronScheduler.Scheduler
 }
 
 // InitSbsService initializes SbsImpl struct and database connection
-func InitSbsService() (*SbsImpl, error) {
-	dbConn, err := db.InitDB()
-	if err != nil {
-		return nil, err
-	}
-	return &SbsImpl{DB: dbConn}, nil
+func InitSbsService(db db.Database, scheduler cronScheduler.Scheduler) *SbsImpl {
+	return &SbsImpl{DB: db, CronScheduler: scheduler}
 }
 
 // CreateAdsbTables creates all tables for the database schema
@@ -39,7 +38,7 @@ func (svc *SbsImpl) CreateAdsbTables() error {
 	}
 	defer func() {
 		if err != nil {
-			svc.DB.Rollback()
+			_ = svc.DB.Rollback()
 		}
 	}()
 
@@ -75,7 +74,7 @@ func (svc *SbsImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) err
 	}
 	defer func() {
 		if err != nil {
-			svc.DB.Rollback()
+			_ = svc.DB.Rollback()
 		}
 	}()
 
@@ -102,11 +101,9 @@ func (svc *SbsImpl) InsertNewSbsData(aircraft []models.AircraftCurrentModel) err
 	return nil
 }
 
-// Cleanup remove old rows to save space
-func (svc *SbsImpl) Cleanup() error {
-	return svc.DB.DeleteOldHistory(global.MaxDaysHistory)
-}
-
-func (svc *SbsImpl) ProcessSbsData() ([]models.AircraftCurrentModel, error) {
-	return sbs.ProcessSbsStream()
+// ScheduleCleanUpJob initializes a starts a cleanupJob job, that remove old rows from database to save space.
+// When the job is scheduled to be executed is decided by schedule parameter.
+func (svc *SbsImpl) ScheduleCleanUpJob(schedule string, days int) error {
+	job := cleanupJob.NewCleanupJob(svc.DB, days)
+	return svc.CronScheduler.ScheduleJob(schedule, job.Execute)
 }

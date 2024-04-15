@@ -6,17 +6,18 @@ import (
 	"adsb-api/internal/service/restService"
 	"adsb-api/internal/utility/apiUtility"
 	"adsb-api/internal/utility/convert"
-	"adsb-api/internal/utility/logger"
 	"fmt"
 	"net/http"
+	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 // CurrentAircraftHandler handles HTTP requests for /aircraft/current/ endpoint.
 func CurrentAircraftHandler(svc restService.RestService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := apiUtility.ValidateURL(r, global.CurrentPathMaxLength, []string{})
+		err := apiUtility.ValidateURL(w, r, len(strings.Split(global.AircraftCurrentPath, "/"))-1, []string{})
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		switch r.Method {
@@ -34,20 +35,24 @@ func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 	res, err := svc.GetCurrentAircraft()
 	if err != nil {
 		http.Error(w, errorMsg.ErrorRetrievingCurrentAircraft, http.StatusInternalServerError)
-		logger.Error.Printf(errorMsg.ErrorRetrievingCurrentAircraft+": %q Path: %q", err, r.URL)
+		log.Error().Msgf(errorMsg.ErrorRetrievingCurrentAircraft+": %q Path: %q", err, r.URL)
 		return
 	}
 	if len(res) == 0 {
-		w.WriteHeader(http.StatusNoContent)
+		apiUtility.NoContent(w)
 		return
 	}
 
 	aircraft, err := convert.CurrentModelToGeoJson(res)
 	if err != nil {
 		http.Error(w, errorMsg.ErrorConvertingDataToGeoJson, http.StatusInternalServerError)
-		logger.Error.Printf(errorMsg.ErrorConvertingDataToGeoJson+": %q", err)
+		log.Error().Msgf(errorMsg.ErrorConvertingDataToGeoJson+": %q", err)
 		return
 	}
 
-	apiUtility.EncodeJsonData(w, aircraft)
+	err = apiUtility.EncodeJsonData(w, aircraft)
+	if err != nil {
+		http.Error(w, errorMsg.ErrorEncodingJsonData, http.StatusInternalServerError)
+		log.Error().Msgf(errorMsg.ErrorEncodingJsonData+": %q", err)
+	}
 }

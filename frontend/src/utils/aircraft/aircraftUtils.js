@@ -18,7 +18,7 @@ export const isInBounds = (ac,mapBounds) =>{
 export const findAircraftByIcaoOrCallsign = (search, aircrafts) =>{
   if (aircrafts !== null){
     for (let ac of aircrafts){
-      if (ac.properties.icao === search || ac.properties.callsign === search){
+      if (ac.properties.icao === search.toUpperCase() || ac.properties.callsign === search.toUpperCase()){
         return ac
       }
     }
