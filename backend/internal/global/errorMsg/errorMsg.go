@@ -18,4 +18,7 @@ const (
 	TransactionInProgress           = "transaction already in progress"
 	NoTransactionInProgress         = "no transaction in progress"
 	TooLongIcao                     = "ICAO code cannot be longer than 6 characters"
+	ErrorDeletingOldHistory         = "error deleting old history"
+
+	InfoOldHistoryDataDeleted = "old history data deleted"
 )
