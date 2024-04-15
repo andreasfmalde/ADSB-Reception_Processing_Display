@@ -6,6 +6,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// CleanupJob represents a job to clean up old history data from the database.
+// It contains the database instance and the maximum number of days of history to keep.
 type CleanupJob struct {
 	db             db.Database
 	MaxDaysHistory int

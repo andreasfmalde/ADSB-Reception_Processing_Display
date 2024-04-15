@@ -25,6 +25,7 @@ var (
 	HistoryPathMaxLength = len(strings.Split(AircraftHistoryPath, "/"))
 )
 
+// SBS processing constants
 var (
 	SbsSource       string
 	WaitingTime     = 4

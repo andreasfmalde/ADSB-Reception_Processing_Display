@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Database represents the interface for interacting with a database.
 type Database interface {
 	CreateAircraftCurrentTable() error
 	DropAircraftCurrentTable() error
@@ -32,6 +33,7 @@ type Database interface {
 	Close() error
 }
 
+// Context represents a context object that holds a database connection and transaction.
 type Context struct {
 	db *sql.DB
 	tx *sql.Tx

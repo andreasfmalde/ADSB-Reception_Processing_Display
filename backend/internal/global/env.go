@@ -9,6 +9,9 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// InitEnvironment initializes the environment variables by loading the .env file.
+// It then calls the InitDatabaseEnvVariables and InitSbsEnvVariables functions to initialize the database and SBS
+// environment variables respectively.
 func InitEnvironment() {
 	err := godotenv.Load("./.env")
 	if err != nil {
@@ -19,6 +22,9 @@ func InitEnvironment() {
 	InitSbsEnvVariables()
 }
 
+// InitDatabaseEnvVariables initializes the environment variables related to the database.
+// It retrieves the values of the DB_USER, DB_PASSWORD, DB_HOST and DB_PORT environment variables and assigns
+// them to the respective variables.
 func InitDatabaseEnvVariables() {
 	DbUser = os.Getenv("DB_USER")
 	DbPassword = os.Getenv("DB_PASSWORD")
@@ -43,6 +49,9 @@ func InitDatabaseEnvVariables() {
 	}
 }
 
+// InitSbsEnvVariables initializes the environment variables related to the SBS.
+// It retrieves the values of the SBS_SOURCE, WAITING_TIME, CLEANUP_SCHEDULE, UPDATING_PERIOD,
+// and MAX_DAYS_HISTORY environment variables and assigns them to the respective variables.
 func InitSbsEnvVariables() {
 	SbsSource = os.Getenv("SBS_SOURCE")
 
@@ -77,6 +86,8 @@ func InitSbsEnvVariables() {
 	}
 }
 
+// InitTestEnvironment initializes the test environment by initializing the logger and setting up the test database
+// and SBS environment variables.
 func InitTestEnvironment() {
 	logger.InitLogger()
 	DbUser = "test"
