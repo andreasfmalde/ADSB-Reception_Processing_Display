@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"strings"
 )
 
 var optionalParams = []string{"hour"}
@@ -19,9 +20,8 @@ var optionalParams = []string{"hour"}
 // HistoryAircraftHandler handles HTTP requests for /aircraft/history/{icao}?hour= endpoint.
 func HistoryAircraftHandler(svc restService.RestService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := apiUtility.ValidateURL(r, global.HistoryPathMaxLength, optionalParams)
+		err := apiUtility.ValidateURL(w, r, len(strings.Split(global.AircraftHistoryPath, "/")), optionalParams)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		switch r.Method {
@@ -37,8 +37,11 @@ func HistoryAircraftHandler(svc restService.RestService) http.HandlerFunc {
 // Sends history data for aircraft given by the icao query parameter.
 func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc restService.RestService) {
 	search := path.Base(r.URL.Path)
-	if search == "history" || search == "" {
+	if search == "history" {
 		http.Error(w, errorMsg.EmptyIcao, http.StatusBadRequest)
+		return
+	} else if len(search) > 6 {
+		http.Error(w, errorMsg.TooLongIcao, http.StatusBadRequest)
 		return
 	}
 
@@ -59,17 +62,12 @@ func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 
 	if err != nil {
 		http.Error(w, errorMsg.ErrorRetrievingAircraftWithIcao+search, http.StatusInternalServerError)
-		log.Error().Msgf(errorMsg.ErrorRetrievingAircraftWithIcao+search+" Error : %q URL: %q", err, r.URL)
+		log.Error().Msgf(errorMsg.ErrorRetrievingAircraftWithIcao+": %s Error : %q URL: %q", search, err, r.URL)
 		return
 	}
 
-	if len(res) == 0 {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	if len(res) < 2 {
-		http.Error(w, errorMsg.ErrorGeoJsonTooFewCoordinates, http.StatusNoContent)
+	if len(res) == 0 || len(res) < 2 {
+		apiUtility.NoContent(w)
 		return
 	}
 

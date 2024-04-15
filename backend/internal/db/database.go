@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Database represents the interface for interacting with a database.
 type Database interface {
 	CreateAircraftCurrentTable() error
 	DropAircraftCurrentTable() error
@@ -32,6 +33,7 @@ type Database interface {
 	Close() error
 }
 
+// Context represents a context object that holds a database connection and transaction.
 type Context struct {
 	db *sql.DB
 	tx *sql.Tx
@@ -58,7 +60,7 @@ func (ctx *Context) Begin() error {
 	}
 	tx, err := ctx.db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	ctx.tx = tx
 	return nil
@@ -71,7 +73,7 @@ func (ctx *Context) Commit() error {
 	}
 	err := ctx.tx.Commit()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	ctx.tx = nil
 	return nil
@@ -84,7 +86,7 @@ func (ctx *Context) Rollback() error {
 	}
 	err := ctx.tx.Rollback()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to rollback transaction: %w", err)
 	}
 	ctx.tx = nil
 	return nil
@@ -235,7 +237,7 @@ func (ctx *Context) SelectAllColumnsAircraftCurrent() (aircraft []models.Aircraf
 
 // SelectAllColumnHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
 func (ctx *Context) SelectAllColumnHistoryByIcao(search string) (aircraft []models.AircraftHistoryModel, err error) {
-	query := `SELECT icao, lat, long, timestamp FROM aircraft_history WHERE icao = $1 ORDER BY timestamp desc`
+	query := `SELECT icao, lat, long, timestamp FROM aircraft_history WHERE icao = $1 ORDER BY timestamp DESC`
 
 	rows, err := ctx.Query(query, search)
 	if err != nil {

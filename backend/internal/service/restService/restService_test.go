@@ -53,7 +53,7 @@ func TestRestServiceImpl_GetCurrentAircraft_ErrorRetrievingDbData(t *testing.T) 
 
 	svc := &RestImpl{DB: mockDB}
 
-	var errorMsg = "mock error selecting table data"
+	var errorMsg = "mockData error selecting table data"
 	mockDB.EXPECT().SelectAllColumnsAircraftCurrent().Return(nil, errors.New(errorMsg))
 
 	res, err := svc.GetCurrentAircraft()
@@ -90,7 +90,7 @@ func TestRestServiceImpl_GetAircraftHistoryByIcao_ErrorRetrievingDbData(t *testi
 
 	svc := &RestImpl{DB: mockDB}
 
-	var errorMsg = "mock error selecting table data"
+	var errorMsg = "mockData error selecting table data"
 	mockDB.EXPECT().SelectAllColumnHistoryByIcao("search").Return(nil, errors.New(errorMsg))
 
 	res, err := svc.GetAircraftHistoryByIcao("search")
@@ -129,7 +129,7 @@ func TestRestImpl_GetAircraftHistoryByIcaoFilterByTimestamp_ErrorRetrievingDbDat
 
 	svc := &RestImpl{DB: mockDB}
 
-	var errorMsg = "mock error selecting table data"
+	var errorMsg = "mockData error selecting table data"
 	mockDB.EXPECT().SelectAllColumnHistoryByIcaoFilterByTimestamp("search", 1).Return(nil, errors.New(errorMsg))
 
 	res, err := svc.GetAircraftHistoryByIcaoFilterByTimestamp("search", 1)

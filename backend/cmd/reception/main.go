@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// main method and starting point of the reception and processing part of the ADS-B API
+// main method and starting point of the receiving and processing part of the ADS-B API
 func main() {
 	// Initialize environment variables
 	global.InitEnvironment()

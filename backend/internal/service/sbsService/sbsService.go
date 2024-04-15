@@ -7,6 +7,8 @@ import (
 	"adsb-api/internal/service/cronScheduler/jobs/cleanupJob"
 )
 
+// SbsService represents a service with an interface for retrieving database data through the repository in
+// internal/db/database.go.
 type SbsService interface {
 	CreateAdsbTables() error
 	InsertNewSbsData(aircraft []models.AircraftCurrentModel) error

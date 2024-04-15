@@ -9,14 +9,14 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"net/http"
+	"strings"
 )
 
 // CurrentAircraftHandler handles HTTP requests for /aircraft/current/ endpoint.
 func CurrentAircraftHandler(svc restService.RestService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := apiUtility.ValidateURL(r, global.CurrentPathMaxLength, []string{})
+		err := apiUtility.ValidateURL(w, r, len(strings.Split(global.AircraftCurrentPath, "/"))-1, []string{})
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		switch r.Method {
@@ -38,7 +38,7 @@ func handleCurrentAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 		return
 	}
 	if len(res) == 0 {
-		w.WriteHeader(http.StatusNoContent)
+		apiUtility.NoContent(w)
 		return
 	}
 

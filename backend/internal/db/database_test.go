@@ -19,6 +19,10 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
+// setupTestDB initializes the test database and returns a Context object.
+// It creates the required tables and indexes for the test environment.
+// If any error occurs during initialization, it fails the testing.
+// The created Context object is then returned for further use in tests.
 func setupTestDB(t *testing.T) *Context {
 	ctx, err := InitDB()
 	if err != nil {
@@ -35,9 +39,18 @@ func setupTestDB(t *testing.T) *Context {
 		t.Fatalf("error creating history_aircraft table: %q", err)
 	}
 
+	err = ctx.CreateAircraftHistoryTimestampIndex()
+	if err != nil {
+		t.Fatalf("error creating timestamp_index: %q", err)
+	}
+
 	return ctx
 }
 
+// teardownTestDB closes the database connection and cleans up the test environment.
+// It drops the aircraft_current table and deletes all data from the aircraft_history table.
+// If a transaction is in progress, it commits the transaction before closing the connection.
+// If any error occurs during the cleanup process, it fails the testing.
 func teardownTestDB(ctx *Context, t *testing.T) {
 	err := ctx.DropAircraftCurrentTable()
 	if err != nil {

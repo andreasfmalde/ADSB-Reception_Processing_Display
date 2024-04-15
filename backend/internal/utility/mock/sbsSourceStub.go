@@ -65,7 +65,7 @@ func (stub *StubImpl) Close() error {
 }
 
 func StartStubServer() {
-	mockData, err := os.ReadFile("./resources/mock/mockSbsDataLen5.txt")
+	mockData, err := os.ReadFile("./resources/mockData/mockSbsDataLen5.txt")
 	if err != nil {
 		log.Printf("error reading file: %q", err)
 	}
