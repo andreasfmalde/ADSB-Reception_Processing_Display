@@ -84,14 +84,14 @@ func TestInvalidRequests(t *testing.T) {
 			url:        endpoint + "ABC123?param=123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(optionalParams, ", "),
+			errorMsg:   fmt.Errorf(errorMsg.ErrorInvalidQueryParams+": %s", strings.Join(optionalParams, ", ")).Error(),
 		},
 		{
 			name:       "Get request with too many parameters",
 			url:        endpoint + "ABC123?url=abc?param=ABC123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   errorMsg.ErrorInvalidQueryParams + strings.Join(optionalParams, ", "),
+			errorMsg:   fmt.Errorf(errorMsg.ErrorInvalidQueryParams+": %s", strings.Join(optionalParams, ", ")).Error(),
 		},
 		{
 			name:       "Get request without icao or parameter",

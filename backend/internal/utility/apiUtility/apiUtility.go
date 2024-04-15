@@ -38,14 +38,14 @@ func ValidateURL(w http.ResponseWriter, r *http.Request, maxLength int, optional
 	query := r.URL.Query()
 
 	if len(query) != len(optionalParams) {
-		http.Error(w, errorMsg.ErrorInvalidQueryParams+strings.Join(optionalParams, ", "), http.StatusBadRequest)
+		http.Error(w, fmt.Errorf(errorMsg.ErrorInvalidQueryParams+": %s", strings.Join(optionalParams, ", ")).Error(), http.StatusBadRequest)
 		return fmt.Errorf("falied to validate URL")
 	}
 
 	for _, param := range optionalParams {
 		values, ok := query[param]
 		if !ok || len(values) == 0 || values[0] == "" {
-			http.Error(w, errorMsg.ErrorInvalidQueryParams+strings.Join(optionalParams, ", "), http.StatusBadRequest)
+			http.Error(w, fmt.Errorf(errorMsg.ErrorInvalidQueryParams+": %s", strings.Join(optionalParams, ", ")).Error(), http.StatusBadRequest)
 			return fmt.Errorf("falied to validate URL")
 		}
 	}

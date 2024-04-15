@@ -76,7 +76,7 @@ func TestInvalidRequests(t *testing.T) {
 			url:        endpoint + "?param=123",
 			httpMethod: http.MethodGet,
 			statusCode: http.StatusBadRequest,
-			errorMsg:   errorMsg.ErrorInvalidQueryParams,
+			errorMsg:   errorMsg.ErrorInvalidQueryParams + ": ",
 		},
 	}
 

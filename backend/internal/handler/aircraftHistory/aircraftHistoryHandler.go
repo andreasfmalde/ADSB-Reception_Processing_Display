@@ -61,7 +61,7 @@ func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 
 	if err != nil {
 		http.Error(w, errorMsg.ErrorRetrievingAircraftWithIcao+search, http.StatusInternalServerError)
-		logger.Error.Printf(errorMsg.ErrorRetrievingAircraftWithIcao+search+" Error : %q URL: %q", err, r.URL)
+		logger.Error.Printf(errorMsg.ErrorRetrievingAircraftWithIcao+": %s"+" Error : %q URL: %q", search, err, r.URL)
 		return
 	}
 
