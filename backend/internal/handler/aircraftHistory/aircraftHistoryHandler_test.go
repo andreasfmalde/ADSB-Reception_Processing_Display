@@ -69,7 +69,7 @@ func TestInvalidRequests(t *testing.T) {
 			name:       "Get request with too long URL",
 			url:        endpoint + "endpoint/endpoint/",
 			httpMethod: http.MethodGet,
-			statusCode: http.StatusBadRequest,
+			statusCode: http.StatusRequestURITooLong,
 			errorMsg:   errorMsg.ErrorTongURL,
 		},
 		{

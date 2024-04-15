@@ -19,9 +19,8 @@ var optionalParams = []string{"hour"}
 // HistoryAircraftHandler handles HTTP requests for /aircraft/history/{icao}?hour= endpoint.
 func HistoryAircraftHandler(svc restService.RestService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := apiUtility.ValidateURL(r, global.HistoryPathMaxLength, optionalParams)
+		err := apiUtility.ValidateURL(w, r, global.HistoryPathMaxLength, optionalParams)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		switch r.Method {
