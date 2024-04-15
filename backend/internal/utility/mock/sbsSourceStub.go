@@ -2,7 +2,7 @@ package mock
 
 import (
 	"adsb-api/internal/global"
-	"adsb-api/internal/utility/logger"
+	"log"
 	"net"
 	"os"
 )
@@ -29,7 +29,7 @@ func (stub *StubImpl) StartServer() (err error) {
 		return err
 	}
 
-	logger.Info.Println("starting mockData TCP server")
+	log.Println("starting mock TCP server")
 
 	go func() {
 		defer func(ln net.Listener) {
@@ -67,13 +67,13 @@ func (stub *StubImpl) Close() error {
 func StartStubServer() {
 	mockData, err := os.ReadFile("./resources/mockData/mockSbsDataLen5.txt")
 	if err != nil {
-		logger.Error.Printf("error reading file: %q", err)
+		log.Printf("error reading file: %q", err)
 	}
 
 	stub := InitStub(global.SbsSource, mockData)
 	err = stub.StartServer()
 	if err != nil {
-		logger.Error.Fatalf("error starting stub server: %q", err)
+		log.Fatalf("error starting stub server: %q", err)
 		return
 	}
 

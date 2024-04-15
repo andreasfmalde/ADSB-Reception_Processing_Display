@@ -2,7 +2,7 @@ package cleanupJob
 
 import (
 	"adsb-api/internal/db"
-	"adsb-api/internal/utility/logger"
+	"github.com/rs/zerolog/log"
 )
 
 type CleanupJob struct {
@@ -16,6 +16,7 @@ func NewCleanupJob(db db.Database, days int) *CleanupJob {
 
 func (cj *CleanupJob) Execute() {
 	if err := cj.db.DeleteOldHistory(cj.MaxDaysHistory); err != nil {
-		logger.Error.Printf("error deleting old history: %q", err.Error())
+		log.Error().Msgf("error deleting old history: %q", err.Error())
 	}
+	log.Info().Msgf("old SBS data deleted")
 }

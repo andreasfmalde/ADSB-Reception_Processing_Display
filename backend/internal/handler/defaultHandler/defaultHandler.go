@@ -4,7 +4,7 @@ import (
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/utility/apiUtility"
-	"adsb-api/internal/utility/logger"
+	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
@@ -35,7 +35,7 @@ func DefaultHandler(w http.ResponseWriter, r *http.Request) {
 		err := apiUtility.EncodeJsonData(w, out)
 		if err != nil {
 			http.Error(w, errorMsg.ErrorEncodingJsonData, http.StatusInternalServerError)
-			logger.Error.Printf(errorMsg.ErrorEncodingJsonData+": %q", err)
+			log.Error().Msgf(errorMsg.ErrorEncodingJsonData+": %q", err)
 		}
 	default:
 		http.Error(w, "Method is not supported", http.StatusMethodNotAllowed)

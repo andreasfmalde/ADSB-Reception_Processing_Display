@@ -7,8 +7,8 @@ import (
 	"adsb-api/internal/service/restService"
 	"adsb-api/internal/utility/apiUtility"
 	"adsb-api/internal/utility/convert"
-	"adsb-api/internal/utility/logger"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"path"
 	"strconv"
@@ -51,7 +51,7 @@ func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 		hour, err := strconv.Atoi(r.URL.Query().Get("hour"))
 		if err != nil {
 			http.Error(w, errorMsg.InvalidQueryParameterHour, http.StatusBadRequest)
-			logger.Error.Printf(errorMsg.InvalidQueryParameterHour+" Error : %q", err)
+			log.Error().Msgf(errorMsg.InvalidQueryParameterHour+" Error : %q", err)
 			return
 		}
 		res, err = svc.GetAircraftHistoryByIcaoFilterByTimestamp(search, hour)
@@ -61,7 +61,7 @@ func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 
 	if err != nil {
 		http.Error(w, errorMsg.ErrorRetrievingAircraftWithIcao+search, http.StatusInternalServerError)
-		logger.Error.Printf(errorMsg.ErrorRetrievingAircraftWithIcao+": %s"+" Error : %q URL: %q", search, err, r.URL)
+		log.Error().Msgf(errorMsg.ErrorRetrievingAircraftWithIcao+": %s Error : %q URL: %q", search, err, r.URL)
 		return
 	}
 
@@ -73,13 +73,13 @@ func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc
 	aircraft, err := convert.HistoryModelToGeoJson(res)
 	if err != nil {
 		http.Error(w, errorMsg.ErrorConvertingDataToGeoJson, http.StatusInternalServerError)
-		logger.Error.Printf(errorMsg.ErrorConvertingDataToGeoJson+" Error: %q", err)
+		log.Error().Msgf(errorMsg.ErrorConvertingDataToGeoJson+" Error: %q", err)
 		return
 	}
 
 	err = apiUtility.EncodeJsonData(w, aircraft)
 	if err != nil {
 		http.Error(w, errorMsg.ErrorEncodingJsonData, http.StatusInternalServerError)
-		logger.Error.Printf(errorMsg.ErrorEncodingJsonData+": %q", err)
+		log.Error().Msgf(errorMsg.ErrorEncodingJsonData+": %q", err)
 	}
 }

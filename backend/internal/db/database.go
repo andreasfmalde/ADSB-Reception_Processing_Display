@@ -150,7 +150,7 @@ func (ctx *Context) CreateAircraftHistoryTimestampIndex() error {
 
 // DropAircraftCurrentTable drops aircraft_current table
 func (ctx *Context) DropAircraftCurrentTable() error {
-	query := `DROP TABLE IF EXISTS aircraft_current CASCADE`
+	query := `DROP TABLE IF EXISTS aircraft_current`
 
 	_, err := ctx.Exec(query)
 	return err
@@ -198,9 +198,7 @@ func (ctx *Context) BulkInsertAircraftCurrent(aircraft []models.AircraftCurrentM
 func (ctx *Context) InsertHistoryFromCurrent() error {
 	query := `INSERT INTO aircraft_history (icao, lat, long, timestamp) 
 			  SELECT icao, lat, long, timestamp
-			  FROM aircraft_current
-			  ON CONFLICT (icao, timestamp) 
-			      DO UPDATE SET timestamp = excluded.timestamp`
+			  FROM aircraft_current`
 	_, err := ctx.Exec(query)
 	return err
 }
@@ -237,7 +235,7 @@ func (ctx *Context) SelectAllColumnsAircraftCurrent() (aircraft []models.Aircraf
 
 // SelectAllColumnHistoryByIcao retrieves a list from aircraft_history of rows matching the icao parameter.
 func (ctx *Context) SelectAllColumnHistoryByIcao(search string) (aircraft []models.AircraftHistoryModel, err error) {
-	query := `SELECT icao, lat, long, timestamp FROM aircraft_history WHERE icao = $1`
+	query := `SELECT icao, lat, long, timestamp FROM aircraft_history WHERE icao = $1 ORDER BY timestamp desc`
 
 	rows, err := ctx.Query(query, search)
 	if err != nil {

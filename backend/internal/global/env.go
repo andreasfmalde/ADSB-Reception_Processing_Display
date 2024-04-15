@@ -2,6 +2,7 @@ package global
 
 import (
 	"adsb-api/internal/utility/logger"
+	"github.com/rs/zerolog/log"
 	"os"
 	"strconv"
 
@@ -11,7 +12,7 @@ import (
 func InitEnvironment() {
 	err := godotenv.Load("./.env")
 	if err != nil {
-		logger.Error.Printf("error loading .env file: %q", err.Error())
+		log.Error().Msgf("error loading .env file: %q", err.Error())
 	}
 
 	InitDatabaseEnvVariables()
@@ -37,7 +38,7 @@ func InitDatabaseEnvVariables() {
 	if exist {
 		DbPort, err = strconv.Atoi(dbPort)
 		if err != nil {
-			logger.Warning.Printf("error setting environment variable 'DB_PORT': can only be an integer: Error %q", err.Error())
+			log.Warn().Msgf("error setting environment variable 'DB_PORT': can only be an integer: Error %q", err.Error())
 		}
 	}
 }
@@ -50,7 +51,7 @@ func InitSbsEnvVariables() {
 	if exist {
 		WaitingTime, err = strconv.Atoi(waitingTime)
 		if err != nil {
-			logger.Warning.Printf("error setting environment variable 'WAITING_TIME': can only be an integer: Error %q", err.Error())
+			log.Warn().Msgf("error setting environment variable 'WAITING_TIME': can only be an integer: Error %q", err.Error())
 		}
 	}
 
@@ -63,7 +64,7 @@ func InitSbsEnvVariables() {
 	if exist {
 		UpdatingPeriod, err = strconv.Atoi(updatingPeriod)
 		if err != nil {
-			logger.Warning.Printf("error setting environment variable 'UPDATING_PERIOD': can only be an integer: Error %q", err.Error())
+			log.Warn().Msgf("error setting environment variable 'UPDATING_PERIOD': can only be an integer: Error %q", err.Error())
 		}
 	}
 
@@ -71,7 +72,7 @@ func InitSbsEnvVariables() {
 	if exist {
 		MaxDaysHistory, err = strconv.Atoi(maxDaysHistory)
 		if err != nil {
-			logger.Warning.Printf("error setting environment variable 'MAX_DAYS_HISTORY': can only be an integer: Error %q", err.Error())
+			log.Warn().Msgf("error setting environment variable 'MAX_DAYS_HISTORY': can only be an integer: Error %q", err.Error())
 		}
 	}
 }
