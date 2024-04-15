@@ -13,7 +13,7 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-var geoJsonOverallSchema string
+var schemaLoader gojsonschema.JSONLoader
 
 func TestMain(m *testing.M) {
 	global.InitTestEnvironment()
@@ -33,15 +33,12 @@ func TestMain(m *testing.M) {
 	u.Scheme = "file"
 	u.Path = absPath
 	absURL := u.String()
-	geoJsonOverallSchema = absURL
+	schemaLoader = gojsonschema.NewReferenceLoader(absURL)
 
 	m.Run()
-
 }
 
 func TestConvertCurrentModelToGeoJson(t *testing.T) {
-	schemaLoader := gojsonschema.NewReferenceLoader(geoJsonOverallSchema)
-
 	var mockData = testUtility.CreateMockAircraft(1)
 	geoJson, err := CurrentModelToGeoJson(mockData)
 	if err != nil {
@@ -64,8 +61,6 @@ func TestConvertCurrentModelToGeoJson(t *testing.T) {
 }
 
 func TestConvertHistoryModelToGeoJson(t *testing.T) {
-	schemaLoader := gojsonschema.NewReferenceLoader(geoJsonOverallSchema)
-
 	var mockData = testUtility.CreateMockHistAircraft(2)
 	geoJson, err := HistoryModelToGeoJson(mockData)
 	if err != nil {
