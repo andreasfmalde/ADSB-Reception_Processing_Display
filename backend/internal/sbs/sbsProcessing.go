@@ -27,16 +27,13 @@ func ProcessSbsStream(addr string, waitingTime int) ([]models.AircraftCurrentMod
 	var aircraft []models.AircraftCurrentModel
 
 	timer := time.Now()
-	for {
+	for scanner.Scan() {
 		if diff := time.Since(timer).Seconds(); diff > float64(waitingTime) {
 			break
 		}
 
 		var ac models.AircraftCurrentModel
 
-		if !scanner.Scan() {
-			break
-		}
 		msg1 := strings.Split(scanner.Text(), ",")
 		if len(msg1) < 11 {
 			continue
