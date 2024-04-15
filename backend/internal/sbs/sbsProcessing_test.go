@@ -50,6 +50,8 @@ func TestProcessSbsStream_WithMockResponse(t *testing.T) {
 		t.Errorf("error reading file: %q", err)
 	}
 
+	mockFirstLineEmpty, err := os.ReadFile("./resources/mock/mockSbsDataFirstLineEmpty.txt")
+
 	tests := []struct {
 		name           string
 		mockResponse   []byte
