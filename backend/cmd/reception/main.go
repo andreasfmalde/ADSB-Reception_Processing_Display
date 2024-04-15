@@ -14,10 +14,10 @@ import (
 
 // main method and starting point of the reception and processing part of the ADS-B API
 func main() {
-	// Initialize logger
-	logger.InitLogger()
 	// Initialize environment variables
 	global.InitEnvironment()
+	// Initialize logger
+	logger.InitLogger()
 	// Initialize the database
 	database, err := db.InitDB()
 	if err != nil {
