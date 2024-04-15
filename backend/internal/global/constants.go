@@ -1,7 +1,5 @@
 package global
 
-import "strings"
-
 // Database variables
 var (
 	DbUser     string
@@ -18,11 +16,6 @@ const (
 	DefaultPath         = "/"
 	AircraftCurrentPath = "/aircraft/current/"
 	AircraftHistoryPath = "/aircraft/history/"
-)
-
-var (
-	CurrentPathMaxLength = len(strings.Split(AircraftCurrentPath, "/")) - 1
-	HistoryPathMaxLength = len(strings.Split(AircraftHistoryPath, "/"))
 )
 
 // SBS processing constants

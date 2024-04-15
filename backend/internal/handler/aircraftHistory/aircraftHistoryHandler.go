@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"strings"
 )
 
 var optionalParams = []string{"hour"}
@@ -19,7 +20,7 @@ var optionalParams = []string{"hour"}
 // HistoryAircraftHandler handles HTTP requests for /aircraft/history/{icao}?hour= endpoint.
 func HistoryAircraftHandler(svc restService.RestService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := apiUtility.ValidateURL(w, r, global.HistoryPathMaxLength, optionalParams)
+		err := apiUtility.ValidateURL(w, r, len(strings.Split(global.AircraftHistoryPath, "/")), optionalParams)
 		if err != nil {
 			return
 		}
