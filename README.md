@@ -38,8 +38,8 @@ The application is deployed on the following urls:<br>
    - SBS_SOURCE
      <br> Other environment variables are optional and have default values.
   
-- Create .env file in frontend folder wil following environment variables: 
-  - REACT_APP_SERVER=http://{PUBLIC_IP}:8080 
+- Create .env file in frontend folder with the following environment variable: 
+  - REACT_APP_SERVER=http://{PUBLIC_IP/localhost}:8080 
     - `Public IP` to the backend API for global access
     - `localhost` for local development where backend and frontend are running on the same computer
 
