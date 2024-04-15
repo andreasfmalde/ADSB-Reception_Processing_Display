@@ -298,7 +298,7 @@ Environment variables:
 - DB_HOST, database host, Default value: localhost
 - DB_PORT, database port, Default Value: 5432
 - WAITING_TIME, time between each batch of SBS data, Default value: 4 seconds
-- CLEANING_PERIOD, crontab schedule for cleaning old data, Default value is once a day: 0 0 * * *
+- CLEANING_SCHEDULE, crontab schedule for cleaning old data, Default value is once a day: 0 0 * * *
 - UPDATING_PERIOD, time between next for-loop iteration, Default value: 10 seconds
 - MAX_DAYS_HISTORY, max amount of history to keep in the database, Default value: 1 day
 - SBS_SOURCE, URL for the SBS source to be used for retrieving flight data, No default value
