@@ -1,38 +1,34 @@
 # ADSB-Reception_Processing_Display_Analysis
 ADS-B - Reception, Processing, Display and Analysis. A bachelor thesis by Andreas Follvaag Malde and Fredrik Sundt-Hansen at NTNU Gjøvik.
 
+This repository contains the application developed for our bachelor's thesis in Computer Science at the 
+Norwegian University of Science and Technology. The purpose of this project was to build an application for 
+Electronic Chart Centre AS, so they could use it in their applications. 
+
+The project is a fullstack application able to receive and process live ADS-B flight traffic in SBS format from a 
+given source, expose that data through a REST API, and show live and historic data on a website. Golang is used for 
+the backend, PostgreSQL for the database, and React is used for the frontend.
+
+The application is deployed on the following urls:<br>
+`http://129.241.150.147/` - website<br>
+`http://129.241.150.147:8080/` - RESTful API
 ## Table of Contents
-- [Project Description](#project-description)
-    - [REST API](#rest-api)
-      - [Database](#Database)
-    - [SBS Flight Traffic Receiving API](#sbs-receiving-api)
-    - [Website in React](#website)
-    - [Logging](#logging)
+- [SBS Flight Traffic Receiving API](#sbs-receiving-api)
+- [Database](#Database)
+- [REST API](#rest-api)
+  - [Current Aircraft Endpoint](#current-aircraft)
+  - [Aircraft History Endpoint](#aircraft-history)
+- [Logging](#logging)
+- [Website in React](#website)
 - [Deployment](#deployment)
 - [Testing](#testing)
 - [License](#license)
 - [Contact](#contact)
 
 
-### Project Description
-This GitHub repository contains the application developed for our bachelor's thesis in Computer Science at the 
-Norwegian University of Science and Technology. The purpose of this project was to build an application for 
-Electronic Chart Centre AS, the product owners, so they could use it in their applications. Or any organization, 
-for that matter, could clone/fork this repository to use as they like. 
-
-It consists of a fullstack application able to receive and process live SBS flight traffic from a 
-given SBS source, expose that data through a REST API, and show live and historic data on a website. Golang was used for 
-the backend, Postgres was used for the database, and React was used for the frontend.
-
-The application is deployed on the university's internal infrastructure:
-`http://129.241.150.147/` - website
-`http://129.241.150.147:8080/` - RESTful API
-
-#### SBS Receiving API
+## SBS Receiving API
 `backend/cmd/reception/main.go` Consists of an infinite loop that processes SBS data by receiving data through a TCP 
-stream from the given SBS source and converts the data to aircraft structs. Then it inserts that  
-newly gotten data into the database. Lastly, it runs a cleanup job using crontab to delete old data from database to 
-restrict it from getting too big.
+stream and converts the data to aircraft structs. The data is then inserted into a database. A cleanup job using golang's crontab package runs in a seperate thread to delete old data from the database. Preventing it from getting too big.
 
 When processing the SBS data the program assumes that there is a time-period between each batch of new data, this is 
 the WaitingTime variable. 
@@ -44,22 +40,21 @@ WaitingTime period. It sleeps and retires.
 3. It successfully connected to the source and received data. It will then continue on adding this data to the database.
 At the end it will sleep UpdatingPeriod seconds and do another iteration. 
 
-##### Why an infinite loop?
+### Why an infinite loop?
 There is no end condition to the SBS stream we used for developing and testing, `data.adsbhub.org:5002`. 
-The SBS source was a continuous stream, and the application was developed with this in mind.
-One could change the loop to exit if there is an error connecting the source. However, if there is downtime on their 
-side, the whole application would end and one would need to restart it. Thus, we decided to have an infinite loop. 
+The source is a continuous stream, and the application was developed with this in mind.
+One could change the loop to exit if there is an error connecting the source. However, if there is downtime on their side, the whole application would end and one would need to restart it. Thus, we decided to have an infinite loop. 
 
-##### Database
+## Database
 The current database schema does not use any referential integrity constraints, but uses application enforced 
 referential integrity. Due to the fact that the relationship between these two tables is 0..1 to 0..*. Since 
-aircraft_current only contains the aircraft that are in the air at this current time, new aircraft will not 
+aircraft_current only contains the aircrafts that are in the air at this current time, new aircrafts will not 
 have any history yet. On the other hand, aircraft_history might not have any matching aircraft in aircraft_current. 
 Due to lack of coverage, aircraft might disappear momentarily and come back again. 
 
 The application enforced referential integrity is handled in `/backend/internal/db/database.go` 
 
-#### REST API
+## REST API
 `backend/cmd/rest/main.go` To make the retrieved data available for external resources, such as the website described 
 below, a RESTful API has been implemented. 
 
@@ -69,8 +64,8 @@ Endpoints:
 /aircraft/history/
 ````
 
-##### Current Aircraft
-This endpoint retrieves all aircraft in aircraft_current table, that is, all aircraft currently in the air. 
+### Current Aircraft
+This endpoint retrieves all aircrafts in aircraft_current table. That is, all aircrafts currently in the air. 
 
 ```
 Method: GET
@@ -165,7 +160,7 @@ Response:
 }  
 ````
 
-##### Aircraft History
+### Aircraft History
 This endpoint retrieves the history of one aircraft by searching for its unique ICAO code. 
 Additionally, it also has an optional query parameter 'hour' to limit the history result. 
 
@@ -234,7 +229,7 @@ Response:
                         1.869885,
                         38.976334
                     ],
-                   ...
+                   [...],
                 ],
                 "type": "LineString"
             }
@@ -272,21 +267,42 @@ Response:
 }
 ````
 
-### Logging
+## Logging
 For logging, the 'zerolog' library was used `github.com/rs/zerolog`. The global logging level is set by the environment
 variable 'ENV.' For production environment: ENV=production, sets the global logging level to Warning, e.i., all logs with 
 Warning, Error, Fatal, Panic will be logged. Any other value than 'prod' or 'production' will set the global logging 
 level to trace, all levels are logged, Trace, Debug, Info, Warning etc.  
 
-#### Website
+## Website
+The frontend part of this project is built with ReactJS. It is a single-page web application that displays aircrafts in the air on a map to the user. The website is updated every 30 seconds by making a new request to the current endpoint of the backend API to show the most recent data. Selecting an aircraft will make properties like altitude, speed, track and position data available to the user. This will also fire two more API calls. One call to the histroy endpoint of the backend API. This data is used by the frontend to show history trails behind the aircraft. The other call is to an external API `https://www.planespotters.net/photo/api` that will provide a photo of the selected aircraft.
+
+Another feature of the website is the ability to search for a specific aircraft by its ICAO code or callsign. This will make the map 'fly to' the aircraft and show its properties.
+
+### Fronted dependencies
+In additon to the use of ReactJS, there are other dependencies used to make the website work. These are:
+#### Maplibre GL JS
+MapLibre GL JS is a JavaScript library that uses WebGL to render interactive maps from vector tiles and Mapbox styles. It is a fork of Mapbox GL JS which is no longer open source. MapLibre GL JS is used to display the map on the website, together with markers for the aircrafts, the history trails and the 'fly to' feature.
+#### React Map GL
+React Map GL is a React wrapper for MapLibre GL JS. It is used to make it easier to use MapLibre GL JS in a React project. This includes the use of components like Map, Marker, Source and Layer, which all have the form of React components.
+#### OpenStreetMap
+OpenStreetMap is used to provide the map tiles rendered on the map. It is a free and open-source map that can be used by anyone. MapLibre GL JS uses OpenStreetMap as a source for the map tiles.
+
+### Local frontend deployment
+The frontend web application can be deployed locally by using the following steps:
+1. NodeJS must be installed on the local machine. 
+2. Clone the repository to your local machine.
+3. Navigate to the frontend directory in the repository.
+4. Run the command `npm i` to install all the dependencies.
+5. Create a file named `.env` in the frontend directory. Add the following line to the file: `REACT_APP_SERVER=<BACKEND API URL>`. REACT_APP_SERVER is the URL of the backend API that the frontend will use to fetch current and histroy data.
+6. Run the command `npm start` to start the development server.
 
 ## Deployment 
-For deploying the service, Docker is used. The Docker Compose file in the root of the project orchestrates deploying of 
+For deploying the service, Docker is used. The Docker Compose file in the root of the project orchestrates deploying 
 backend with frontend. However, if one would like to only deploy the frontend, there is a compose file in the frontend 
 directory. As described above, `REACT_APP_SERVER` can be set to a remote URL hosting the backend. 
 
 Additionally, in the project root folder, there is a .env file for setting environment variables. These are variables
- the backend uses for logging into the database, set global values like WaitingTime, CleaningPeriod, etc. 
+ the backend uses for connecting to the database, set global values like WaitingTime, CleaningPeriod, etc. 
 For developing, default values are set in `backend/internal/global/db.go` for database variables, and 
 `backend/internal/global/sbs.go` for SBS variables. An instance of the environment variable in the .env file will 
 overwrite the default values. 
@@ -317,6 +333,8 @@ database through the 'gomock' library at 'github.com/golang/mock/gomock'.
 
 
 For GeoJSON testing, the comprehensive GeoJSON schema available at https://geojson.org/schema/GeoJSON.json is utilized.
+
+Frontend testing is done with the Jest testing framework and testing-library/react. The tests are located in the `frontend/src/__tests__` directory. To run the tests, navigate to the frontend directory and run the command `npm test`.
 
 ## License
 MIT License
