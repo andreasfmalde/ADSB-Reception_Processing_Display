@@ -8,8 +8,9 @@ import (
 	"adsb-api/internal/service/cronScheduler"
 	"adsb-api/internal/service/sbsService"
 	"adsb-api/internal/utility/logger"
-	"github.com/rs/zerolog/log"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 // main method and starting point of the receiving and processing part of the ADS-B API

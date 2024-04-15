@@ -9,9 +9,10 @@ import (
 	"adsb-api/internal/handler/defaultHandler"
 	"adsb-api/internal/service/restService"
 	"adsb-api/internal/utility/logger"
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 // main method for the RESTFUL API

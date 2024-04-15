@@ -8,11 +8,12 @@ import (
 	"adsb-api/internal/utility/apiUtility"
 	"adsb-api/internal/utility/convert"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 var optionalParams = []string{"hour"}

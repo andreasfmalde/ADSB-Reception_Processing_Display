@@ -2,9 +2,10 @@ package global
 
 import (
 	"adsb-api/internal/utility/logger"
-	"github.com/rs/zerolog/log"
 	"os"
 	"strconv"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/joho/godotenv"
 )
