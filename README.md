@@ -13,6 +13,33 @@ ADS-B - Reception, Processing, Display and Analysis. A bachelor thesis by Andrea
 - [License](#license)
 - [Contact](#contact)
 
+### Installation and deployment
+#### Requirements for production environment
+- Docker 
+
+#### Installation
+1. `git clone https://github.com/andreasfmalde/ADSB-Reception_Processing_Display_Analysis.git`
+2. `cd .\ADSB-Reception_Processing_Display_Analysis\`
+3. Create .env in the project root folder with the following environment variables:  
+   - DB_USER
+   - DB_PASSWORD 
+   - SBS_SOURCE
+     <br> Other environment variables are optional and have default values.
+  
+- Create .env file in frontend folder wil following environment variables: 
+  - REACT_APP_SERVER=http://{PUBLIC_IP}:8080 
+    - `Public IP` to the backend API for global access
+    - `localhost` for local development where backend and frontend are running on the same computer
+
+    
+4. `docker compose up -d`
+5. The application should now be running. 
+
+### Requirements for local development
+1. Postgres 16.2
+2. Golang 1.20 and up
+3. NodeJS v16.17 and up
+
 
 ### Project Description
 This GitHub repository contains the application developed for our bachelor's thesis in Computer Science at the 
@@ -285,6 +312,9 @@ For deploying the service, Docker is used. The Docker Compose file in the root o
 backend with frontend. However, if one would like to only deploy the frontend, there is a compose file in the frontend 
 directory. As described above, `REACT_APP_SERVER` can be set to a remote URL hosting the backend. 
 
+There exist three Dockerfiles. Two for backend, one for each main in cmd directory, and one for frontend. This way there
+is a clear separation of the different services the application provides, making logging and maintainability easier. 
+
 Additionally, in the project root folder, there is a .env file for setting environment variables. These are variables
  the backend uses for logging into the database, set global values like WaitingTime, CleaningPeriod, etc. 
 For developing, default values are set in `backend/internal/global/db.go` for database variables, and 
@@ -302,7 +332,6 @@ Environment variables:
 - UPDATING_PERIOD, time between next for-loop iteration, Default value: 10 seconds
 - MAX_DAYS_HISTORY, max amount of history to keep in the database, Default value: 1 day
 - SBS_SOURCE, URL for the SBS source to be used for retrieving flight data, No default value
-
 
 ## Testing
 Throughout the project, a combination of unit testing and integration testing is used. For testing individual database
