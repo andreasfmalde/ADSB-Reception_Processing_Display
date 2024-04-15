@@ -2,6 +2,15 @@ package global
 
 import "strings"
 
+// Database variables
+var (
+	DbUser     string
+	DbPassword string
+	DbName     = "adsb_db"
+	DbHost     = "localhost"
+	DbPort     = 5432
+)
+
 // API constants
 const (
 	DefaultPort         = "8080"
@@ -14,4 +23,12 @@ const (
 var (
 	CurrentPathMaxLength = len(strings.Split(AircraftCurrentPath, "/")) - 1
 	HistoryPathMaxLength = len(strings.Split(AircraftHistoryPath, "/"))
+)
+
+var (
+	SbsSource       string
+	WaitingTime     = 4
+	UpdatingPeriod  = 10
+	MaxDaysHistory  = 1
+	CleanupSchedule = "0 0 * * *" // once a day
 )
