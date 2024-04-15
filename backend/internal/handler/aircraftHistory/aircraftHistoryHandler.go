@@ -36,8 +36,11 @@ func HistoryAircraftHandler(svc restService.RestService) http.HandlerFunc {
 // Sends history data for aircraft given by the icao query parameter.
 func handleHistoryAircraftGetRequest(w http.ResponseWriter, r *http.Request, svc restService.RestService) {
 	search := path.Base(r.URL.Path)
-	if search == "history" || search == "" {
+	if search == "history" {
 		http.Error(w, errorMsg.EmptyIcao, http.StatusBadRequest)
+		return
+	} else if len(search) > 6 {
+		http.Error(w, errorMsg.TooLongIcao, http.StatusBadRequest)
 		return
 	}
 

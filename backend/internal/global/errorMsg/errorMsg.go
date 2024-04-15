@@ -17,4 +17,5 @@ const (
 	InvalidQueryParameterHour       = "query parameter 'hour', can only be an integer"
 	TransactionInProgress           = "transaction already in progress"
 	NoTransactionInProgress         = "no transaction in progress"
+	TooLongIcao                     = "icao cannot be longer than 6 characters "
 )

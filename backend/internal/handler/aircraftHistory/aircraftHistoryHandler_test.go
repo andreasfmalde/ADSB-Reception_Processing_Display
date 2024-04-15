@@ -106,6 +106,12 @@ func TestInvalidRequests(t *testing.T) {
 			statusCode: http.StatusBadRequest,
 			errorMsg:   errorMsg.InvalidQueryParameterHour,
 		},
+		{
+			name:       "Too long ICAO",
+			url:        endpoint + "ABC1234",
+			statusCode: http.StatusBadRequest,
+			errorMsg:   errorMsg.TooLongIcao,
+		},
 	}
 
 	for _, tt := range tests {
