@@ -29,7 +29,7 @@ func (stub *StubImpl) StartServer() (err error) {
 		return err
 	}
 
-	logger.Info.Println("starting mock TCP server")
+	logger.Info.Println("starting mockData TCP server")
 
 	go func() {
 		defer func(ln net.Listener) {
@@ -65,7 +65,7 @@ func (stub *StubImpl) Close() error {
 }
 
 func StartStubServer() {
-	mockData, err := os.ReadFile("./resources/mock/mockSbsDataLen5.txt")
+	mockData, err := os.ReadFile("./resources/mockData/mockSbsDataLen5.txt")
 	if err != nil {
 		logger.Error.Printf("error reading file: %q", err)
 	}

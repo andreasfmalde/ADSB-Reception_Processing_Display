@@ -48,7 +48,7 @@ func TestCleanupJob_Execute_ErrorDeletingOldHistory(t *testing.T) {
 
 	job := NewCleanupJob(mockDB, MaxDaysHistory)
 
-	var errorMessage = "mock error deleting old history data"
+	var errorMessage = "mockData error deleting old history data"
 
 	mockDB.EXPECT().DeleteOldHistory(MaxDaysHistory).Return(errors.New(errorMessage))
 

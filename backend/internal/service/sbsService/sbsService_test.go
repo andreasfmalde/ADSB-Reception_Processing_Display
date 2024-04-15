@@ -141,7 +141,7 @@ func TestSbsImpl_ScheduleCleanUpJob_ErrorScheduleJob(t *testing.T) {
 	schedule := "* * * * *"
 	MaxDaysHistory := 5
 
-	errorMessage := "mock error simulating error scheduling job"
+	errorMessage := "mockData error simulating error scheduling job"
 
 	mockCron.EXPECT().ScheduleJob(schedule, gomock.Any()).Return(errors.New(errorMessage))
 

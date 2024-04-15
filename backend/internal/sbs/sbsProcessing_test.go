@@ -22,30 +22,30 @@ func TestProcessSbsStream_WithMockResponse(t *testing.T) {
 	}
 
 	// 1 valid aircraft
-	mockLen1, err := os.ReadFile("./resources/mock/mockSbsDataLen1.txt")
+	mockLen1, err := os.ReadFile("./resources/mockData/mockSbsDataLen1.txt")
 	if err != nil {
 		t.Errorf("error reading file: %q", err)
 	}
 
 	// missing MSG 4
-	mockIncompleteData, err := os.ReadFile("./resources/mock/mockSbsIncompleteData.txt")
+	mockIncompleteData, err := os.ReadFile("./resources/mockData/mockSbsIncompleteData.txt")
 	if err != nil {
 		t.Errorf("error reading file: %q", err)
 	}
 
 	// speed value of MSG 2 is 'AAA'
-	mockParseError, err := os.ReadFile("./resources/mock/mockSbsParseError.txt")
+	mockParseError, err := os.ReadFile("./resources/mockData/mockSbsParseError.txt")
 	if err != nil {
 		t.Errorf("error reading file: %q", err)
 	}
 
 	// data is valid but in incorrect order, MSG 4 before MSG 3
-	mockMalformedLines, err := os.ReadFile("./resources/mock/mockSbsMalformedDataLines.txt")
+	mockMalformedLines, err := os.ReadFile("./resources/mockData/mockSbsMalformedDataLines.txt")
 	if err != nil {
 		t.Errorf("error reading file: %q", err)
 	}
 
-	mockFirstLineEmpty, err := os.ReadFile("./resources/mock/mockSbsDataFirstLineEmpty.txt")
+	mockFirstLineEmpty, err := os.ReadFile("./resources/mockData/mockSbsDataFirstLineEmpty.txt")
 
 	tests := []struct {
 		name           string
