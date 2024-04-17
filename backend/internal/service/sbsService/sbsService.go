@@ -107,3 +107,10 @@ func (svc *SbsImpl) ScheduleCleanUpJob(schedule string, days int) error {
 	job := cleanupJob.NewCleanupJob(svc.DB, days)
 	return svc.CronScheduler.ScheduleJob(schedule, job.Execute)
 }
+
+// StartScheduler starts the cron scheduler.
+// Every job scheduled before this method is called will begin.
+// Jobs scheduled after this method will still be executed.
+func (svc *SbsImpl) StartScheduler() {
+	svc.CronScheduler.Start()
+}

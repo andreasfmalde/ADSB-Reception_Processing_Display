@@ -150,3 +150,25 @@ func TestSbsImpl_ScheduleCleanUpJob_ErrorScheduleJob(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, errorMessage, err.Error())
 }
+
+func TestSbsImpl_StartScheduler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := mock.NewMockDatabase(ctrl)
+	mockCron := mock.NewMockScheduler(ctrl)
+
+	svc := InitSbsService(mockDB, mockCron)
+
+	schedule := "* * * * *"
+	maxDaysHistory := 5
+
+	mockCron.EXPECT().ScheduleJob(schedule, gomock.Any()).Return(nil)
+	mockCron.EXPECT().Start()
+
+	err := svc.ScheduleCleanUpJob(schedule, maxDaysHistory)
+	if err != nil {
+		t.Fatal("error scheduling job", err)
+	}
+	svc.StartScheduler()
+}
