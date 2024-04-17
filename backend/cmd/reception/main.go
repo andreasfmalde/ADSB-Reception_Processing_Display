@@ -42,8 +42,10 @@ func main() {
 	}
 
 	if err := sbsSvc.ScheduleCleanUpJob(global.CleanupSchedule, global.MaxDaysHistory); err != nil {
-		log.Fatal().Msgf("error initiazling cleanupJob job")
+		log.Fatal().Msgf("error initiazling cleanupJob job :%v", err)
 	}
+
+	sbsSvc.StartScheduler()
 
 	log.Info().Msgf("Reception API successfully connected to database with: User: %s | Database: %s | Host: %s | port: %d",
 		global.DbUser, global.DbName, global.DbHost, global.DbPort)
