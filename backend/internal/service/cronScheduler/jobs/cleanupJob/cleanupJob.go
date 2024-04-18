@@ -3,6 +3,7 @@ package cleanupJob
 import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global/errorMsg"
+
 	"github.com/rs/zerolog/log"
 )
 
