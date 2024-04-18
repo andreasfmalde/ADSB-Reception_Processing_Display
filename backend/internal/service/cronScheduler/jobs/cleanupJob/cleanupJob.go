@@ -3,6 +3,7 @@ package cleanupJob
 import (
 	"adsb-api/internal/db"
 	"adsb-api/internal/global/errorMsg"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -13,10 +14,12 @@ type CleanupJob struct {
 	MaxDaysHistory int
 }
 
+// NewCleanupJob initializes a new job for cleaning hold history data.
 func NewCleanupJob(db db.Database, days int) *CleanupJob {
 	return &CleanupJob{db: db, MaxDaysHistory: days}
 }
 
+// Execute is the function be used with scheduler.
 func (cj *CleanupJob) Execute() {
 	if err := cj.db.DeleteOldHistory(cj.MaxDaysHistory); err != nil {
 		log.Error().Msgf(errorMsg.ErrorDeletingOldHistory+": %q", err)

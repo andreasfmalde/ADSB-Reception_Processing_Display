@@ -1,5 +1,7 @@
 package global
 
+// Default constant values
+
 // Database variables
 var (
 	DbUser     string
