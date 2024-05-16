@@ -22,10 +22,7 @@ function App() {
   const [currentBounds, setCurrentBounds] = useState(null);
   const [historyURL, setHistoryURL] = useState('1')
   const map = useRef(null);
-  //const [time, setTime] = useState(null);
-  //let time = null; 
-  const timeStart = useRef(null);
-  //const timeEnd = useRef(null);
+  const time = useRef(null);
 
   // Retrieve aircrafts from API and update the current aircraft list
   const retrievePlanes = async () =>{
@@ -39,7 +36,7 @@ function App() {
       }
       setAircraftJSON(data.features);
     }catch(error){
-      console.log("No aircrafts are fetched")
+      console.error("No aircrafts are fetched")
     }
     
   }
@@ -50,7 +47,7 @@ function App() {
       const data = await callAPI(`https://api.planespotters.net/pub/photos/hex/${icao}`);
       data.error ? setSelectedImg(null) : setSelectedImg(data.photos[0]);
     }catch(error){
-      console.log("API retrieval failed")
+      console.error("API retrieval failed")
     } 
   };
 
@@ -68,7 +65,7 @@ function App() {
       const data = await callAPI(url);
       setHistoryTrail(data.features[0]);
     }catch(error){
-      console.log("History not found")
+      console.error("History not found")
     }
   }
 
@@ -112,10 +109,10 @@ function App() {
   // trail of a selected aircraft
   const setTrail = (trailLength) =>{
     setHistoryURL(trailLength);
-    timeStart.current = Date.now();
+    time.current = Date.now();
     setTimeout(()=>{
       let currentTime = Date.now();
-      if (selected !==null &&  (currentTime - timeStart.current) >= 1000){
+      if (selected !==null &&  (currentTime - time.current) >= 1000){
         // Do a history call
         retrieveHistory(selected.properties.icao, trailLength);
       }
