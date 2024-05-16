@@ -1,4 +1,4 @@
-import { Navbar } from "../components/Navbar";
+import  Navbar  from "../components/Navbar";
 import {render, screen, fireEvent} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect';
 

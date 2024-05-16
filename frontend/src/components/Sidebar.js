@@ -1,7 +1,7 @@
 import './components.css'
 import unavailableImage from '../assets/unavailable.png';
 
-export const Sidebar = (props) =>{
+function Sidebar(props){
     return(
         <div className='Sidebar'>
         {props?.aircraft == null ? 
@@ -34,3 +34,5 @@ export const Sidebar = (props) =>{
         </div>
     );
 }
+
+export default Sidebar;

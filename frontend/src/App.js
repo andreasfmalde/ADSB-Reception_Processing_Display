@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Map, {Layer, Marker, Source} from 'react-map-gl/maplibre';
-import { Sidebar } from './components/Sidebar';
-import { Navbar } from './components/Navbar';
+import Sidebar  from './components/Sidebar';
+import  Navbar  from './components/Navbar';
 import {style, trailLayer, initialView} from './data/MapData';
 import { isInBounds, findAircraftByIcaoOrCallsign, trimAircraftList, callAPI } from './utils';
 import { IoMdAirplane } from "react-icons/io";

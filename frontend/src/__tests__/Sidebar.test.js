@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { Sidebar } from '../components/Sidebar';
+import  Sidebar from '../components/Sidebar';
 import { testImage, geojson } from '../data/TestData';
 import '@testing-library/jest-dom/extend-expect';
 
