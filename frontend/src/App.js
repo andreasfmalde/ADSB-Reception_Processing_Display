@@ -20,7 +20,7 @@ function App() {
   const [selectedImg, setSelectedImg] = useState(null);
   const [historyTrail, setHistoryTrail] = useState(null);
   const [currentBounds, setCurrentBounds] = useState(null);
-  const [historyURL, setHistoryURL] = useState('1')
+  const [historyLength, setHistoryLength] = useState('1')
   const map = useRef(null);
   const time = useRef(null);
 
@@ -80,7 +80,7 @@ function App() {
     if (aircraft !== null){
       setSelected(aircraft);
       retrieveImage(aircraft.properties.icao);
-      retrieveHistory(aircraft.properties.icao, historyURL);
+      retrieveHistory(aircraft.properties.icao, historyLength);
       map.current.flyTo({center:[aircraft.geometry.coordinates[1],aircraft.geometry.coordinates[0]],zoom:9})
     }else{
       warning('No aircraft found...');
@@ -108,7 +108,7 @@ function App() {
   // a call to the backend API to automatically fetch the new
   // trail of a selected aircraft
   const setTrail = (trailLength) =>{
-    setHistoryURL(trailLength);
+    setHistoryLength(trailLength);
     time.current = Date.now();
     setTimeout(()=>{
       let currentTime = Date.now();
@@ -176,7 +176,7 @@ function App() {
                 if(selected?.properties.icao !== p.properties.icao){
                   setSelected(p);
                   retrieveImage(p.properties.icao);
-                  retrieveHistory(p.properties.icao,historyURL);
+                  retrieveHistory(p.properties.icao,historyLength);
                 }
               }}
             >

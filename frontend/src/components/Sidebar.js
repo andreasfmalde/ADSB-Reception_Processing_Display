@@ -1,6 +1,7 @@
 import './components.css'
 import unavailableImage from '../assets/unavailable.png';
 
+// Sidebar component
 function Sidebar(props){
     return(
         <div className='Sidebar'>

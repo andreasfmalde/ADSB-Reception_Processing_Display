@@ -3,8 +3,8 @@ import { IoMdSearch, IoMdSettings, IoIosCloseCircleOutline  } from "react-icons/
 import logoWhite from '../assets/logo_white.png';
 import { useState, useRef, useEffect } from 'react';
 
+// Topbar component 
 function Topbar(props){
-
     const [open, setOpen] = useState(false);
     const [historyHour, setHistoryHour] = useState(1);
     const [currentCustom, setCurrentCustom] = useState(true);
@@ -12,8 +12,8 @@ function Topbar(props){
     const dropDownRef = useRef(null);
     const dropDownButton = useRef(null);
 
+    // Close the settings drop-down on mousedown event outside the drop-down window
     useEffect(()=>{
-
         document.addEventListener('mousedown',e =>{
             if(open && dropDownRef.current !== null 
             && dropDownButton.current !== null
