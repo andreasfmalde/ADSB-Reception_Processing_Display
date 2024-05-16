@@ -3,7 +3,7 @@ import { IoMdSearch, IoMdSettings, IoIosCloseCircleOutline  } from "react-icons/
 import logoWhite from '../assets/logo_white.png';
 import { useState, useRef, useEffect } from 'react';
 
-function Navbar(props){
+function Topbar(props){
 
     const [open, setOpen] = useState(false);
     const [historyHour, setHistoryHour] = useState(1);
@@ -113,4 +113,4 @@ function Navbar(props){
     );
 }
 
-export default Navbar;
+export default Topbar;

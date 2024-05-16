@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Map, {Layer, Marker, Source} from 'react-map-gl/maplibre';
 import Sidebar  from './components/Sidebar';
-import  Navbar  from './components/Navbar';
+import  Topbar  from './components/Topbar';
 import {style, trailLayer, initialView} from './data/MapData';
 import { isInBounds, findAircraftByIcaoOrCallsign, trimAircraftList, callAPI } from './utils';
 import { IoMdAirplane } from "react-icons/io";
@@ -11,7 +11,7 @@ import './App.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Main point of the application 
+// Main component of the application 
 function App() {
   const [viewport,setViewport] =  useState(initialView);
   const [aircraftJSON,setAircraftJSON] = useState(null);
@@ -143,7 +143,7 @@ function App() {
   
   return (
     <div className="App">
-      <Navbar callback={searchForAircraft} trail={setTrail}/>
+      <Topbar callback={searchForAircraft} trail={setTrail}/>
       <div className="main-content">
         <Map
           className='main-map'
