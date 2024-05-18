@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Map, {Layer, Marker, Source} from 'react-map-gl/maplibre';
 import Sidebar  from './components/Sidebar';
 import  Topbar  from './components/Topbar';
-import {style, trailLayer, initialView} from './data/MapData';
+import {style, trailLayer, initialView} from './data/mapData';
 import { isInBounds, findAircraftByIcaoOrCallsign, trimAircraftList, callAPI } from './utils';
 import { IoMdAirplane } from "react-icons/io";
 import { ToastContainer, Zoom, toast } from 'react-toastify';
