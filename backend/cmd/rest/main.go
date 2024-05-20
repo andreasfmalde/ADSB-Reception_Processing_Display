@@ -5,7 +5,7 @@ import (
 	"adsb-api/internal/global"
 	"adsb-api/internal/global/errorMsg"
 	"adsb-api/internal/handler/aircraftCurrentHandler"
-	"adsb-api/internal/handler/aircraftHistory"
+	"adsb-api/internal/handler/aircraftHistoryHandler"
 	"adsb-api/internal/handler/defaultHandler"
 	"adsb-api/internal/service/restService"
 	"adsb-api/internal/utility/logger"
@@ -41,7 +41,7 @@ func main() {
 
 	http.HandleFunc(global.DefaultPath, defaultHandler.DefaultHandler)
 	http.HandleFunc(global.AircraftCurrentPath, aircraftCurrentHandler.CurrentAircraftHandler(restSvc))
-	http.HandleFunc(global.AircraftHistoryPath, aircraftHistory.HistoryAircraftHandler(restSvc))
+	http.HandleFunc(global.AircraftHistoryPath, aircraftHistoryHandler.HistoryAircraftHandler(restSvc))
 
 	port := os.Getenv("PORT")
 	if port == "" {

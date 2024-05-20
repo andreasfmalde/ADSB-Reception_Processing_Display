@@ -1,4 +1,4 @@
-package aircraftHistory
+package aircraftHistoryHandler
 
 import (
 	"adsb-api/internal/global"
