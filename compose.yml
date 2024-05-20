@@ -9,6 +9,7 @@ services:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+    restart: 'unless-stopped'
     ports:
       - '1234:5432'
     volumes:
@@ -22,8 +23,8 @@ services:
       retries: 5
       start_period: 10s
 
-  reception_api:
-    container_name: reception_api_container
+  reception_service:
+    container_name: reception_service_container
     build:
       context: ./backend
       dockerfile: DockerfileReception
