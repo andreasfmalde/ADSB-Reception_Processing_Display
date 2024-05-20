@@ -13,7 +13,7 @@ The application is deployed on the following urls:<br>
 `http://129.241.150.147/` - website<br>
 `http://129.241.150.147:8080/` - RESTful API
 ## Table of Contents
-- [SBS Flight Traffic Receiving API](#sbs-receiving-api)
+- [SBS Flight Traffic Reception Service](#sbs-reception-service)
 - [Database](#Database)
 - [REST API](#rest-api)
   - [Current Aircraft Endpoint](#current-aircraft)
@@ -53,7 +53,7 @@ The application is deployed on the following urls:<br>
 3. NodeJS v16.17 and up
 
 
-## SBS Receiving API
+## SBS Reception Service
 `backend/cmd/reception/main.go` Consists of an infinite loop that processes SBS data by receiving data through a TCP 
 stream and converts the data to aircraft structs. The data is then inserted into a database. A cleanup job using golang's crontab package runs in a seperate thread to delete old data from the database. Preventing it from getting too big.
 
