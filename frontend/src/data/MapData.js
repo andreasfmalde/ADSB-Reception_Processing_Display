@@ -30,7 +30,7 @@ export const trailLayer = {
 		'line-color': '#000',
 		'line-width': 3
 	}
-  };
+};
 
 export const initialView = {
     longitude: 10,

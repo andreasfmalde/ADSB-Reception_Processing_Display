@@ -212,4 +212,4 @@ export const testImage = {
 	thumbnail_large: { src: 'https://somewebsite.no/aircraft.jpg' },
 	photographer: 'Test Testesen',
 	link: 'https://somewebsite.no'
-  };
+};
