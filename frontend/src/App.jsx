@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Map, {Layer, Marker, Source} from 'react-map-gl/maplibre';
-import { Sidebar } from './components/Sidebar';
-import { Navbar } from './components/Navbar';
-import {style, trailLayer, initialView} from './data/MapData';
+import Sidebar  from './components/Sidebar';
+import  Topbar  from './components/Topbar';
+import {style, trailLayer, initialView} from './data/mapData';
 import { isInBounds, findAircraftByIcaoOrCallsign, trimAircraftList, callAPI } from './utils';
 import { IoMdAirplane } from "react-icons/io";
 import { ToastContainer, Zoom, toast } from 'react-toastify';
@@ -11,7 +11,7 @@ import './App.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Main point of the application 
+// Main component of the application 
 function App() {
   const [viewport,setViewport] =  useState(initialView);
   const [aircraftJSON,setAircraftJSON] = useState(null);
@@ -20,12 +20,9 @@ function App() {
   const [selectedImg, setSelectedImg] = useState(null);
   const [historyTrail, setHistoryTrail] = useState(null);
   const [currentBounds, setCurrentBounds] = useState(null);
-  const [historyURL, setHistoryURL] = useState('1')
+  const [historyLength, setHistoryLength] = useState('1')
   const map = useRef(null);
-  //const [time, setTime] = useState(null);
-  //let time = null; 
-  const timeStart = useRef(null);
-  //const timeEnd = useRef(null);
+  const time = useRef(null);
 
   // Retrieve aircrafts from API and update the current aircraft list
   const retrievePlanes = async () =>{
@@ -39,7 +36,7 @@ function App() {
       }
       setAircraftJSON(data.features);
     }catch(error){
-      console.log("No aircrafts are fetched")
+      console.error("No aircrafts are fetched")
     }
     
   }
@@ -50,7 +47,7 @@ function App() {
       const data = await callAPI(`https://api.planespotters.net/pub/photos/hex/${icao}`);
       data.error ? setSelectedImg(null) : setSelectedImg(data.photos[0]);
     }catch(error){
-      console.log("API retrieval failed")
+      console.error("API retrieval failed")
     } 
   };
 
@@ -68,7 +65,7 @@ function App() {
       const data = await callAPI(url);
       setHistoryTrail(data.features[0]);
     }catch(error){
-      console.log("History not found")
+      console.error("History not found")
     }
   }
 
@@ -83,7 +80,7 @@ function App() {
     if (aircraft !== null){
       setSelected(aircraft);
       retrieveImage(aircraft.properties.icao);
-      retrieveHistory(aircraft.properties.icao, historyURL);
+      retrieveHistory(aircraft.properties.icao, historyLength);
       map.current.flyTo({center:[aircraft.geometry.coordinates[1],aircraft.geometry.coordinates[0]],zoom:9})
     }else{
       warning('No aircraft found...');
@@ -111,11 +108,11 @@ function App() {
   // a call to the backend API to automatically fetch the new
   // trail of a selected aircraft
   const setTrail = (trailLength) =>{
-    setHistoryURL(trailLength);
-    timeStart.current = Date.now();
+    setHistoryLength(trailLength);
+    time.current = Date.now();
     setTimeout(()=>{
       let currentTime = Date.now();
-      if (selected !==null &&  (currentTime - timeStart.current) >= 1000){
+      if (selected !==null &&  (currentTime - time.current) >= 1000){
         // Do a history call
         retrieveHistory(selected.properties.icao, trailLength);
       }
@@ -146,7 +143,7 @@ function App() {
   
   return (
     <div className="App">
-      <Navbar callback={searchForAircraft} trail={setTrail}/>
+      <Topbar callback={searchForAircraft} trail={setTrail}/>
       <div className="main-content">
         <Map
           className='main-map'
@@ -179,7 +176,7 @@ function App() {
                 if(selected?.properties.icao !== p.properties.icao){
                   setSelected(p);
                   retrieveImage(p.properties.icao);
-                  retrieveHistory(p.properties.icao,historyURL);
+                  retrieveHistory(p.properties.icao,historyLength);
                 }
               }}
             >

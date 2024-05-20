@@ -241,7 +241,7 @@
 /* TABLET SCREENS */
 
 @media screen and (max-width: 850px) {
-    /* NAVBAR */
+    /* TOPBAR */
     .navigation{
         align-items: center;
         justify-content: space-between;
@@ -318,7 +318,7 @@
 
 @media screen and (max-width: 580px){
 
-    /* NAVBAR */
+    /* TOPBAR */
 
     .search-field > input{
         width: 60vw;

@@ -1,6 +1,8 @@
 import './components.css'
+import unavailableImage from '../assets/unavailable.png';
 
-export const Sidebar = (props) =>{
+// Sidebar component
+function Sidebar(props){
     return(
         <div className='Sidebar'>
         {props?.aircraft == null ? 
@@ -10,7 +12,7 @@ export const Sidebar = (props) =>{
             // Render aircraft
             <div className='aircraft-info'>
                 <div className='aircraft-image'>
-                    <img src={props?.image != null ? props?.image.thumbnail_large.src : "https://eagle-sensors.com/wp-content/uploads/unavailable-image.jpg" } 
+                    <img src={props?.image != null ? props?.image.thumbnail_large.src : unavailableImage } 
                     alt='selected aircraft'/>
                     {props?.image != null ? <a href={props?.image.link}><span>&copy; {props?.image.photographer}</span></a> : ""}
                 </div>
@@ -33,3 +35,5 @@ export const Sidebar = (props) =>{
         </div>
     );
 }
+
+export default Sidebar;

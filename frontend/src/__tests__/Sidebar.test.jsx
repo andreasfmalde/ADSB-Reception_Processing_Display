@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { Sidebar } from '../components/Sidebar';
-import { testImage, geojson } from '../data/TestData';
+import  Sidebar from '../components/Sidebar';
+import { testImage, geojson } from '../data/testData';
 import '@testing-library/jest-dom/extend-expect';
 
 describe('Sidebar component tests',()=>{
